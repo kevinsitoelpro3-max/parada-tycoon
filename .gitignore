@@ -1,2 +1,6 @@
 node_modules/
 dist/
+
+# Llaves de publicación (Play Store): nunca al repo
+*.jks
+keystore.properties

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#0A6A3F"/>
+  <!-- filete blanco de letrero de carretera -->
+  <rect x="64" y="64" width="896" height="896" rx="120" fill="none" stroke="#FFFFFF" stroke-width="30"/>
+  <g transform="translate(512 512) scale(1.3) translate(-510 -552)">
+  <!-- tráiler visto de lado, mirando a la derecha -->
+  <rect x="262" y="400" width="330" height="190" rx="18" fill="#FFFFFF"/>
+  <rect x="262" y="536" width="330" height="18" fill="#D62828"/>
+  <path d="M602 590 V470 Q602 440 632 440 H700 Q718 440 728 456 L758 512 Q762 520 762 532 V590 Z" fill="#F2C230"/>
+  <path d="M648 462 H698 Q707 462 712 470 L734 510 H648 Z" fill="#13261C"/>
+  <rect x="252" y="586" width="516" height="22" rx="8" fill="#13261C"/>
+  <circle cx="324" cy="618" r="40" fill="#13261C"/><circle cx="324" cy="618" r="14" fill="#C3D5CA"/>
+  <circle cx="520" cy="618" r="40" fill="#13261C"/><circle cx="520" cy="618" r="14" fill="#C3D5CA"/>
+  <circle cx="704" cy="618" r="40" fill="#13261C"/><circle cx="704" cy="618" r="14" fill="#C3D5CA"/>
+  <!-- línea amarilla de la carretera -->
+  <rect x="300" y="684" width="120" height="20" rx="10" fill="#F2C230"/>
+  <rect x="452" y="684" width="120" height="20" rx="10" fill="#F2C230"/>
+  <rect x="604" y="684" width="120" height="20" rx="10" fill="#F2C230"/>
+  </g>
+</svg>

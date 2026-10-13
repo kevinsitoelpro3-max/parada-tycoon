@@ -1,3 +1,7 @@
+// Tipografía Overpass incluida en el juego (licencia OFL), para que funcione sin internet
+import '@fontsource/overpass/latin-400.css';
+import '@fontsource/overpass/latin-600.css';
+import '@fontsource/overpass/latin-800.css';
 import { stage } from './utils.js';
 import { game, newGame, load, save, totalUpkeep, inRush } from './state.js';
 import { resize } from './camera.js';
@@ -16,6 +20,7 @@ import { openStart, setupStart } from './ui/start.js';
 import { setupSound } from './audio/sound.js';
 import { sfx, setRain } from './audio/sfx.js';
 import { setMusicMode } from './audio/music.js';
+import { setupNative, nativeReady } from './native.js';
 
 /* ---------- Controles ---------- */
 setupInput();
@@ -26,6 +31,7 @@ setupHud();
 setupTheme();
 setupStart();
 setupSound();
+setupNative();
 // Clic suave en cualquier botón de la interfaz
 document.addEventListener('click', e => { if (e.target.closest('button')) sfx.click(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
@@ -61,6 +67,8 @@ function frame(now) {
   draw();
   tickSound();
   hud();
+  if (first) { first = false; nativeReady(); }
   requestAnimationFrame(frame);
 }
+let first = true;
 requestAnimationFrame(frame);

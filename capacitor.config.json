@@ -1,0 +1,17 @@
+{
+  "appId": "com.kevinsito.paradatycoon",
+  "appName": "Parada Tycoon",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#D2E4D8"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "launchFadeOutDuration": 250,
+      "backgroundColor": "#D2E4D8",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    }
+  }
+}

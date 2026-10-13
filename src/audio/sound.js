@@ -67,6 +67,10 @@ export function renderToggles() {
   }
 }
 
+// Pausar y retomar todo el audio (por ejemplo, cuando la app de Android pasa a segundo plano)
+export function pauseAudio() { try { if (ac) ac.suspend(); } catch (e) { /* nada */ } }
+export function resumeAudio() { try { if (ac && !document.hidden) ac.resume(); } catch (e) { /* nada */ } }
+
 export function setupSound() {
   for (const b of document.querySelectorAll('[data-audio]')) {
     b.addEventListener('click', () => { unlock(); setPref(b.dataset.audio, !prefs[b.dataset.audio]); });
@@ -74,7 +78,6 @@ export function setupSound() {
   renderToggles();
   // Si cambias de app o bloqueas el celular, el audio se pausa
   document.addEventListener('visibilitychange', () => {
-    if (!ac) return;
-    try { if (document.hidden) ac.suspend(); else ac.resume(); } catch (e) { /* nada */ }
+    if (document.hidden) pauseAudio(); else resumeAudio();
   });
 }

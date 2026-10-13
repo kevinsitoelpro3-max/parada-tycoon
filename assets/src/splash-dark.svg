@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2732" viewBox="0 0 2732 2732">
+  <rect width="2732" height="2732" fill="#13201B"/>
+  <!-- letrero centrado: en celulares verticales solo se ve el centro (unos 1200 px de ancho) -->
+  <g transform="translate(866 1046)">
+    <rect width="1000" height="560" rx="40" fill="#0A6A3F"/>
+    <rect x="22" y="22" width="956" height="516" rx="26" fill="none" stroke="#FFFFFF" stroke-width="16"/>
+    <rect x="70" y="-46" width="330" height="92" rx="18" fill="#F2C230"/>
+    <text x="235" y="18" text-anchor="middle" font-family="Overpass" font-weight="800" font-size="52" fill="#16140C" letter-spacing="3">SALIDA 1 ↗</text>
+    <text x="500" y="250" text-anchor="middle" font-family="Overpass" font-weight="800" font-size="170" fill="#FFFFFF">PARADA</text>
+    <text x="500" y="420" text-anchor="middle" font-family="Overpass" font-weight="800" font-size="170" fill="#FFFFFF">TYCOON</text>
+  </g>
+</svg>
