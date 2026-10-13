@@ -6,6 +6,7 @@
   --red:#B3261E;
   --rush:#D9711A;
   --sky:#D2E4D8;
+  --veil:rgba(210,228,216,.84);
   --panel:#FFFFFF;
   --ink:#13261C;
   --muted:#4B6155;
@@ -18,12 +19,12 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --sky:#13201B; --panel:#1A2922; --ink:#E6F0E9; --muted:#9FB4A8; --line:#2C4036; --danger:#FF8A80;
+    --sky:#13201B; --panel:#1A2922; --ink:#E6F0E9; --muted:#9FB4A8; --line:#2C4036; --danger:#FF8A80; --veil:rgba(19,32,27,.86);
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --sky:#13201B; --panel:#1A2922; --ink:#E6F0E9; --muted:#9FB4A8; --line:#2C4036; --danger:#FF8A80;
+  --sky:#13201B; --panel:#1A2922; --ink:#E6F0E9; --muted:#9FB4A8; --line:#2C4036; --danger:#FF8A80; --veil:rgba(19,32,27,.86);
   color-scheme:dark;
 }
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -121,3 +122,36 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .modes .btn.armed{background:var(--warn);color:var(--warn-ink);border-color:var(--warn)}
 .how{margin:8px 0 4px;padding-left:20px;font-size:14px;line-height:1.45}
 .how li{margin-bottom:6px}
+
+/* Sonido: interruptores en el menú y en la pantalla de inicio */
+.toggles{margin-bottom:4px}
+.toggles .btn{font-size:14px;padding:10px 6px 8px}
+.toggles .btn[aria-pressed="false"]{color:var(--muted);border-style:dashed}
+.menu-end{margin-top:14px}
+
+/* Pantalla de inicio */
+.start{
+  position:fixed;inset:0;z-index:10;display:grid;place-items:center;overflow:auto;
+  padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));
+  background:var(--veil);
+}
+.start[hidden]{display:none}
+.start-card{
+  width:100%;max-width:400px;background:var(--panel);color:var(--ink);
+  border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;box-shadow:0 12px 34px rgba(0,0,0,.24);
+}
+.start .title{
+  position:relative;display:block;text-align:center;border-radius:12px;padding:26px 14px 16px;
+  box-shadow:inset 0 0 0 4px var(--sign),inset 0 0 0 7px var(--sign-ink);
+}
+.start .exit{
+  position:absolute;top:-11px;left:16px;background:var(--warn);color:var(--warn-ink);
+  font-size:12px;font-weight:800;letter-spacing:.04em;padding:4px 9px 2px;border-radius:5px;
+}
+.start h1{margin:0;font-size:40px;line-height:.95;font-weight:800;letter-spacing:.01em;text-transform:uppercase}
+.start .tagline{margin:8px 0 0;font-size:14px;font-weight:600;opacity:.92}
+.start .icons{text-align:center;font-size:24px;letter-spacing:.2em;margin:12px 0 10px}
+.start h3{margin:14px 0 6px;font-size:15px;font-weight:800}
+.start .small{margin:0 0 10px}
+.btn.big{width:100%;font-size:18px;padding:14px 10px 12px}
+.save-info{text-align:center;margin-top:6px !important;font-variant-numeric:tabular-nums}

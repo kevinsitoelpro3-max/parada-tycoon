@@ -6,6 +6,7 @@ import { buildOuterTrees } from './render/scene.js';
 import { toast } from './ui/toast.js';
 import { closeSheet } from './ui/sheet.js';
 import { menuEl, overEl, renderMenu } from './ui/menu.js';
+import { sfx } from './audio/sfx.js';
 
 /* ---------- Días, gastos y eventos ---------- */
 export function rollEvent() {
@@ -33,6 +34,7 @@ export function closeDay() {
     if (left <= 0) { gameOver(); return; }
     msg += left === 1 ? ' Estás en rojo: si vuelves a cerrar en rojo, quiebras.' : ` Estás en rojo: ${left} cierres más en rojo y quiebras.`;
   } else S.red = 0;
+  sfx.dayEnd(S.money < 0);
   S.day++; S.dayT = 0; S.dayEarn = 0; S.dayServed = 0; S.dayLost = 0;
   const em = rollEvent();
   toast(msg, 4200, true);
@@ -42,6 +44,7 @@ export function closeDay() {
 export function gameOver() {
   const S = game.S;
   S.over = true;
+  sfx.gameOver();
   closeSheet(); menuEl.hidden = true;
   $('#overTxt').textContent = `Tu parada aguantó ${S.day} días en modo ${mode().name}, atendió ${fmt(S.served)} tráileres y terminó con ${S.rep.toFixed(1)} estrellas.`;
   overEl.hidden = false;
@@ -51,8 +54,9 @@ export function expandLand() {
   const S = game.S;
   if (game.H >= HMAX) return;
   const c = landCost();
-  if (S.money < c) { toast('Te faltan ' + money(c - S.money)); return; }
+  if (S.money < c) { sfx.nope(); toast('Te faltan ' + money(c - S.money)); return; }
   S.money -= c;
+  sfx.build();
   const oldEnd = game.H + 2.6;
   for (let y = game.H; y < game.H + 2; y++) for (let x = 0; x < W; x++) {
     S.tiles.push({ t: x === 0 ? 'hwy' : (x >= 2 && Math.random() < 0.2 ? 'tree' : 'grass') });

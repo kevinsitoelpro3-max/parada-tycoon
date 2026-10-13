@@ -4,6 +4,7 @@ import { game, T, isRoad, upkeepOf } from './state.js';
 import { inUse } from './routes.js';
 import { toast } from './ui/toast.js';
 import { openSheet, closeSheet } from './ui/sheet.js';
+import { sfx } from './audio/sfx.js';
 
 /* ---------- Herramientas ---------- */
 export function toolCost(k) {
@@ -52,18 +53,21 @@ export function applyTool(x, y, drag) {
     return;
   }
   const r = check(tool, x, y);
-  if (!r.ok) { if (r.msg && !drag) toast(r.msg); return; }
-  if (S.money < r.cost) { toast(S.money < 0 ? 'Estás en rojo: no puedes construir hasta recuperarte' : 'Te faltan ' + money(r.cost - S.money)); return; }
+  if (!r.ok) { if (r.msg && !drag) { toast(r.msg); sfx.nope(); } return; }
+  if (S.money < r.cost) { sfx.nope(); toast(S.money < 0 ? 'Estás en rojo: no puedes construir hasta recuperarte' : 'Te faltan ' + money(r.cost - S.money)); return; }
   const t = T(x, y);
   S.money -= r.cost;
   if (tool === 'road') {
     t.t = 'road';
+    sfx.road();
   } else if (KINDS[tool]) {
     Object.assign(t, { t: 'bld', k: tool, lvl: 1, earned: 0, slots: [null, null] });
+    sfx.build();
     toast(`Nuevo negocio: ${KINDS[tool].name}. Gasto diario $${fmt(upkeepOf(t))}`);
   } else if (tool === 'demo') {
     for (const k of Object.keys(t)) delete t[k];
     t.t = 'grass';
+    sfx.demolish();
     if (r.refund) {
       S.money += r.refund;
       game.floats.push({ x: x + 0.5, y: y + 0.5, z: 1.1, text: '+$' + r.refund, t: 0, neg: false });

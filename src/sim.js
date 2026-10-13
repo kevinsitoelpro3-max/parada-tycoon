@@ -6,6 +6,7 @@ import { spawn, spawnInterval, moveAlong, finishService } from './trucks.js';
 import { closeDay } from './days.js';
 import { toast } from './ui/toast.js';
 import { renderGoal } from './ui/hud.js';
+import { sfx } from './audio/sfx.js';
 
 /* ---------- Simulación ---------- */
 // dt: tiempo de juego (con la velocidad ×1/×2/×3); rdt: tiempo real, para animaciones.
@@ -22,6 +23,7 @@ export function update(dt, rdt) {
   const rush = inRush();
   if (rush !== game.ev.rushOn) {
     game.ev.rushOn = rush;
+    if (rush) sfx.rush();
     if (rush) toast('🚨 Empieza la hora pico: llegan el doble de tráileres', 2600, true);
   }
   if (game.ev.luzAt >= 0 && S.dayT >= game.ev.luzAt) {
@@ -30,11 +32,13 @@ export function update(dt, rdt) {
     if (bl.length) {
       const b = pick(bl);
       b.off = 25;
+      sfx.blackout();
       toast(`🔌 Apagón: tu ${KINDS[b.k].name.toLowerCase()} se quedó sin luz un rato`, 3000, true);
     }
   }
   if (game.ev.caravanAt >= 0 && S.dayT >= game.ev.caravanAt) {
     game.ev.caravanAt = -1; game.ev.burst = 8; game.spawnT = 0;
+    sfx.caravan();
     toast('🚛 ¡Ahí viene la caravana!', 2400, true);
   }
   for (const t of S.tiles) if (t.off > 0) { t.off -= dt; if (t.off <= 0) delete t.off; }
@@ -72,6 +76,7 @@ export function update(dt, rdt) {
     const g = GOALS[S.goal];
     if (g && g.ok()) {
       S.money += g.prize; S.goal++;
+      sfx.goal();
       toast('Meta cumplida: +$' + fmt(g.prize), 2600, true);
       renderGoal(true);
     }

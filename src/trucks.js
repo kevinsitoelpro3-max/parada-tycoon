@@ -2,6 +2,7 @@ import { CABS, TRAILERS } from './config.js';
 import { clamp, pick } from './utils.js';
 import { game, T, mode, inRush, countK, payNow } from './state.js';
 import { findService, parkSpot } from './routes.js';
+import { sfx } from './audio/sfx.js';
 
 /* ---------- Tráileres ---------- */
 export function spawnInterval() {
@@ -36,6 +37,7 @@ export function spawn() {
       tr.tiles = new Set(plan.p.map(([x, y]) => x + ',' + y));
     } else {
       tr.angry = true;
+      sfx.angry();
       S.lost++; S.dayLost++;
       // Duele más si tenías ese negocio pero estaba lleno o sin luz
       const had = countK(tr.need) > 0;
@@ -67,6 +69,7 @@ export function finishService(tr) {
     S.money += pay; S.served++; S.dayServed++; S.dayEarn += pay;
     S.rep = Math.min(5, S.rep + 0.03);
     b.earned = (b.earned || 0) + pay;
+    sfx.cash();
     if (b.slots[tr.slot] === tr) b.slots[tr.slot] = null;
     game.floats.push({ x: tr.bx + 0.5, y: tr.by + 0.5, z: 1.1, text: '+$' + pay, t: 0, neg: false });
   }
