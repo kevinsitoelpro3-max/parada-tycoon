@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parada Tycoon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+<header class="hud">
+  <div class="sign money" id="moneySign" aria-live="polite"><span id="moneyLabel">Caja</span><b id="money">$0</b></div>
+  <div class="sign stats">
+    <div class="rep" aria-label="Reputación"><span id="repStars">★★★☆☆</span><b id="repNum">3.0</b></div>
+    <div>🚚 <b id="served">0</b>&nbsp; 😠 <b id="lost">0</b></div>
+  </div>
+  <button class="sign sq" id="speed" aria-label="Velocidad del juego">×1</button>
+  <button class="sign sq" id="menuBtn" aria-label="Menú">☰</button>
+</header>
+<div class="info">
+  <div class="goal" id="goal"><span class="tag" id="goalTag">Meta</span><span class="txt" id="goalTxt"></span><span class="prize" id="goalPrize"></span></div>
+  <div class="day">
+    <b id="dayName">Día 1</b>
+    <div class="track" aria-hidden="true"><div class="rush"></div><div class="done" id="dayDone"></div><div class="mark" id="dayMark"></div></div>
+    <span class="chip" id="dayChip" hidden></span>
+    <span class="bill" id="dayBill">Gastos $0</span>
+  </div>
+</div>
+
+<main id="stage">
+  <canvas id="c" aria-label="Mapa de tu parada de tráileres"></canvas>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="zoom">
+    <button class="sign" id="zin" aria-label="Acercar">+</button>
+    <button class="sign" id="zout" aria-label="Alejar">−</button>
+    <button class="sign" id="zfit" aria-label="Centrar mapa">◎</button>
+  </div>
+
+  <div class="sheet" id="sheet" hidden>
+    <h2 id="shTitle"></h2>
+    <div class="lvl" id="shLvl"></div>
+    <div class="facts">
+      <div class="fact"><b id="shCap"></b><span>tráileres a la vez</span></div>
+      <div class="fact"><b id="shPay"></b><span>por cliente hoy</span></div>
+      <div class="fact"><b id="shUpk"></b><span>de gasto al día</span></div>
+      <div class="fact"><b id="shEarn"></b><span>ganado aquí</span></div>
+    </div>
+    <p class="next" id="shNext"></p>
+    <div class="row">
+      <button class="btn" id="shClose">Cerrar</button>
+      <button class="btn primary" id="shUp"></button>
+    </div>
+  </div>
+
+  <div class="sheet" id="menu" hidden>
+    <h2>Menú</h2>
+    <h3>Terreno</h3>
+    <p class="small" id="landTxt"></p>
+    <div class="row"><button class="btn primary" id="landBtn"></button></div>
+    <h3>Cómo se juega</h3>
+    <ul class="how">
+      <li>Traza calles desde la carretera y pon negocios pegados a ellas.</li>
+      <li>Cada tráiler pide ⛽ diésel, 🍗 comida o 💤 descanso. Si hay lugar, entra y paga. Si no, se va 😠 y baja tu reputación.</li>
+      <li>Más estrellas traen más tráileres y mejores propinas. Pocas estrellas, lo contrario.</li>
+      <li>Cada día dura poco más de un minuto. Al cierre pagas los gastos de tus negocios y calles, y suben un poco cada día.</li>
+      <li>Si cierras el día en rojo varias veces seguidas, quiebras.</li>
+      <li>En la hora pico (la franja naranja de la barra) llegan el doble de tráileres. También hay lluvia, apagones y caravanas.</li>
+      <li>Toca un negocio con ✋ Ver para mejorarlo. Con ✋ Ver arrastras para moverte y pellizcas para acercar.</li>
+    </ul>
+    <h3>Partida nueva</h3>
+    <p class="small" id="modeTxt"></p>
+    <div class="modes" id="menuModes">
+      <button class="btn" data-mode="facil">Fácil</button>
+      <button class="btn" data-mode="normal">Normal</button>
+      <button class="btn" data-mode="dificil">Difícil</button>
+    </div>
+    <div class="row"><button class="btn primary" id="closeMenu">Seguir jugando</button></div>
+  </div>
+
+  <div class="sheet bad" id="over" hidden>
+    <h2>Quebraste</h2>
+    <p class="next" id="overTxt"></p>
+    <p class="small">Elige con qué dificultad vuelves a empezar.</p>
+    <div class="modes" id="overModes">
+      <button class="btn" data-mode="facil">Fácil</button>
+      <button class="btn primary" data-mode="normal">Normal</button>
+      <button class="btn" data-mode="dificil">Difícil</button>
+    </div>
+  </div>
+</main>
+
+<nav class="dock" aria-label="Herramientas de construcción">
+  <button class="sign tool" data-tool="none" aria-pressed="true"><span class="ic">✋</span><span class="nm">Ver</span><span class="pr">mejorar</span></button>
+  <button class="sign tool" data-tool="road" aria-pressed="false"><span class="ic">🛣️</span><span class="nm">Calle</span><span class="pr">$20</span></button>
+  <button class="sign tool" data-tool="gas" aria-pressed="false"><span class="ic">⛽</span><span class="nm">Gasolina</span><span class="pr">$250</span></button>
+  <button class="sign tool" data-tool="food" aria-pressed="false"><span class="ic">🍗</span><span class="nm">Comedor</span><span class="pr">$400</span></button>
+  <button class="sign tool" data-tool="sleep" aria-pressed="false"><span class="ic">🛏️</span><span class="nm">Hotel</span><span class="pr">$600</span></button>
+  <button class="sign tool" data-tool="demo" aria-pressed="false"><span class="ic">🔨</span><span class="nm">Demoler</span><span class="pr">$10</span></button>
+</nav>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
