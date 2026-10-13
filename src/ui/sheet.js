@@ -4,6 +4,7 @@ import { game, T, payOf, payNow, repMult, upkeepOf, upCost } from '../state.js';
 import { toast } from './toast.js';
 import { hudCache } from './hud.js';
 import { menuEl } from './menu.js';
+import { sfx } from '../audio/sfx.js';
 
 /* ---------- Ficha del negocio (ver y mejorar) ---------- */
 export const sheetEl = $('#sheet');
@@ -40,8 +41,9 @@ export function setupSheet() {
     const t = T(sel.x, sel.y);
     if (!t || t.t !== 'bld' || t.lvl >= 3) return;
     const c = upCost(t);
-    if (S.money < c) { toast('Te faltan ' + money(c - S.money)); return; }
+    if (S.money < c) { sfx.nope(); toast('Te faltan ' + money(c - S.money)); return; }
     S.money -= c; t.lvl++; t.slots.push(null);
+    sfx.upgrade();
     game.floats.push({ x: sel.x + 0.5, y: sel.y + 0.5, z: 1.1, text: '−$' + fmt(c), t: 0, neg: true });
     game.puffs.push({ x: sel.x, y: sel.y, t: 0 });
     toast(KINDS[t.k].name + ' subió a nivel ' + t.lvl);

@@ -13,7 +13,8 @@ export const game = {
   spawnT: 1.2, goalT: 0, saveT: 0, userCam: false, dpr: 1, rainT: 0, billCache: 0,
   sky: '#D2E4D8', dark: false,
   ev: emptyEvent(),
-  upgradedFromV1: false
+  upgradedFromV1: false,
+  paused: false         // true mientras está abierta la pantalla de inicio
 };
 
 export const T = (x, y) => (x >= 0 && x < W && y >= 0 && y < game.H) ? game.S.tiles[y * W + x] : null;

@@ -7,7 +7,8 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - Proyecto con Vite: HTML en `index.html`, estilos en `src/styles.css` y el juego en módulos de JavaScript dentro de `src/` (sin dependencias en tiempo de juego; dibuja con canvas 2D).
 - `npm install` una vez; `npm run dev` para jugar mientras programas (también abre en el celular por la red local); `npm run build` genera la versión publicable en `dist/`; `npm run preview` la sirve para probarla.
 - La partida se guarda en `localStorage` con la clave `parada-tycoon-v1` (el formato interno ya va en la versión 2; carga partidas de la versión 1).
-- La única fuente externa es la tipografía Overpass de Google Fonts.
+- La única fuente externa es la tipografía Overpass de Google Fonts. Los sonidos y la música se generan con Web Audio, sin archivos.
+- Las preferencias de sonido se guardan aparte, con la clave `parada-tycoon-audio` (`{ music, sfx }`).
 
 ## Cómo funciona
 
@@ -22,6 +23,8 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Eventos (desde cierto día):** lluvia (tráileres más lentos), apagón (un negocio sin luz 25 s), más diésel y caravana.
 - **Modos:** Fácil, Normal y Difícil (dinero inicial, gastos, tráfico, castigo de reputación y días en rojo permitidos).
 - **Metas:** 17 metas con premio, en dos temporadas.
+- **Pantalla de inicio:** sale al abrir el juego y desde ☰ → Volver al inicio. Mientras está abierta el juego queda en pausa (`game.paused`). Tiene Continuar (si hay partida), los tres modos (tocar dos veces si hay partida que perder) e interruptores de Música y Efectos. El primer toque desbloquea el audio del celular.
+- **Sonido:** efectos para construir, demoler, cobrar, tráiler enojado, mejorar, meta, cierre del día, hora pico, caravana, apagón, quiebra, errores y botones; lluvia de fondo; música en bucle que va 15 % más rápido en hora pico y se detiene en la quiebra.
 
 ## Estructura del código
 
@@ -44,7 +47,10 @@ src/render/iso.js       primitivas isométricas (P, poly, box, shade...)
 src/render/scene.js     suelo, calles, árboles, negocios, tráileres y lluvia
 src/render/overlays.js  íconos de negocios, burbujas y números flotantes
 src/render/draw.js      dibuja un cuadro completo en orden de profundidad
-src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negocio) y menu
+src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negocio), menu y start (pantalla de inicio)
+src/audio/sound.js      contexto de audio, volúmenes, desbloqueo y preferencias
+src/audio/sfx.js        efectos de sonido y lluvia
+src/audio/music.js      música en bucle
 ```
 
 Todo lo que cambia durante la partida vive en el objeto `game` de `src/state.js` (`game.S` es la partida guardable, `game.H` las filas, `game.trucks`, `game.tool`, etc.). Los módulos lo importan y lo modifican ahí, nunca con variables globales sueltas.
@@ -56,11 +62,12 @@ Todo lo que cambia durante la partida vive en el objeto `game` de `src/state.js`
 - No usar nombres, logos ni personajes de otros juegos o marcas.
 - Antes de cambiar el balance (precios, tiempos, tráfico), explica qué número cambia y por qué.
 - Probar en el navegador después de cada cambio grande y no romper las partidas guardadas.
+- El código de audio nunca usa `Math.random` (usa `mulberry32`), para no cambiar el azar de la partida.
 
 ## Plan sugerido (por decidir con Kevin)
 
 1. ~~Pasar el archivo único a un proyecto ordenado con Vite, separando el código en módulos, sin cambiar cómo se juega.~~ Hecho.
-2. Agregar sonidos, música y una pantalla de inicio.
+2. ~~Agregar sonidos, música y una pantalla de inicio.~~ Hecho.
 3. Empaquetarlo como app de Android (por ejemplo con Capacitor) o migrarlo a un motor como Godot si se quiere 3D real.
 4. Preparar la publicación en Play Store.
 

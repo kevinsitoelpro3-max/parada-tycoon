@@ -1,5 +1,5 @@
 import { stage } from './utils.js';
-import { game, newGame, load, save, totalUpkeep } from './state.js';
+import { game, newGame, load, save, totalUpkeep, inRush } from './state.js';
 import { resize } from './camera.js';
 import { update } from './sim.js';
 import { gameOver } from './days.js';
@@ -12,6 +12,10 @@ import { hud, renderGoal, setupHud } from './ui/hud.js';
 import { setupDock } from './ui/dock.js';
 import { setupSheet } from './ui/sheet.js';
 import { setupMenu } from './ui/menu.js';
+import { openStart, setupStart } from './ui/start.js';
+import { setupSound } from './audio/sound.js';
+import { sfx, setRain } from './audio/sfx.js';
+import { setMusicMode } from './audio/music.js';
 
 /* ---------- Controles ---------- */
 setupInput();
@@ -20,6 +24,10 @@ setupSheet();
 setupMenu();
 setupHud();
 setupTheme();
+setupStart();
+setupSound();
+// Clic suave en cualquier botón de la interfaz
+document.addEventListener('click', e => { if (e.target.closest('button')) sfx.click(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 window.addEventListener('pagehide', save);
 
@@ -33,15 +41,25 @@ renderGoal(false);
 new ResizeObserver(resize).observe(stage);
 resize();
 if (game.S.over) gameOver();
-else if (fresh) setTimeout(() => toast('Empieza: toca 🛣️ Calle y trázala desde la carretera', 3000), 700);
-else if (game.upgradedFromV1) setTimeout(() => toast('Temporada 2: ahora hay días con gastos, reputación, hora pico y eventos. Toca ☰ para ver cómo funciona.', 6000), 700);
+// Primero la pantalla de inicio; el aviso de bienvenida sale al tocar Continuar
+openStart(game.upgradedFromV1
+  ? () => setTimeout(() => toast('Temporada 2: ahora hay días con gastos, reputación, hora pico y eventos. Toca ☰ para ver cómo funciona.', 6000), 400)
+  : null);
+
+// Música y lluvia siguen lo que pasa en la partida
+function tickSound() {
+  const over = game.S.over;
+  setMusicMode(over ? 'off' : inRush() && !game.paused ? 'rush' : 'normal');
+  setRain(!over && !game.paused && game.ev.rain);
+}
 
 let last = performance.now();
 function frame(now) {
   const rdt = Math.min(0.1, Math.max(0, (now - last) / 1000));
   last = now;
-  update(rdt * game.speed, rdt);
+  if (!game.paused) update(rdt * game.speed, rdt);
   draw();
+  tickSound();
   hud();
   requestAnimationFrame(frame);
 }

@@ -22,6 +22,8 @@ npm run preview  # sirve dist/ para revisarla antes de subirla
 
 Sube el contenido de `dist/` a cualquier hosting estático (por ejemplo GitHub Pages).
 
+El juego abre con una pantalla de inicio: ahí sigues tu partida o empiezas otra, y prendes o apagas la música y los efectos (también desde el menú ☰).
+
 La partida se guarda en el navegador (`localStorage`), por separado en cada dirección web donde abras el juego.
 
 Detalles de cómo funciona el juego y cómo está organizado el código: [CLAUDE.md](CLAUDE.md).
