@@ -3,7 +3,12 @@ export const W = 8, H0 = 10, HMAX = 16;   // x = 0 es la carretera principal
 export const TW = 64, TH = 32, ZU = 30;
 export const ZMIN = 0.35, ZMAX = 2.6;
 export const KEY = 'parada-tycoon-v1';
-export const DAY_LEN = 75;                 // segundos de juego por día
+export const DAY_LEN = 180;                // segundos de juego por día (a ×1: 3 minutos)
+// El balance original se hizo con días de 75 s. Los gastos diarios y la hora de los eventos
+// se escalan con este factor, así que cambiar DAY_LEN no cambia lo que se gana o paga por minuto.
+export const DAY_SCALE = DAY_LEN / 75;
+export const OPEN_HOUR = 6, CLOSE_HOUR = 24;  // reloj de la parada: abre a las 06:00 y cierra a las 24:00
+export const PERFECT_DAY_MIN = 25;            // clientes para un "día perfecto" (sin nadie enojado)
 export const RUSH = [0.4, 0.65];           // franja de hora pico dentro del día
 export const KINDS = {
   gas:   { name: 'Gasolinera',    emoji: '⛽',  cost: 250, pay: 35, time: 2.5, upkeep: 30, color: '#D62828' },

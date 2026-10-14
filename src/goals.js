@@ -1,4 +1,4 @@
-import { H0 } from './config.js';
+import { H0, PERFECT_DAY_MIN } from './config.js';
 import { game, countK } from './state.js';
 
 /* ---------- Metas ---------- */
@@ -15,10 +15,10 @@ export const GOALS = [
   // Temporada 2
   { text: 'Llega a 4 estrellas de reputación',         prize: 500,  ok: () => game.S.rep >= 4 },
   { text: 'Amplía tu terreno desde el menú ☰',         prize: 500,  ok: () => game.H > H0 },
-  { text: 'Cierra un día con 10 clientes o más y nadie enojado', prize: 800, ok: () => game.S.perfectDays >= 1 },
-  { text: 'Vende $2,000 en un solo día',               prize: 1000, ok: () => Math.max(game.S.bestDay, game.S.dayEarn) >= 2000 },
+  { text: `Cierra un día con ${PERFECT_DAY_MIN} clientes o más y nadie enojado`, prize: 800, ok: () => game.S.perfectDays >= 1 },
+  { text: 'Vende $5,000 en un solo día',               prize: 1000, ok: () => Math.max(game.S.bestDay, game.S.dayEarn) >= 5000 },
   { text: 'Atiende 500 tráileres',                     prize: 1500, ok: () => game.S.served >= 500 },
-  { text: 'Llega al día 15 sin quebrar',               prize: 2000, ok: () => game.S.day >= 15 },
+  { text: 'Llega al día 10 sin quebrar',               prize: 2000, ok: () => game.S.day >= 10 },
   { text: 'Llega a 5 estrellas de reputación',         prize: 3000, ok: () => game.S.rep >= 4.95 },
   { text: 'Junta $30,000 en caja',                     prize: 5000, ok: () => game.S.money >= 30000 }
 ];

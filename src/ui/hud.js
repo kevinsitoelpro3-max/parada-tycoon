@@ -1,6 +1,6 @@
 import { DAY_LEN } from '../config.js';
 import { $, stage, clamp, fmt, money } from '../utils.js';
-import { game, inRush } from '../state.js';
+import { game, inRush, clockNow } from '../state.js';
 import { GOALS } from '../goals.js';
 import { cam, fit, zoomAt } from '../camera.js';
 import { toolCost } from '../tools.js';
@@ -40,7 +40,8 @@ export function hud() {
     repStars.textContent = '★'.repeat(n) + '☆'.repeat(5 - n);
     repNum.textContent = rr.toFixed(1);
   }
-  if (hudCache.d !== S.day) { hudCache.d = S.day; dayName.textContent = 'Día ' + S.day; }
+  const dayTxt = `Día ${S.day}\u00a0·\u00a0${clockNow()}`;
+  if (hudCache.d !== dayTxt) { hudCache.d = dayTxt; dayName.textContent = dayTxt; }
   const f = clamp(S.dayT / DAY_LEN, 0, 1);
   dayDone.style.transform = `scaleX(${f.toFixed(4)})`;
   dayMark.style.left = (f * 100).toFixed(2) + '%';

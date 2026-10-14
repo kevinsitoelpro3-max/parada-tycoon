@@ -22,10 +22,11 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Construcción:** calle $20, gasolinera $250, comedor $400, hotel de paso $600, demoler $10 (quitar árbol $15; demoler un negocio devuelve la mitad). Las calles deben salir de la carretera o de otra calle; los negocios deben quedar pegados a una calle.
 - **Tráileres:** aparecen arriba de la carretera. El 82 % pide algo (⛽ diésel, 🍗 comida o 💤 descanso). Al aparecer buscan con BFS un negocio de ese tipo con espacio libre y conectado; si lo hay, apartan un lugar, entran, esperan el servicio y pagan. Si no, pasan de largo enojados.
 - **Negocios:** nivel 1 a 3. Cada nivel suma un lugar y +50 % de cobro. Mejorar cuesta el precio base por el nivel actual.
-- **Días:** cada día dura 75 segundos de juego. Al cierre se pagan gastos de negocios y calles, con inflación de 6 % por día.
+- **Días:** cada día dura 180 segundos de juego (`DAY_LEN`), con un reloj de 06:00 a 24:00 en el marcador. Al cierre ("corte de caja") se pagan gastos de negocios y calles, con inflación de 6 % por día.
+- **Escala del día:** el balance se hizo con días de 75 s. `DAY_SCALE = DAY_LEN / 75` multiplica los gastos diarios y la hora de los eventos, así que cambiar `DAY_LEN` no cambia lo que se gana o paga por minuto. Las metas que dependen del largo del día usan $5,000 en un día, `PERFECT_DAY_MIN` (25) clientes sin enojados y llegar al día 10.
 - **Quiebra:** depende del modo; si cierras en rojo demasiados días seguidos, termina la partida.
 - **Reputación (1 a 5 estrellas):** sube al atender y baja al perder clientes (baja más si tenías el negocio pero estaba lleno o sin luz). Afecta el tráfico y las propinas.
-- **Hora pico:** del 40 % al 65 % del día llegan el doble de tráileres.
+- **Hora pico:** del 40 % al 65 % del día (13:10 a 17:40) llegan el doble de tráileres.
 - **Eventos (desde cierto día):** lluvia (tráileres más lentos), apagón (un negocio sin luz 25 s), más diésel y caravana.
 - **Modos:** Fácil, Normal y Difícil (dinero inicial, gastos, tráfico, castigo de reputación y días en rojo permitidos).
 - **Metas:** 17 metas con premio, en dos temporadas.
