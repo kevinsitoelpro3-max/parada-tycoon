@@ -1,5 +1,5 @@
 import { WMAX, HMAX, TW, TH, ZU } from '../config.js';
-import { canvas, ctx, clamp, mulberry32 } from '../utils.js';
+import { canvas, ctx, mulberry32 } from '../utils.js';
 import { game, T, isRoad } from '../state.js';
 import { check } from '../tools.js';
 import { P, poly, tile, cbox, circle } from './iso.js';
