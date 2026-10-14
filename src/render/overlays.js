@@ -1,4 +1,4 @@
-import { W, KINDS, NEED_EMOJI, EMOJI_FONT, UI_FONT } from '../config.js';
+import { KINDS, NEED_EMOJI, EMOJI_FONT, UI_FONT } from '../config.js';
 import { ctx, clamp } from '../utils.js';
 import { game, T } from '../state.js';
 import { cam } from '../camera.js';
@@ -9,7 +9,7 @@ import { truckAlpha } from './scene.js';
 export function drawOverlays() {
   const k = clamp(cam.z, 0.85, 1.35);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  for (let y = 0; y < game.H; y++) for (let x = 1; x < W; x++) {
+  for (let y = 0; y < game.H; y++) for (let x = 1; x < game.W; x++) {
     const t = T(x, y);
     if (t.t !== 'bld') continue;
     const off = t.off > 0;

@@ -1,4 +1,4 @@
-import { W, HMAX, DIRS } from '../config.js';
+import { WMAX, HMAX, DIRS } from '../config.js';
 import { ctx, clamp, mulberry32 } from '../utils.js';
 import { game, T, isRoad } from '../state.js';
 import { check } from '../tools.js';
@@ -26,7 +26,7 @@ function drawHwy(y) {
   line(P(0.5, y + 0.15), P(0.5, y + 0.6), 1.7, '#F2C230');
 }
 export function drawGround() {
-  const H = game.H;
+  const W = game.W, H = game.H;
   for (let y = -4; y <= H + 3; y++) for (let x = -3; x <= W + 2; x++) {
     const inLot = x >= 0 && x < W && y >= 0 && y < H;
     const d = Math.max(0, -x, x - (W - 1), -y, y - (H - 1));
@@ -56,7 +56,7 @@ export function drawHighlights() {
   const tool = game.tool, sel = game.sel;
   if (tool !== 'none' && !game.S.over) {
     const fill = tool === 'demo' ? 'rgba(230,57,70,.34)' : 'rgba(255,238,140,.45)';
-    for (let y = 0; y < game.H; y++) for (let x = 1; x < W; x++) if (check(tool, x, y).ok) tile(x, y, fill);
+    for (let y = 0; y < game.H; y++) for (let x = 1; x < game.W; x++) if (check(tool, x, y).ok) tile(x, y, fill);
   }
   if (sel) {
     const p = [P(sel.x, sel.y), P(sel.x + 1, sel.y), P(sel.x + 1, sel.y + 1), P(sel.x, sel.y + 1)];
@@ -180,10 +180,12 @@ export let outerTrees = [];
 export function buildOuterTrees() {
   outerTrees = [];
   const r = mulberry32(99);
-  for (let y = -4; y <= HMAX + 3; y++) for (let x = -3; x <= W + 2; x++) {
+  // la cuadrícula del sorteo es fija (hasta el tamaño máximo), así los árboles de afuera no se
+  // mueven al ampliar el terreno: solo desaparecen los que quedan dentro
+  for (let y = -4; y <= HMAX + 3; y++) for (let x = -3; x <= WMAX + 2; x++) {
     const roll = r(), size = 0.75 + r() * 0.4;
-    const inLot = x >= 0 && x < W && y >= 0 && y < game.H;
-    if (inLot || x === 0 || y > game.H + 3) continue;
+    const inLot = x >= 0 && x < game.W && y >= 0 && y < game.H;
+    if (inLot || x === 0 || y > game.H + 3 || x > game.W + 2) continue;
     if (roll < 0.2) outerTrees.push([x, y, size]);
   }
 }

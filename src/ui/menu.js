@@ -1,4 +1,4 @@
-import { HMAX, KEY, MODES } from '../config.js';
+import { WMAX, HMAX, LAND_STEP, KEY, MODES } from '../config.js';
 import { $, fmt } from '../utils.js';
 import { game, mode, landCost, newGame, emptyEvent, totalUpkeep, save } from '../state.js';
 import { fit } from '../camera.js';
@@ -13,17 +13,16 @@ import { setTool } from './dock.js';
 export const menuEl = $('#menu'), overEl = $('#over');
 
 export function renderMenu() {
-  const H = game.H;
-  const landBtn = $('#landBtn');
-  if (H >= HMAX) {
-    $('#landTxt').textContent = `Tu terreno tiene ${H} filas, el máximo.`;
-    landBtn.textContent = 'Terreno al máximo';
-    landBtn.disabled = true;
-  } else {
-    $('#landTxt').textContent = `Tu terreno tiene ${H} filas. Puedes comprar 2 más hacia abajo, hasta ${HMAX}.`;
-    landBtn.textContent = 'Ampliar por $' + fmt(landCost());
-    landBtn.disabled = game.S.money < landCost() || game.S.over;
-  }
+  const W = game.W, H = game.H, c = landCost();
+  const canDown = H + LAND_STEP <= HMAX, canRight = W + LAND_STEP <= WMAX;
+  $('#landTxt').textContent = canDown || canRight
+    ? `Tu terreno mide ${W - 1} × ${H} casillas, sin contar la carretera (máximo ${WMAX - 1} × ${HMAX}). Cada compra agrega ${LAND_STEP} filas o ${LAND_STEP} columnas y cuesta ${'$' + fmt(c)}; la siguiente cuesta más.`
+    : `Tu terreno mide ${W - 1} × ${H} casillas, el máximo.`;
+  const down = $('#landDown'), right = $('#landRight');
+  down.textContent = canDown ? `⬇ ${LAND_STEP} filas abajo` : 'Abajo: al máximo';
+  right.textContent = canRight ? `➡ ${LAND_STEP} columnas a la derecha` : 'Derecha: al máximo';
+  down.disabled = !canDown || game.S.money < c || game.S.over;
+  right.disabled = !canRight || game.S.money < c || game.S.over;
   $('#modeTxt').textContent = `Estás jugando en ${mode().name}. ${MODES.dificil.desc} Empezar de nuevo borra tu partida actual.`;
   for (const b of document.querySelectorAll('#menuModes .btn')) b.classList.toggle('primary', b.dataset.mode === game.S.mode && !b.classList.contains('armed'));
 }
@@ -43,7 +42,8 @@ export function startNew(modeKey) {
 }
 
 export function setupMenu() {
-  $('#landBtn').addEventListener('click', expandLand);
+  $('#landDown').addEventListener('click', () => expandLand('down'));
+  $('#landRight').addEventListener('click', () => expandLand('right'));
   $('#menuBtn').addEventListener('click', () => {
     if (game.S.over) return;
     closeSheet();

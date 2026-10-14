@@ -1,4 +1,3 @@
-import { W } from '../config.js';
 import { canvas, ctx, clamp } from '../utils.js';
 import { game, T } from '../state.js';
 import { cam } from '../camera.js';
@@ -7,7 +6,7 @@ import { drawOverlays } from './overlays.js';
 
 /* ---------- Dibujo de un cuadro completo ---------- */
 export function draw() {
-  const H = game.H;
+  const W = game.W, H = game.H;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = game.sky;
   ctx.fillRect(0, 0, canvas.width, canvas.height);

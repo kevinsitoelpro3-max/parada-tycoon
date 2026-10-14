@@ -6,7 +6,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 
 - Proyecto con Vite: HTML en `index.html`, estilos en `src/styles.css` y el juego en módulos de JavaScript dentro de `src/` (sin dependencias en tiempo de juego; dibuja con canvas 2D).
 - `npm install` una vez; `npm run dev` para jugar mientras programas (también abre en el celular por la red local); `npm run build` genera la versión publicable en `dist/`; `npm run preview` la sirve para probarla.
-- La partida se guarda en `localStorage` con la clave `parada-tycoon-v1` (el formato interno ya va en la versión 2; carga partidas de la versión 1).
+- La partida se guarda en `localStorage` con la clave `parada-tycoon-v1` (formato interno versión 3, con ancho `w`, alto `h` y compras de terreno `land`; carga partidas v1 y v2, que tenían 8 columnas fijas, y las agranda gratis al tamaño inicial nuevo sin mover lo construido).
 - No hay fuentes externas: la tipografía Overpass viene del paquete `@fontsource/overpass` (licencia OFL) y los sonidos y la música se generan con Web Audio. El juego funciona sin internet.
 - Las preferencias de sonido se guardan aparte, con la clave `parada-tycoon-audio` (`{ music, sfx }`).
 - **App de Android con Capacitor 8** (`capacitor.config.json`, carpeta `android/`). Identificador `com.kevinsito.paradatycoon` (no cambiarlo nunca: es el de Play Store). Solo vertical.
@@ -18,7 +18,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 
 ## Cómo funciona
 
-- **Mapa:** 8 columnas por 10 filas. La columna `x = 0` es la carretera principal, de un solo sentido hacia abajo. El terreno se puede ampliar de 2 en 2 filas hasta 16.
+- **Mapa:** empieza en 10 columnas por 12 filas (`W0`, `H0`); el tamaño actual está en `game.W` y `game.H`. La columna `x = 0` es la carretera principal, de un solo sentido hacia abajo. Desde ☰ se compran 2 filas hacia abajo o 2 columnas hacia la derecha, hasta 20 × 30 (`WMAX`, `HMAX`); la compra número n cuesta $2,500 × n (`LAND_BASE`), y se cuentan en `S.land`.
 - **Construcción:** calle $20, gasolinera $250, comedor $400, hotel de paso $600, tiendita $200, lavado $350, taller $700, demoler $10 (quitar árbol $15; demoler un negocio devuelve la mitad). Las calles deben salir de la carretera o de otra calle; los negocios deben quedar pegados a una calle.
 - **Tráileres:** aparecen arriba de la carretera. El 82 % pide algo (⛽ diésel, 🍗 comida o 💤 descanso). Al aparecer buscan con BFS un negocio de ese tipo con espacio libre y conectado; si lo hay, apartan un lugar, entran, esperan el servicio y pagan. Si no, pasan de largo enojados.
 - **Negocios extra** (`extra: true` en `KINDS`): 🛒 tiendita (cobra $20, 1.5 s, gasto $25), 🚿 lavado ($45, 3.5 s, $45) y 🔧 taller ($110, 7 s, $90); gastos en base a días de 75 s, antes de `DAY_SCALE`. Cada uno abre un mercado nuevo **sin quitarles clientes a los básicos**: atienden a tráileres que antes pasaban de largo (el 18 % sin pedido). Cada tipo extra que ya tengas se queda con `EXTRA_SHARE` (0.3) de esos tráileres; con los tres, el 90 %. El reparto de gasolina, comida y descanso no cambia. Sin negocios extra no hay sorteo extra: el azar es idéntico a antes y nadie pide algo que no tienes. Pedidos: 🍫, 💦 y 🔧 (usar emojis que existen desde Android 7: la app soporta minSdk 24).

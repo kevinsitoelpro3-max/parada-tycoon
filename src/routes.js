@@ -1,4 +1,4 @@
-import { W, DIRS } from './config.js';
+import { DIRS } from './config.js';
 import { game, T, isRoad } from './state.js';
 
 /* ---------- Rutas ---------- */
@@ -24,7 +24,7 @@ export function pathToHighway(sx, sy) {
 }
 export function findService(need) {
   let best = null;
-  for (let y = 0; y < game.H; y++) for (let x = 1; x < W; x++) {
+  for (let y = 0; y < game.H; y++) for (let x = 1; x < game.W; x++) {
     const t = T(x, y);
     if (!t || t.t !== 'bld' || t.k !== need || t.off > 0) continue;
     const slot = t.slots.indexOf(null);
