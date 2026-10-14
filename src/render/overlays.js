@@ -18,10 +18,14 @@ function star(x, y, r) {
 
 // Ícono de un negocio: un letrerito flotando encima del techo, con una punta que lo señala
 // y las estrellas del nivel en el borde de abajo. Se achica al alejar la cámara para no tapar el edificio.
+// Con el zoom normal del celular (cam.z < 0.8) el letrerito es más chico y flota un poco más alto,
+// para no tapar los letreros de azotea que identifican cada negocio. Entre 0.7 y 0.8 pasa poco a poco
+// de un tamaño al otro, para que no brinque al pellizcar.
 function drawBadge(x, y, t, kb) {
   const off = t.off > 0, col = off ? '#5E6670' : KINDS[t.k].color;
   const [sx, ay] = scr(x + 0.5, y + 0.5, t.top || 0.6);
-  const s = 24 * kb, tip = ay - 2 * kb, bot = tip - 6 * kb, sy = bot - s / 2;
+  const n = clamp((cam.z - 0.7) / 0.1, 0, 1);   // 0 = zoom de celular, 1 = cerca (como antes)
+  const s = (20 + 4 * n) * kb, tip = ay - (5 - 3 * n) * kb, bot = tip - 6 * kb, sy = bot - s / 2;
   ctx.beginPath(); ctx.moveTo(sx - 5 * kb, bot - 1); ctx.lineTo(sx, tip); ctx.lineTo(sx + 5 * kb, bot - 1); ctx.closePath();
   ctx.fillStyle = col; ctx.fill();
   rrect(sx - s / 2, sy - s / 2, s, s, 6 * kb);
@@ -30,7 +34,7 @@ function drawBadge(x, y, t, kb) {
   ctx.font = `${14 * kb}px ${EMOJI_FONT}`;
   ctx.fillStyle = '#000'; ctx.fillText(off ? '🔌' : KINDS[t.k].emoji, sx, sy);
   if (cam.z < 0.4) return;            // muy lejos: solo el ícono
-  const r = 4.2 * kb, gap = r * 1.9;
+  const r = (3.6 + 0.6 * n) * kb, gap = r * 1.9;
   ctx.lineWidth = 1.6 * kb; ctx.strokeStyle = '#3B2F00'; ctx.fillStyle = '#F2C230';
   for (let i = 0; i < t.lvl; i++) {
     star(sx + (i - (t.lvl - 1) / 2) * gap, bot, r);

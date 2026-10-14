@@ -16,11 +16,20 @@ const dayNum = $('#dayNum'), dayClock = $('#dayClock'), dayDone = $('#dayDone'),
 // Últimos valores mostrados, para tocar el DOM solo cuando algo cambia
 export const hudCache = {};
 
+// Largo del monto en "anchos de letra" (Overpass gruesa: cifras, $ y − miden 0.62; la coma, 0.26).
+// styles.css lo usa como --n para achicar la letra y que montos grandes no se salgan del letrero.
+function fitMoney(s) {
+  const commas = s.split(',').length - 1;
+  const n = Math.round(((s.length - commas) * 0.62 + commas * 0.26) * 100) / 100;
+  if (hudCache.n !== n) { hudCache.n = n; moneyEl.style.setProperty('--n', String(n)); }
+}
+
 export function hud() {
   const S = game.S;
   if (hudCache.m !== S.money) {
     hudCache.m = S.money;
     moneyEl.textContent = money(S.money);
+    fitMoney(moneyEl.textContent);
     const red = S.money < 0;
     moneySign.classList.toggle('red', red);
     moneyLabel.textContent = red ? 'En rojo' : 'Caja';

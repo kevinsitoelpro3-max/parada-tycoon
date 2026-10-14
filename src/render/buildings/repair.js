@@ -37,8 +37,8 @@ export default function draw(x, y, t) {
   const inside = off ? '#2A2E33' : lit ? '#FFD98A' : '#363B43';
   const glass = off ? '#5E6670' : lit ? '#FFE08A' : '#9FC3D6';
 
-  // 1) Patio de concreto, mancha de aceite y franja de seguridad frente a la cortina
-  flat(0.03, 0.04, 0.97, 0.97, '#BDB9AF');
+  // 1) Sin piso propio: queda el concreto del terreno (y debajo el resaltado de Demoler o de la
+  //    herramienta). Encima, mancha de aceite translúcida y franja de seguridad frente a la cortina.
   ctx.beginPath();
   const [ox, oy] = P(x + 0.47, y + 0.87, 0);
   ctx.ellipse(ox, oy, 4, 1.7, 0, 0, Math.PI * 2); ctx.ellipse(ox + 3.5, oy + 1.2, 2.2, 1, 0, 0, Math.PI * 2);

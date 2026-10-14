@@ -6,7 +6,8 @@ import { P, poly, box, winX, winY, shade } from '../iso.js';
 // Dibuja el negocio en la casilla (x, y) y devuelve la altura del techo (para poner el ícono encima).
 // t.lvl es el nivel (1 a 3) y t.off > 0 significa que está sin luz.
 // Túnel de lavado con techo de bóveda azul cielo y boca abierta al frente (+y): adentro se ven los
-// cepillos giratorios, la cortina de tiras y la espuma. Piso de concreto mojado con charcos.
+// cepillos giratorios, la cortina de tiras y la espuma. Al frente, carriles mojados y charcos
+// translúcidos sobre el concreto del terreno (sin piso opaco, para que se vea el resaltado de Demoler).
 // Nivel 2: tanque de agua sobre patas con tubo al túnel. Nivel 3: túnel más ancho con dos carriles.
 // Siempre: hidrolavadora con manguera en la esquina del frente.
 const SKY = '#1B8FC4', SKY_D = '#13729F', WALL = '#F1F5F8';
@@ -45,12 +46,14 @@ export default function draw(x, y, t) {
   const glass = off ? '#5E6670' : lit ? '#FFE08A' : '#9CCFE6';
   const brushC = off ? '#6D7680' : lit ? '#5CC6F2' : '#2FA3DD';
 
-  // 1) Piso de concreto mojado, carriles brillosos frente a cada boca, charcos y rejilla
-  flat(0.04, 0.05, 0.96, 0.96, off ? '#B3BEC5' : '#BED0DA');
-  multi(lanes.map(([a, b]) => [[a - 0.01, Y1], [b + 0.01, Y1], [b + 0.01, 0.96], [a - 0.01, 0.96]]), lit ? '#A6DCF2' : '#A3C6D9');
-  multi([[[0.62, 0.9], [0.7, 0.86], [0.8, 0.89], [0.74, 0.94], [0.64, 0.94]],
-         [[0.05, 0.8], [0.1, 0.77], [0.15, 0.82], [0.09, 0.87]]], lit ? '#BDE9FA' : '#95BED5');
-  flat(X0 + 0.04, 0.86, (two ? X1 : 0.56) - 0.02, 0.885, '#6E7F8A');
+  // 1) Sin piso propio: queda el concreto del terreno (y debajo el resaltado de Demoler o de la
+  //    herramienta). Encima solo detalles translúcidos y lejos de las orillas: carriles mojados
+  //    frente a cada boca, dos charcos y la rejilla del desagüe.
+  multi(lanes.map(([a, b]) => [[a - 0.01, Y1], [b + 0.01, Y1], [b + 0.01, 0.9], [a - 0.01, 0.9]]),
+    lit ? 'rgba(130,205,240,.45)' : 'rgba(85,155,205,.42)');
+  multi([[[0.62, 0.88], [0.7, 0.845], [0.79, 0.87], [0.74, 0.91], [0.64, 0.91]],
+         [[0.08, 0.8], [0.12, 0.775], [0.16, 0.81], [0.11, 0.85]]], lit ? 'rgba(170,225,250,.6)' : 'rgba(70,145,200,.5)');
+  flat(X0 + 0.04, 0.85, (two ? X1 : 0.56) - 0.02, 0.875, off ? 'rgba(70,80,90,.55)' : 'rgba(80,100,115,.6)');
   if (lit) multi(lanes.map(([a, b]) => [[a, Y1], [b, Y1], [b, Y1 + 0.16], [a, Y1 + 0.16]]), 'rgba(255,214,110,.35)');
 
   // 2) Túnel por piezas, de izquierda a derecha: pilar, interior del carril, pilar...

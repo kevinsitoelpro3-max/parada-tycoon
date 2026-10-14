@@ -56,6 +56,7 @@ src/render/iso.js       primitivas isométricas (P, poly, box, shade...)
 src/render/scene.js     reúne y reexporta lo de abajo (draw.js lo importa de aquí)
 src/render/terrain.js   pasto, calles, carretera, agua, árboles, resaltados y orilla del terreno
 src/render/buildings/   un archivo por negocio (gas, food, sleep, shop, wash, repair) y index.js; cada uno exporta draw(x, y, t) y devuelve la altura del techo
+src/render/bldcache.js  caché de negocios: cada uno se dibuja una vez en un lienzo chico y luego solo se pega (si un dibujo empieza a depender de algo nuevo, agrégalo a `sig`)
 src/render/vehicles.js  tráileres en las 4 direcciones (faros de noche)
 src/render/weather.js   lluvia
 src/render/overlays.js  íconos de negocios (letrerito con punta y estrellas encima del techo), burbujas y números flotantes

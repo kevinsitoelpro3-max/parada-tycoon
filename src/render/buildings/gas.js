@@ -5,7 +5,8 @@ import { P, poly, box, cbox, winX, winY } from '../iso.js';
 // Dibuja el negocio en la casilla (x, y) y devuelve la altura del techo (para poner el ícono encima).
 // t.lvl es el nivel (1 a 3) y t.off > 0 significa que está sin luz.
 // Acomodo: tienda atrás a la derecha, marquesina con las islas de bombas adelante a la izquierda,
-// poste de precios en la esquina derecha (nivel 3) y compresor de aire al frente.
+// letrero de precios en la esquina de atrás (bajo en nivel 2, poste alto en nivel 3) y compresor
+// de aire al frente.
 const RED = '#D62828', RED_D = '#AE1F1F', YEL = '#F2C230';
 
 // Por nivel: alcance de la marquesina y columnas (x) de las islas que van debajo.
@@ -24,15 +25,23 @@ export default function draw(x, y, t) {
   const flat = (x0, y0, x1, y1, c) => poly([P(x + x0, y + y0), P(x + x1, y + y0), P(x + x1, y + y1), P(x + x0, y + y1)], c);
   const C = CANOPY[lvl], H = 0.6 + lvl * 0.03;   // altura de la marquesina
 
-  // Poste de precios (nivel 3): atrás a la derecha para no tapar la tienda ni el ícono
+  // Letrero de precios atrás a la derecha, para no tapar la tienda ni el ícono:
+  // nivel 2, letrero bajo (0.75) sobre un pedestal; nivel 3, poste alto (1.08) con dos precios
+  const digit = off ? '#5E6670' : YEL;
   if (lvl >= 3) {
     B(0.885, 0.085, 0.915, 0.115, 0, 0.62, '#9BA1A8');
     box(x + 0.8, y + 0.07, x + 0.98, y + 0.13, 0.6, 1.08, '#F4F4F2', RED, RED_D);
     winY(x + 0.81, x + 0.97, y + 0.13, 0.94, 1.05, '#F7F7F5');
     winY(x + 0.82, x + 0.96, y + 0.13, 0.66, 0.76, '#22262B');
     winY(x + 0.82, x + 0.96, y + 0.13, 0.8, 0.9, '#22262B');
-    winY(x + 0.85, x + 0.93, y + 0.13, 0.69, 0.73, off ? '#5E6670' : YEL);
-    winY(x + 0.85, x + 0.93, y + 0.13, 0.83, 0.87, off ? '#5E6670' : YEL);
+    winY(x + 0.85, x + 0.93, y + 0.13, 0.69, 0.73, digit);
+    winY(x + 0.85, x + 0.93, y + 0.13, 0.83, 0.87, digit);
+  } else if (lvl >= 2) {
+    B(0.87, 0.08, 0.93, 0.12, 0, 0.42, '#9BA1A8');
+    box(x + 0.8, y + 0.07, x + 0.98, y + 0.13, 0.4, 0.75, '#F4F4F2', RED, RED_D);
+    winY(x + 0.81, x + 0.97, y + 0.13, 0.63, 0.72, '#F7F7F5');
+    winY(x + 0.82, x + 0.96, y + 0.13, 0.48, 0.59, '#22262B');
+    winY(x + 0.85, x + 0.93, y + 0.13, 0.515, 0.555, digit);
   }
 
   // Luz bajo la marquesina de noche

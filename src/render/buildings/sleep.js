@@ -10,6 +10,8 @@ import { P, poly, box, cbox, winX, winY, shade } from '../iso.js';
 const WALL = '#4A7FC1';    // azul de identidad (KINDS.sleep)
 const DOOR = '#22344F';
 const RAIL = '#F4F6F9';
+const SIGN = '#22344F';     // letrero: marco y letras azul marino
+const SIGN_DK = '#1A2840';
 
 // Número de 0 a 1 que solo depende de los enteros dados (para decidir qué cuartos tienen la luz prendida)
 function hash(a, b, c) {
@@ -79,9 +81,10 @@ export default function draw(x, y, t) {
 
   // Letrero vertical en el costado, saliendo de la pared y por encima de la azotea: cuatro "letras" sin texto
   const s0 = 0.3, s1 = h + 0.28;
+  // Familia de color propia del hotel: marco azul marino con cara amarilla (el rojo es de la gasolinera)
   const face = off ? '#B9A97A' : night ? '#FFE680' : '#F2C230';
-  const ink = off ? '#7A5A50' : '#C21F1F';
-  box(X(u1), Y(0.37), X(0.985), Y(0.46), s0, s1, '#9E1C1C', '#D62828', '#A81F1F');
+  const ink = off ? '#4A5363' : SIGN;
+  box(X(u1), Y(0.37), X(0.985), Y(0.46), s0, s1, SIGN_DK, SIGN, SIGN_DK);
   winY(X(u1 + 0.018), X(0.967), Y(0.46), s0 + 0.035, s1 - 0.035, face);
   winX(X(0.985), Y(0.385), Y(0.445), s0 + 0.035, s1 - 0.035, shade(face, -0.16));
   const step = (s1 - s0 - 0.1) / 4;

@@ -253,11 +253,23 @@ export function drawHighlights() {
   }
 }
 
-/* ---------- Árboles: frondoso, pino y álamo, según la casilla ---------- */
+/* ---------- Árboles: frondoso, pino y álamo, según la casilla ----------
+   Dentro del terreno el pino y el álamo llegan a la misma altura que el frondoso (cerca de 1), para no
+   taparle la fachada a un negocio que quede detrás; afuera pueden ser más altos y dan más paisaje. */
 function blob(x, y, rx, ry, c) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, 6.2832); ctx.fillStyle = c; ctx.fill(); }
+// medidas del pino y del álamo: [0] afuera, [1] dentro del terreno
+const PINE = [
+  { trunk: 0.22, z0: 0.2, dz: 0.3, h: 0.58, w: 12, dw: 2.8 },     // punta en 1.38
+  { trunk: 0.18, z0: 0.16, dz: 0.22, h: 0.44, w: 10.5, dw: 2.3 }, // punta en 1.04
+];
+const POPLAR = [
+  { trunk: 0.3, z: 0.8, rx: 8, ry: 14.5, rx2: 7, ry2: 13.5, hx: 3.2, hy: 6.5, hdy: 5 },
+  { trunk: 0.24, z: 0.62, rx: 7.2, ry: 12.6, rx2: 6.5, ry2: 12, hx: 3, hy: 5.8, hdy: 4.4 },
+];
 export function drawTree(x, y, s) {
   const v = hash(x, y, 40);
   s *= 0.92 + hash(x, y, 41) * 0.16;
+  const low = x >= 0 && x < game.W && y >= 0 && y < game.H ? 1 : 0;
   const cx = x + 0.5, cy = y + 0.5, g = P(cx, cy);
   if (v < 0.5) {                  // frondoso: copa redonda con sombra abajo a la derecha y brillo arriba
     blob(g[0] + 3, g[1] + 1, 13 * s, 6.5 * s, 'rgba(0,0,0,.16)');
@@ -268,20 +280,22 @@ export function drawTree(x, y, s) {
     circle(p[0] + 4.5 * s, p[1] - 6 * s, 6 * s, '#3E8F46');
     circle(p[0] - 4 * s, p[1] - 4.5 * s, 5.5 * s, '#5BAA52');
   } else if (v < 0.8) {           // pino: tres pisos de cono, cara iluminada y cara en sombra
-    blob(g[0] + 3, g[1] + 1, 10 * s, 5 * s, 'rgba(0,0,0,.16)');
-    cbox(cx - 0.03, cy - 0.03, cx + 0.03, cy + 0.03, 0, 0.22 * s, '#6B4628');
+    const m = PINE[low];
+    blob(g[0] + 3, g[1] + 1, (m.w - 2) * s, (m.w - 2) * 0.5 * s, 'rgba(0,0,0,.16)');
+    cbox(cx - 0.03, cy - 0.03, cx + 0.03, cy + 0.03, 0, m.trunk * s, '#6B4628');
     for (let i = 0; i < 3; i++) {
-      const b = P(cx, cy, (0.2 + i * 0.3) * s), t = P(cx, cy, (0.78 + i * 0.3) * s), w = (12 - i * 2.8) * s, f = w * 0.42;
+      const z = m.z0 + i * m.dz, b = P(cx, cy, z * s), t = P(cx, cy, (z + m.h) * s), w = (m.w - i * m.dw) * s, f = w * 0.42;
       poly([[b[0] - w, b[1]], [b[0], b[1] + f], t], '#3B8A50');
       poly([[b[0], b[1] + f], [b[0] + w, b[1]], t], '#26663A');
     }
   } else {                        // álamo: copa alta y angosta, de un verde más claro
-    blob(g[0] + 3, g[1] + 1, 9 * s, 4.5 * s, 'rgba(0,0,0,.16)');
-    cbox(cx - 0.03, cy - 0.03, cx + 0.03, cy + 0.03, 0, 0.3 * s, '#7A5230');
-    const p = P(cx, cy, 0.8 * s);
-    blob(p[0] + 1.2 * s, p[1] + 1 * s, 8 * s, 14.5 * s, '#4D8C33');
-    blob(p[0] - 0.6 * s, p[1] - 0.4 * s, 7 * s, 13.5 * s, '#6AA845');
-    blob(p[0] - 2.6 * s, p[1] - 5 * s, 3.2 * s, 6.5 * s, '#86C05A');
+    const m = POPLAR[low];
+    blob(g[0] + 3, g[1] + 1, (m.rx + 1) * s, (m.rx + 1) * 0.5 * s, 'rgba(0,0,0,.16)');
+    cbox(cx - 0.03, cy - 0.03, cx + 0.03, cy + 0.03, 0, m.trunk * s, '#7A5230');
+    const p = P(cx, cy, m.z * s);
+    blob(p[0] + 1.2 * s, p[1] + 1 * s, m.rx * s, m.ry * s, '#4D8C33');
+    blob(p[0] - 0.6 * s, p[1] - 0.4 * s, m.rx2 * s, m.ry2 * s, '#6AA845');
+    blob(p[0] - 2.6 * s, p[1] - m.hdy * s, m.hx * s, m.hy * s, '#86C05A');
   }
 }
 export let outerTrees = [];
