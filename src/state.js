@@ -1,4 +1,4 @@
-import { W, H0, HMAX, KEY, DAY_LEN, RUSH, KINDS, MODES } from './config.js';
+import { W, H0, HMAX, KEY, DAY_LEN, DAY_SCALE, RUSH, KINDS, MODES, OPEN_HOUR, CLOSE_HOUR } from './config.js';
 import { clamp, mulberry32 } from './utils.js';
 import { GOALS } from './goals.js';
 
@@ -25,11 +25,17 @@ export const payOf = (t, lvl = t.lvl) => Math.round(KINDS[t.k].pay * (1 + 0.5 * 
 export const repMult = () => 1 + 0.08 * (game.S.rep - 3);
 export const payNow = t => Math.round(payOf(t) * repMult());
 export const inflation = () => 1 + 0.06 * (game.S.day - 1);
-export const upkeepOf = (t, lvl = t.lvl) => Math.round(KINDS[t.k].upkeep * lvl * mode().upkeep * inflation());
+export const upkeepOf = (t, lvl = t.lvl) => Math.round(KINDS[t.k].upkeep * lvl * mode().upkeep * inflation() * DAY_SCALE);
 export const upCost = t => KINDS[t.k].cost * t.lvl;
 export const landCost = () => 3000 * ((game.H - H0) / 2 + 1);
 export const countK = k => game.S.tiles.filter(t => t.t === 'bld' && t.k === k).length;
 export const inRush = () => { const f = game.S.dayT / DAY_LEN; return f >= RUSH[0] && f < RUSH[1]; };
+// Hora del reloj de la parada para una fracción del día (0 = apertura, 1 = cierre), en pasos de 10 minutos
+export function clockAt(f) {
+  const m = Math.floor((OPEN_HOUR + f * (CLOSE_HOUR - OPEN_HOUR)) * 6) * 10;
+  return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+}
+export const clockNow = () => clockAt(Math.min(1, game.S.dayT / DAY_LEN));
 
 export function emptyEvent() { return { type: null, label: '', rain: false, diesel: false, luzAt: -1, caravanAt: -1, burst: 0, rushOn: false }; }
 export function totalUpkeep() {
@@ -38,7 +44,7 @@ export function totalUpkeep() {
     if (t.t === 'bld') c += KINDS[t.k].upkeep * t.lvl;
     else if (t.t === 'road') c += 1;
   }
-  return Math.round(c * mode().upkeep * inflation());
+  return Math.round(c * mode().upkeep * inflation() * DAY_SCALE);
 }
 
 export function newGame(modeKey) {

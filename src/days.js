@@ -1,4 +1,4 @@
-import { W, HMAX } from './config.js';
+import { W, HMAX, DAY_SCALE, PERFECT_DAY_MIN, CLOSE_HOUR } from './config.js';
 import { $, pick, fmt, money } from './utils.js';
 import { game, mode, totalUpkeep, landCost, emptyEvent, save } from './state.js';
 import { fit, clampCam } from './camera.js';
@@ -15,19 +15,19 @@ export function rollEvent() {
   const k = pick(['lluvia', 'luz', 'diesel', 'caravana']);
   ev.type = k;
   if (k === 'lluvia') { ev.rain = true; ev.label = '🌧️ Lluvia'; return 'Hoy llueve: los tráileres van más despacio'; }
-  if (k === 'luz') { ev.luzAt = 12 + Math.random() * 40; ev.label = '🔌 Apagón'; return 'Hoy anuncian un apagón: un negocio se quedará sin luz un rato'; }
+  if (k === 'luz') { ev.luzAt = (12 + Math.random() * 40) * DAY_SCALE; ev.label = '🔌 Apagón'; return 'Hoy anuncian un apagón: un negocio se quedará sin luz un rato'; }
   if (k === 'diesel') { ev.diesel = true; ev.label = '⛽ Más diésel'; return 'Hoy más tráileres vienen a cargar diésel'; }
-  ev.caravanAt = 10 + Math.random() * 45; ev.label = '🚛 Caravana';
+  ev.caravanAt = (10 + Math.random() * 45) * DAY_SCALE; ev.label = '🚛 Caravana';
   return 'Hoy pasa una caravana de tráileres';
 }
 export function closeDay() {
   const S = game.S;
   const bill = totalUpkeep();
   S.money -= bill;
-  if (S.dayLost === 0 && S.dayServed >= 10) S.perfectDays++;
+  if (S.dayLost === 0 && S.dayServed >= PERFECT_DAY_MIN) S.perfectDays++;
   S.bestDay = Math.max(S.bestDay, S.dayEarn);
   game.floats.push({ x: 4, y: game.H / 2, z: 2, text: '−$' + fmt(bill) + ' gastos', t: 0, neg: true });
-  let msg = `Cierre del día ${S.day}: vendiste $${fmt(S.dayEarn)} y pagaste $${fmt(bill)} de gastos.`;
+  let msg = `Corte de caja de las ${CLOSE_HOUR}:00, día ${S.day}: vendiste $${fmt(S.dayEarn)} y pagaste $${fmt(bill)} de gastos.`;
   if (S.money < 0) {
     S.red++;
     const left = mode().redDays - S.red;
