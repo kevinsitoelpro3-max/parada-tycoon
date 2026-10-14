@@ -1,4 +1,4 @@
-import { CABS, TRAILERS } from './config.js';
+import { CABS, TRAILERS, KINDS, EXTRA_WEIGHT } from './config.js';
 import { clamp, pick } from './utils.js';
 import { game, T, mode, inRush, countK, payNow } from './state.js';
 import { findService, parkSpot } from './routes.js';
@@ -22,9 +22,13 @@ export function spawn() {
     cab: pick(CABS), trailer: pick(TRAILERS)
   };
   if (Math.random() < 0.82) {
-    const q = Math.random();
+    // Los tres básicos ocupan el rango 0..1; cada negocio extra que ya tengas suma EXTRA_WEIGHT.
+    // Sin negocios extra el resultado es el mismo de siempre.
+    const extras = Object.keys(KINDS).filter(k => KINDS[k].extra && countK(k) > 0);
+    const q = Math.random() * (1 + EXTRA_WEIGHT * extras.length);
     const w = ev.diesel ? [0.65, 0.85] : [0.45, 0.75];
-    tr.need = q < w[0] ? 'gas' : q < w[1] ? 'food' : 'sleep';
+    tr.need = q < w[0] ? 'gas' : q < w[1] ? 'food' : q < 1 ? 'sleep'
+      : extras[Math.min(extras.length - 1, Math.floor((q - 1) / EXTRA_WEIGHT))];
   }
   if (tr.need) {
     const plan = findService(tr.need);

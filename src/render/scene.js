@@ -109,10 +109,44 @@ function drawSleep(x, y, t) {
   winY(x + 0.44, x + 0.56, y + 0.88, 0, 0.18, '#22344F');
   return h;
 }
+function drawShop(x, y, t) {
+  const glass = t.off > 0 ? '#5E6670' : '#A6D6EA';
+  cbox(x + 0.16, y + 0.16, x + 0.84, y + 0.84, 0, 0.42, '#F4F1E8', '#2F6B4F');
+  winY(x + 0.22, x + 0.42, y + 0.84, 0, 0.3, '#5A3B24');
+  winY(x + 0.48, x + 0.78, y + 0.84, 0.1, 0.3, glass);
+  winX(x + 0.84, y + 0.22, y + 0.78, 0.1, 0.3, glass);
+  // toldo verde y blanco
+  box(x + 0.18, y + 0.84, x + 0.82, y + 0.94, 0.3, 0.36, '#FFFFFF', '#2A9D5C', '#1F7A47');
+  box(x + 0.84, y + 0.18, x + 0.94, y + 0.82, 0.3, 0.36, '#FFFFFF', '#2A9D5C', '#1F7A47');
+  // letrero en el techo
+  cbox(x + 0.3, y + 0.42, x + 0.7, y + 0.5, 0.42, 0.58, '#F2C230');
+  return 0.58;
+}
+function drawWash(x, y, t) {
+  const roof = t.off > 0 ? '#7C8790' : '#1B8FC4';
+  // piso mojado y cepillos
+  poly([P(x + 0.12, y + 0.12), P(x + 0.88, y + 0.12), P(x + 0.88, y + 0.88), P(x + 0.12, y + 0.88)], '#B9DDEE');
+  cbox(x + 0.3, y + 0.42, x + 0.4, y + 0.52, 0, 0.42, '#F2C230');
+  cbox(x + 0.6, y + 0.42, x + 0.7, y + 0.52, 0, 0.42, '#F2C230');
+  // cuatro postes y techo
+  for (const [a, b] of [[0.1, 0.1], [0.8, 0.1], [0.1, 0.8], [0.8, 0.8]]) cbox(x + a, y + b, x + a + 0.1, y + b + 0.1, 0, 0.56, '#E9F4FA');
+  box(x + 0.06, y + 0.06, x + 0.94, y + 0.94, 0.56, 0.66, roof, '#E9F4FA', '#C9E3F0');
+  return 0.66;
+}
+function drawRepair(x, y, t) {
+  const lit = t.off > 0 ? '#5E6670' : '#FFE08A';
+  cbox(x + 0.1, y + 0.1, x + 0.9, y + 0.9, 0, 0.62, '#9CA3AF', '#4B5563');
+  // cortina del taller con franjas
+  winY(x + 0.2, x + 0.8, y + 0.9, 0, 0.46, '#374151');
+  for (const z of [0.12, 0.24, 0.36]) winY(x + 0.2, x + 0.8, y + 0.9 + 0.001, z, z + 0.025, '#6B7280');
+  winX(x + 0.9, y + 0.25, y + 0.75, 0.24, 0.44, lit);
+  // franja amarilla de advertencia arriba de la cortina
+  winY(x + 0.12, x + 0.88, y + 0.9 + 0.002, 0.5, 0.56, '#F2C230');
+  return 0.62;
+}
+const DRAW = { gas: drawGas, food: drawFood, sleep: drawSleep, shop: drawShop, wash: drawWash, repair: drawRepair };
 export function drawBld(x, y, t) {
-  if (t.k === 'gas') t.top = drawGas(x, y, t);
-  else if (t.k === 'food') t.top = drawFood(x, y, t);
-  else t.top = drawSleep(x, y, t);
+  t.top = DRAW[t.k](x, y, t);
 }
 export function drawTruck(tr) {
   const d = tr.dir, cx = tr.x + tr.ox, cy = tr.y + tr.oy, hw = 0.13;

@@ -12,7 +12,7 @@ import { menuEl, renderMenu } from './menu.js';
 const moneyEl = $('#money'), moneySign = $('#moneySign'), moneyLabel = $('#moneyLabel');
 const servedEl = $('#served'), lostEl = $('#lost'), repStars = $('#repStars'), repNum = $('#repNum');
 const goalEl = $('#goal'), goalTag = $('#goalTag'), goalTxt = $('#goalTxt'), goalPrize = $('#goalPrize');
-const dayName = $('#dayName'), dayDone = $('#dayDone'), dayMark = $('#dayMark'), dayChip = $('#dayChip'), dayBill = $('#dayBill');
+const dayNum = $('#dayNum'), dayClock = $('#dayClock'), dayDone = $('#dayDone'), dayMark = $('#dayMark'), dayChip = $('#dayChip'), dayBill = $('#dayBill');
 // Últimos valores mostrados, para tocar el DOM solo cuando algo cambia
 export const hudCache = {};
 
@@ -40,8 +40,9 @@ export function hud() {
     repStars.textContent = '★'.repeat(n) + '☆'.repeat(5 - n);
     repNum.textContent = rr.toFixed(1);
   }
-  const dayTxt = `Día ${S.day}\u00a0·\u00a0${clockNow()}`;
-  if (hudCache.d !== dayTxt) { hudCache.d = dayTxt; dayName.textContent = dayTxt; }
+  if (hudCache.d !== S.day) { hudCache.d = S.day; dayNum.textContent = 'Día ' + S.day; }
+  const clk = clockNow();
+  if (hudCache.k !== clk) { hudCache.k = clk; dayClock.textContent = clk; }
   const f = clamp(S.dayT / DAY_LEN, 0, 1);
   dayDone.style.transform = `scaleX(${f.toFixed(4)})`;
   dayMark.style.left = (f * 100).toFixed(2) + '%';

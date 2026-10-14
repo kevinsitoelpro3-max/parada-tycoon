@@ -13,8 +13,14 @@ export const RUSH = [0.4, 0.65];           // franja de hora pico dentro del dí
 export const KINDS = {
   gas:   { name: 'Gasolinera',    emoji: '⛽',  cost: 250, pay: 35, time: 2.5, upkeep: 30, color: '#D62828' },
   food:  { name: 'Comedor',       emoji: '🍗',  cost: 400, pay: 55, time: 4,   upkeep: 50, color: '#E8892B' },
-  sleep: { name: 'Hotel de paso', emoji: '🛏️', cost: 600, pay: 90, time: 6,   upkeep: 80, color: '#3D6FB0' }
+  sleep: { name: 'Hotel de paso', emoji: '🛏️', cost: 600, pay: 90, time: 6,   upkeep: 80, color: '#3D6FB0' },
+  // Negocios extra: solo llegan tráileres que los piden cuando ya tienes al menos uno de ese tipo
+  shop:  { name: 'Tiendita',      emoji: '🛒', cost: 200, pay: 20, time: 1.5, upkeep: 25, color: '#2A9D5C', extra: true },
+  wash:  { name: 'Lavado',        emoji: '🧽', cost: 350, pay: 45, time: 3.5, upkeep: 45, color: '#1B8FC4', extra: true },
+  repair:{ name: 'Taller',        emoji: '🔧', cost: 700, pay: 110, time: 7, upkeep: 90, color: '#6B7280', extra: true }
 };
+// Peso de cada negocio extra al elegir qué pide un tráiler (los tres básicos suman 1)
+export const EXTRA_WEIGHT = 0.15;
 export const MODES = {
   facil:   { name: 'Fácil',   money: 800, upkeep: 0.6, traffic: 0.9,  repLoss: 0.07, redDays: 3, eventsFrom: 4,
              desc: 'Fácil: gastos bajos y puedes cerrar 3 días seguidos en rojo antes de quebrar.' },
@@ -23,7 +29,7 @@ export const MODES = {
   dificil: { name: 'Difícil', money: 400, upkeep: 1.5, traffic: 1.15, repLoss: 0.18, redDays: 1, eventsFrom: 2,
              desc: 'Difícil: gastos altos, más tráfico, la reputación cae rápido y quiebras al primer cierre en rojo.' }
 };
-export const NEED_EMOJI = { gas: '⛽', food: '🍗', sleep: '💤' };
+export const NEED_EMOJI = { gas: '⛽', food: '🍗', sleep: '💤', shop: '🥤', wash: '🫧', repair: '🔧' };
 export const COST = { road: 20, tree: 15, demo: 10 };
 export const CABS = ['#D7263D', '#1B998B', '#F46036', '#3F88C5', '#E2B33C', '#6A4C93', '#33363F', '#2A9D5C'];
 export const TRAILERS = ['#F1F1F1', '#C7CDD6', '#E6DFCF', '#9DB6C8', '#D9534F', '#5C7F67'];

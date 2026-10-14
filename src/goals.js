@@ -1,4 +1,4 @@
-import { H0, PERFECT_DAY_MIN } from './config.js';
+import { H0, PERFECT_DAY_MIN, KINDS } from './config.js';
 import { game, countK } from './state.js';
 
 /* ---------- Metas ---------- */
@@ -20,5 +20,11 @@ export const GOALS = [
   { text: 'Atiende 500 tráileres',                     prize: 1500, ok: () => game.S.served >= 500 },
   { text: 'Llega al día 10 sin quebrar',               prize: 2000, ok: () => game.S.day >= 10 },
   { text: 'Llega a 5 estrellas de reputación',         prize: 3000, ok: () => game.S.rep >= 4.95 },
-  { text: 'Junta $30,000 en caja',                     prize: 5000, ok: () => game.S.money >= 30000 }
+  { text: 'Junta $30,000 en caja',                     prize: 5000, ok: () => game.S.money >= 30000 },
+  // Temporada 3: negocios extra
+  { text: 'Abre una tiendita',                         prize: 100,  ok: () => countK('shop') >= 1 },
+  { text: 'Abre un lavado de tráileres',               prize: 200,  ok: () => countK('wash') >= 1 },
+  { text: 'Abre un taller',                            prize: 400,  ok: () => countK('repair') >= 1 },
+  { text: 'Ten los 6 tipos de negocio a la vez',       prize: 1500, ok: () => Object.keys(KINDS).every(k => countK(k) >= 1) },
+  { text: 'Atiende 1,000 tráileres',                   prize: 3000, ok: () => game.S.served >= 1000 }
 ];
