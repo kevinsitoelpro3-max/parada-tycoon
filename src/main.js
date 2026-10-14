@@ -17,6 +17,7 @@ import { setupDock } from './ui/dock.js';
 import { setupSheet } from './ui/sheet.js';
 import { setupMenu } from './ui/menu.js';
 import { openStart, setupStart } from './ui/start.js';
+import { setupTuto, tickTuto } from './ui/tuto.js';
 import { setupSound } from './audio/sound.js';
 import { sfx, setRain } from './audio/sfx.js';
 import { setMusicMode } from './audio/music.js';
@@ -47,6 +48,8 @@ renderGoal(false);
 new ResizeObserver(resize).observe(stage);
 resize();
 if (game.S.over) gameOver();
+// La guía de Lupe necesita la partida ya cargada para saber si es la primera vez
+setupTuto();
 // Primero la pantalla de inicio; el aviso de bienvenida sale al tocar Continuar
 const welcome = [];
 if (game.upgradedFromV1) welcome.push(['Temporada 2: ahora hay días con gastos, reputación, hora pico y eventos. Toca ☰ para ver cómo funciona.', 6000]);
@@ -69,6 +72,7 @@ function frame(now) {
   draw();
   tickSound();
   hud();
+  tickTuto();
   if (first) { first = false; nativeReady(); }
   requestAnimationFrame(frame);
 }

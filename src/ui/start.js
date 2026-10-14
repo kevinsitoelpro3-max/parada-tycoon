@@ -1,6 +1,6 @@
 import { MODES } from '../config.js';
 import { $, money } from '../utils.js';
-import { game, save } from '../state.js';
+import { game, save, hasProgress } from '../state.js';
 import { unlock } from '../audio/sound.js';
 import { closeSheet } from './sheet.js';
 import { menuEl, startNew } from './menu.js';
@@ -11,12 +11,6 @@ import { menuEl, startNew } from './menu.js';
 const startEl = $('#start');
 const modeBtns = [...document.querySelectorAll('#startModes .btn')];
 let onContinue = null, armed = null, armTimer = null;
-
-// Hay algo que perder si ya se jugó algo y la partida no terminó en quiebra
-const hasProgress = () => {
-  const S = game.S;
-  return !S.over && (S.day > 1 || S.served > 0 || S.lost > 0 || S.tiles.some(t => t.t === 'road' || t.t === 'bld'));
-};
 
 function disarm() {
   clearTimeout(armTimer);

@@ -4,7 +4,7 @@ import { drawGround, drawHighlights, drawTree, drawTruck, drawRain, outerTrees, 
 import { worldXform } from './iso.js';
 import { bldFrame, drawBldCached } from './bldcache.js';
 import { drawNight, skyColor } from './night.js';
-import { drawOverlays } from './overlays.js';
+import { drawOverlays, drawTutoMark } from './overlays.js';
 
 /* ---------- Dibujo de un cuadro completo ---------- */
 export function draw() {
@@ -43,4 +43,5 @@ export function draw() {
   drawNight(vw, vh);
   if (game.ev.rain) drawRain(vw, vh);
   drawOverlays();
+  drawTutoMark();
 }

@@ -285,6 +285,50 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   .tool{min-height:64px}
 }
 
+/* ---------- Guía de Lupe (tutorial de primera partida) ----------
+   Un letrero abajo a la izquierda que deja pasar los toques al mapa (solo sus botones los reciben)
+   y un aro amarillo aparte sobre el botón que toca usar. No hay capa oscura: guía, no impide. */
+.tuto{
+  position:absolute;left:8px;right:58px;bottom:10px;max-width:360px;z-index:3;
+  display:grid;grid-template-columns:auto 1fr auto;align-items:start;gap:4px 8px;
+  padding:8px 6px 8px 10px;pointer-events:none;
+}
+#tuto[hidden]{display:none}
+.tuto-av{font-size:26px;line-height:1;padding-top:4px}
+.tuto-txt{
+  margin:0;font-size:13.5px;font-weight:600;line-height:1.35;align-self:center;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.tuto button{pointer-events:auto}
+.tuto-x{
+  width:40px;height:40px;margin:-4px -2px 0 0;padding:0;background:transparent;color:inherit;border:0;
+  font-size:18px;font-weight:800;border-radius:8px;
+}
+.tuto-row{grid-column:1 / -1;display:flex;justify-content:flex-end}
+.tuto-row[hidden]{display:none}
+/* Dentro del letrero verde el botón va en amarillo para que se distinga */
+.tuto .btn{flex:none;height:36px;padding:0 16px;font-size:14px;
+  background:var(--warn);color:var(--warn-ink);border-color:var(--warn);box-shadow:0 3px 0 var(--warn-edge)}
+.tuto .btn:not(:disabled):active{box-shadow:0 1px 0 var(--warn-edge)}
+/* Con la ficha del negocio abierta (paso «Mejorar») el globo sube arriba, compacto */
+.tuto.top{top:8px;bottom:auto;right:8px;max-width:none;grid-template-columns:1fr auto}
+.tuto.top .tuto-av{display:none}
+.tuto.top .tuto-txt{-webkit-line-clamp:2}
+/* En pantallas anchas, arriba y centrado al ancho de la ficha */
+@media (min-width:600px){.tuto.top{max-width:440px;margin:0 auto}}
+/* A 320 px los textos largos piden 4 líneas */
+@media (max-width:340px){.tuto:not(.top) .tuto-txt{-webkit-line-clamp:4}}
+/* Los pasos con botón (al final y en el repaso) no se recortan: «¡Ya sabes lo básico!…» pide 4 o 5 líneas a 320–360 px */
+.tuto:has(> .tuto-row:not([hidden])) .tuto-txt{display:block;-webkit-line-clamp:unset;overflow:visible}
+.tuto-ring{
+  position:fixed;z-index:9;pointer-events:none;box-sizing:border-box;
+  border-radius:12px;border:3px solid var(--warn);box-shadow:0 0 0 2px rgba(0,0,0,.35);
+  animation:tutoPulse 1.2s ease-in-out infinite alternate;
+}
+.tuto-ring[hidden]{display:none}
+@keyframes tutoPulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+#tutoBtn{width:100%;margin:2px 0 14px;font-size:14px;padding:11px 6px 9px}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition:none !important;animation:none !important}
 }
