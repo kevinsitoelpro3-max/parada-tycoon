@@ -301,21 +301,27 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 }
 .tuto button{pointer-events:auto}
 .tuto-x{
-  width:40px;height:40px;margin:-4px -2px 0 0;padding:0;background:transparent;color:inherit;border:0;
+  width:44px;height:44px;margin:-6px -4px 0 0;padding:0;background:transparent;color:inherit;border:0;
   font-size:18px;font-weight:800;border-radius:8px;
 }
 .tuto-row{grid-column:1 / -1;display:flex;justify-content:flex-end}
 .tuto-row[hidden]{display:none}
 /* Dentro del letrero verde el botón va en amarillo para que se distinga */
-.tuto .btn{flex:none;height:36px;padding:0 16px;font-size:14px;
+.tuto .btn{flex:none;min-height:44px;padding:0 16px;font-size:14px;
   background:var(--warn);color:var(--warn-ink);border-color:var(--warn);box-shadow:0 3px 0 var(--warn-edge)}
 .tuto .btn:not(:disabled):active{box-shadow:0 1px 0 var(--warn-edge)}
 /* Con la ficha del negocio abierta (paso «Mejorar») el globo sube arriba, compacto */
-.tuto.top{top:8px;bottom:auto;right:8px;max-width:none;grid-template-columns:1fr auto}
+.tuto.top{top:8px;bottom:auto;right:8px;max-width:none;grid-template-columns:1fr auto;z-index:4}
 .tuto.top .tuto-av{display:none}
 .tuto.top .tuto-txt{-webkit-line-clamp:2}
 /* En pantallas anchas, arriba y centrado al ancho de la ficha */
 @media (min-width:600px){.tuto.top{max-width:440px;margin:0 auto}}
+/* Celular acostado o ventana baja: abajo a la derecha y compacto (arriba va el aviso), para no tapar el poco mapa que queda */
+@media (orientation:landscape) and (max-height:480px){
+  .tuto:not(.top){left:auto;right:58px;bottom:8px;max-width:300px;grid-template-columns:1fr auto}
+  .tuto:not(.top) .tuto-av{display:none}
+  .tuto:not(.top) .tuto-txt{-webkit-line-clamp:3;font-size:12.5px;line-height:1.3}
+}
 /* A 320 px los textos largos piden 4 líneas */
 @media (max-width:340px){.tuto:not(.top) .tuto-txt{-webkit-line-clamp:4}}
 /* Los pasos con botón (al final y en el repaso) no se recortan: «¡Ya sabes lo básico!…» pide 4 o 5 líneas a 320–360 px */
@@ -327,7 +333,9 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 }
 .tuto-ring[hidden]{display:none}
 @keyframes tutoPulse{from{transform:scale(1)}to{transform:scale(1.06)}}
-#tutoBtn{width:100%;margin:2px 0 14px;font-size:14px;padding:11px 6px 9px}
+#tutoBtn{width:100%;min-height:44px;margin:2px 0 14px;font-size:14px;padding:11px 6px 9px}
+/* Solo para el lector de pantalla */
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition:none !important;animation:none !important}

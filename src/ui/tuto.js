@@ -1,6 +1,6 @@
 import { KINDS, DIRS } from '../config.js';
 import { GOALS } from '../goals.js';
-import { game, T, hasProgress } from '../state.js';
+import { game, T } from '../state.js';
 import { check } from '../tools.js';
 import { $, fmt } from '../utils.js';
 import { toast } from './toast.js';
@@ -16,23 +16,25 @@ import { sheetEl } from './sheet.js';
    El paso no se guarda: sale de la meta actual (game.S.goal) y de la herramienta elegida.
    Su estado vive en game.tuto y se guarda aparte, en localStorage 'parada-tycoon-tuto'. */
 const KEY = 'parada-tycoon-tuto';
-const tutoEl = $('#tuto'), txtEl = $('#tutoTxt'), rowEl = $('#tutoRow'), nextEl = $('#tutoNext'), ringEl = $('#tutoRing');
-const dockEl = document.querySelector('.dock'), toastEl = $('#toast'), stageEl = $('#stage');
+const tutoEl = $('#tuto'), txtEl = $('#tutoTxt'), liveEl = $('#tutoLive'), rowEl = $('#tutoRow'), nextEl = $('#tutoNext'), ringEl = $('#tutoRing');
+const dockEl = document.querySelector('.dock'), toastEl = $('#toast'), stageEl = $('#stage'), upEl = $('#shUp');
 
 // Textos de cada paso. {X} es lo que falta de dinero (redondeado a decenas)
 const TXT = {
   calle1: '¡Hola! Soy Lupe, la encargada. Los tráileres necesitan por dónde entrar: toca 🛣️ Calle.',
-  calle2: 'Arrastra el dedo desde la carretera hacia adentro. Con 2 o 3 casillas basta.',
+  calle2: 'Arrastra desde la carretera, $20 por casilla. Guarda $250 para la gasolinera.',
   gas1: '¡Eso! Ahora abre una gasolinera: toca ⛽ Gasolina.',
   gas0: 'Te faltan {X} para la gasolinera. Ya no gastes en calles.',
-  gas2: 'Ponla en una casilla amarilla, pegada a tu calle.',
+  // Sin ningún negocio no entra dinero: esperar no sirve
+  gasN: 'Sin negocios no entra dinero y te faltan {X}. Empieza otra partida desde ☰.',
+  gas2: 'Ponla donde marca la flecha amarilla, pegada a tu calle.',
   serv: '¡Ya vendes diésel! Arriba ves 🚚 los que atiendes y 😠 los que se van. Atiende 10.',
   food1: 'Los que piden 🍗 se van enojados. Abre un comedor: toca 🍗 Comedor.',
   food0: 'Junta $400 para el comedor. Te faltan {X}: espera a que paguen los tráileres.',
-  food2: 'Ponlo pegado a una calle. Si ya no hay lugar, alarga tu calle.',
+  food2: 'Ponlo donde marca la flecha amarilla. Si ya no hay lugar, alarga tu calle.',
   sleep1: 'De noche muchos piden 💤. Abre un hotel de paso: toca 🛏️ Hotel.',
   sleep0: 'Junta $600 para el hotel de paso. Te faltan {X}.',
-  sleep2: 'Ponlo pegado a una calle. Si ya no hay lugar, alarga tu calle.',
+  sleep2: 'Ponlo donde marca la flecha amarilla. Si ya no hay lugar, alarga tu calle.',
   up1: 'Mejora un negocio para que atienda a más tráileres a la vez. Toca ✋ Ver.',
   up2: 'Ahora toca tu gasolinera (o cualquier negocio).',
   up3: 'Toca «Mejorar». Si te falta dinero, cierra la ficha y vuelve más tarde.',
@@ -47,13 +49,13 @@ const BTN = { fin: '¡Listo!', rev0: 'Siguiente', rev1: 'Siguiente', rev2: 'Sigu
 // Elemento que rodea el aro en cada paso
 const TOOL = k => `.tool[data-tool="${k}"]`;
 const RING = {
-  calle1: TOOL('road'), gas1: TOOL('gas'), gas0: '#moneySign', serv: '.hud .stats',
+  calle1: TOOL('road'), gas1: TOOL('gas'), gas0: '#moneySign', gasN: '#menuBtn', serv: '.hud .stats',
   food1: TOOL('food'), food0: '#moneySign', sleep1: TOOL('sleep'), sleep0: '#moneySign',
   up1: TOOL('none'), up3: '#shUp', fin: '#goal',
   rev0: TOOL('road'), rev1: '.hud .stats', rev2: TOOL('none'), rev3: '#goal'
 };
 // Pasos con faltante de dinero: qué negocio se quiere comprar
-const SHORT = { gas0: 'gas', food0: 'food', sleep0: 'sleep' };
+const SHORT = { gas0: 'gas', gasN: 'gas', food0: 'food', sleep0: 'sleep' };
 // Pasos con marca en el mapa: qué casilla buscar
 const MARK = { calle2: 'road', gas2: 'gas', food2: 'food', sleep2: 'sleep', up2: 'up' };
 
@@ -73,17 +75,24 @@ function writeSt(st) {
 
 /* ---------- Paso actual (solo lee la partida) ---------- */
 const prevId = () => game.tuto.key.split('|')[0];
+const has = (t, k) => game.S.tiles.some(o => o.t === t && (!k || o.k === k));
 function stepId() {
   const S = game.S, g = S.goal, tool = game.tool, tu = game.tuto;
+  // El repaso es para quien ya pasó la guía; en una partida nueva vuelve la guía paso a paso
+  if (tu.review >= 0 && g < 6) { tu.review = -1; tu.key = ''; }
   if (tu.review >= 0) return 'rev' + tu.review;
   if (g >= 6) return 'fin';
   // Meta cumplida pero sim.js aún no entrega el premio (hasta 0.4 s): se queda el paso de antes
   if (GOALS[g].ok() && prevId()) return prevId();
   const sheetOpen = !sheetEl.hidden && game.sel;
+  // Sin ninguna calle (por ejemplo, si la demoliste) no hay dónde poner negocios: primero la calle
+  if (g >= 1 && g <= 4 && !has('road')) return tool === 'road' ? 'calle2' : 'calle1';
   switch (g) {
     case 0: return tool === 'road' ? 'calle2' : 'calle1';
-    case 1: return tool === 'gas' ? 'gas2' : S.money < KINDS.gas.cost ? 'gas0' : 'gas1';
-    case 2: return 'serv';
+    case 2: if (has('bld', 'gas')) return 'serv';
+    // Sin gasolinera (la demoliste) se vuelve a pedir, como en la meta 1
+    // falls through
+    case 1: return tool === 'gas' ? 'gas2' : S.money < KINDS.gas.cost ? (has('bld') ? 'gas0' : 'gasN') : 'gas1';
     case 3: return tool === 'food' ? 'food2' : S.money < KINDS.food.cost ? 'food0' : 'food1';
     case 4: return tool === 'sleep' ? 'sleep2' : S.money < KINDS.sleep.cost ? 'sleep0' : 'sleep1';
     default: {
@@ -174,8 +183,11 @@ function hideAll() {
   hideRing();
   game.tuto.tile = null; game.tuto.sig = '';   // al volver a mostrarse se busca otra vez la casilla
 }
-function render(id, X) {
-  txtEl.textContent = TXT[id].replace('{X}', '$' + fmt(X));
+function render(id, X, changed) {
+  const txt = TXT[id].replace('{X}', '$' + fmt(X));
+  txtEl.textContent = txt;
+  // El lector de pantalla solo lee el paso nuevo, no cada cambio del faltante de dinero
+  if (changed) liveEl.textContent = txt;
   const btn = BTN[id];
   rowEl.hidden = !btn;
   if (btn) nextEl.textContent = btn;
@@ -186,7 +198,11 @@ function placeTop(id) {
   let top = '';
   // También mientras el aviso se desvanece, para que no se encimen
   if (id === 'up3' && (toastEl.classList.contains('show') || +getComputedStyle(toastEl).opacity > 0)) {
-    top = Math.round(toastEl.getBoundingClientRect().bottom - stageEl.getBoundingClientRect().top + 6) + 'px';
+    const st = stageEl.getBoundingClientRect().top;
+    const y = Math.round(toastEl.getBoundingClientRect().bottom - st + 6);
+    // Si debajo del aviso taparía «Mejorar», se queda arriba (8 px), encima del aviso
+    const up = upEl.getBoundingClientRect();
+    if (!up.height || y + tutoEl.offsetHeight <= up.top - st - 6) top = y + 'px';
   }
   if (top !== view.top) { tutoEl.style.top = top; view.top = top; }
 }
@@ -199,7 +215,7 @@ export function tickTuto() {
   if (!sheetEl.hidden && id !== 'up3') return hideAll();
   const X = shortBy(id), key = id + '|' + (X === null ? '' : X);
   const changed = id !== prevId() || !tu.key;
-  if (key !== tu.key) { render(id, X); tu.key = key; }
+  if (key !== tu.key) { render(id, X, changed); tu.key = key; }
   if (changed) tu.sig = '';
   // Casilla sugerida: al cambiar de paso o cuando cambian calles, negocios o el tamaño del terreno
   if (MARK[id]) {
@@ -224,7 +240,9 @@ export function setupTuto() {
   const tu = game.tuto, st = readSt();
   if (st === null) {
     // Primera vez: solo sale sola si la partida no tiene avance (los de antes no la ven)
-    const vet = hasProgress();
+    // Igual que hasProgress() pero sin !S.over: una partida en quiebra también cuenta como avance
+    const S = game.S;
+    const vet = S.day > 1 || S.served > 0 || S.lost > 0 || S.goal > 0 || S.tiles.some(t => t.t === 'road' || t.t === 'bld');
     writeSt(vet ? 'vet' : 'on');
     tu.on = !vet;
   } else tu.on = st === 'on';

@@ -243,7 +243,8 @@ export function drawGround() {
 export function drawHighlights() {
   const tool = game.tool, sel = game.sel;
   if (tool !== 'none' && !game.S.over) {
-    const fill = tool === 'demo' ? 'rgba(230,57,70,.34)' : 'rgba(255,238,140,.45)';
+    // De noche o con el tema oscuro el velo las apaga: van más opacas para que se sigan viendo
+    const fill = tool === 'demo' ? 'rgba(230,57,70,.34)' : game.dark ? 'rgba(255,238,140,.7)' : 'rgba(255,238,140,.45)';
     for (let y = 0; y < game.H; y++) for (let x = 1; x < game.W; x++) if (check(tool, x, y).ok) tile(x, y, fill);
   }
   if (sel) {
