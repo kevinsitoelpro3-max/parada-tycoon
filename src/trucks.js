@@ -1,10 +1,13 @@
-import { CABS, TRAILERS } from './config.js';
+import { CABS, TRAILERS, KINDS, EXTRA_SHARE } from './config.js';
 import { clamp, pick } from './utils.js';
 import { game, T, mode, inRush, countK, payNow } from './state.js';
 import { findService, parkSpot } from './routes.js';
 import { sfx } from './audio/sfx.js';
 
 /* ---------- Tráileres ---------- */
+// Tipos de negocio extra que ya tienes (tiendita, lavado, taller)
+const ownedExtras = () => Object.keys(KINDS).filter(k => KINDS[k].extra && countK(k) > 0);
+
 export function spawnInterval() {
   const S = game.S;
   if (game.ev.burst > 0) return 0.5;
@@ -25,6 +28,15 @@ export function spawn() {
     const q = Math.random();
     const w = ev.diesel ? [0.65, 0.85] : [0.45, 0.75];
     tr.need = q < w[0] ? 'gas' : q < w[1] ? 'food' : 'sleep';
+  } else {
+    // Los negocios extra atienden a tráileres que antes pasaban de largo, así que nunca le
+    // quitan un cliente a gasolina, comida o descanso. Cada tipo extra que ya tengas se queda
+    // con EXTRA_SHARE de esos tráileres. Sin negocios extra no hay sorteo y todo sigue igual.
+    const extras = ownedExtras();
+    if (extras.length) {
+      const r = Math.random();
+      if (r < EXTRA_SHARE * extras.length) tr.need = extras[Math.min(extras.length - 1, Math.floor(r / EXTRA_SHARE))];
+    }
   }
   if (tr.need) {
     const plan = findService(tr.need);

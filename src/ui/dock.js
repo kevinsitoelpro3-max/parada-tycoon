@@ -13,4 +13,11 @@ export function setTool(k) {
 }
 export function setupDock() {
   for (const b of tools) b.addEventListener('click', () => setTool(game.tool === b.dataset.tool ? 'none' : b.dataset.tool));
+  // Con mouse, la rueda desliza la barra hacia los lados (en celular se desliza con el dedo)
+  const dock = document.querySelector('.dock');
+  dock.addEventListener('wheel', e => {
+    if (dock.scrollWidth <= dock.clientWidth || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    dock.scrollLeft += e.deltaY;
+    e.preventDefault();
+  }, { passive: false });
 }
