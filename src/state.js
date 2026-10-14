@@ -1,4 +1,4 @@
-import { W0, H0, WMAX, HMAX, LAND_BASE, KEY, DAY_LEN, DAY_SCALE, RUSH, KINDS, MODES, OPEN_HOUR, CLOSE_HOUR } from './config.js';
+import { W0, H0, WMAX, HMAX, LAND_BASE, KEY, DAY_LEN, DAY_SCALE, RUSH, KINDS, MODES, OPEN_HOUR, CLOSE_HOUR, DUSK, DAWN, NIGHT_FROM } from './config.js';
 import { clamp, mulberry32 } from './utils.js';
 import { GOALS } from './goals.js';
 
@@ -11,7 +11,7 @@ export const game = {
   trucks: [], floats: [], puffs: [],
   tool: 'none', speed: 1, sel: null,
   spawnT: 1.2, goalT: 0, saveT: 0, userCam: false, dpr: 1, rainT: 0, billCache: 0,
-  sky: '#D2E4D8', dark: false,
+  sky: '#D2E4D8', themeDark: false, night: 0, dark: false,   // tema oscuro; oscuridad de 0 a 1; luces encendidas
   ev: emptyEvent(),
   upgradedFromV1: false, grewFromOld: false,
   paused: false         // true mientras está abierta la pantalla de inicio
@@ -38,8 +38,16 @@ export function clockAt(f) {
   return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
 }
 export const clockNow = () => clockAt(Math.min(1, game.S.dayT / DAY_LEN));
+export const hourNow = () => OPEN_HOUR + Math.min(1, game.S.dayT / DAY_LEN) * (CLOSE_HOUR - OPEN_HOUR);
+// Qué tan oscuro está a la hora h: 0 de día, 1 de noche cerrada; al abrir (06:00) todavía está a 0.6
+export function darkness(h) {
+  if (h < DAWN) return 0.6 * (DAWN - h) / (DAWN - OPEN_HOUR);
+  if (h <= DUSK[0]) return 0;
+  return Math.min(1, (h - DUSK[0]) / (DUSK[1] - DUSK[0]));
+}
+export const isNight = () => hourNow() >= NIGHT_FROM;
 
-export function emptyEvent() { return { type: null, label: '', rain: false, diesel: false, luzAt: -1, caravanAt: -1, burst: 0, rushOn: false }; }
+export function emptyEvent() { return { type: null, label: '', rain: false, diesel: false, luzAt: -1, caravanAt: -1, burst: 0, rushOn: false, nightOn: false }; }
 export function totalUpkeep() {
   let c = 0;
   for (const t of game.S.tiles) {

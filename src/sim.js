@@ -1,6 +1,6 @@
-import { KINDS, DAY_LEN, RUSH } from './config.js';
+import { KINDS, DAY_LEN, RUSH, NIGHT_FROM } from './config.js';
 import { pick, fmt } from './utils.js';
-import { game, T, inRush, totalUpkeep, save, clockAt } from './state.js';
+import { game, T, inRush, isNight, totalUpkeep, save, clockAt } from './state.js';
 import { GOALS } from './goals.js';
 import { spawn, spawnInterval, moveAlong, finishService } from './trucks.js';
 import { closeDay } from './days.js';
@@ -25,6 +25,11 @@ export function update(dt, rdt) {
     game.ev.rushOn = rush;
     if (rush) sfx.rush();
     if (rush) toast(`🚨 Son las ${clockAt(RUSH[0])}: empieza la hora pico y llegan el doble de tráileres`, 2600, true);
+  }
+  const night = isNight();
+  if (night !== game.ev.nightOn) {
+    game.ev.nightOn = night;
+    if (night) toast(`🌙 Son las ${NIGHT_FROM}:00: de noche más tráileres buscan dónde dormir 💤`, 2600, true);
   }
   if (game.ev.luzAt >= 0 && S.dayT >= game.ev.luzAt) {
     game.ev.luzAt = -1;
