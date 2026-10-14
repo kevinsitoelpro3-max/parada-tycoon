@@ -78,11 +78,19 @@ button:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
 main{position:relative;flex:1;min-height:0}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 
-/* Barra de herramientas deslizable: se ven unas 6 a la vez y el resto asoma a la derecha */
-.dock{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 30px) / 6.4);gap:5px;padding:6px 8px 8px;
+/* Barra de herramientas deslizable: en celular se ven unas 5½ (el siguiente botón asoma a la derecha);
+   en pantallas anchas caben las 9 en una fila */
+.dock{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 28px) / 5.5);gap:5px;padding:6px 8px 8px;
   overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding-inline:8px;scrollbar-width:none;touch-action:pan-x}
 .dock::-webkit-scrollbar{display:none}
 .dock .tool{scroll-snap-align:start}
+@media (hover:hover) and (pointer:fine){
+  .dock{scrollbar-width:thin}
+  .dock::-webkit-scrollbar{display:block;height:6px}
+}
+@media (min-width:600px){
+  .dock{grid-auto-flow:row;grid-template-columns:repeat(9,minmax(0,1fr));grid-auto-columns:auto;overflow-x:visible}
+}
 .tool{display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 2px 7px;min-height:60px}
 .tool .ic{font-size:20px;line-height:1.1}
 .tool .nm{font-size:11.5px;font-weight:600;line-height:1.2;margin-top:2px}
@@ -93,6 +101,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   box-shadow:inset 0 0 0 3px var(--warn),inset 0 0 0 5px var(--warn-ink);
 }
 .tool[aria-pressed="true"].poor .pr{color:#9A1B1B}
+/* En celulares muy angostos (360 px) los nombres largos como "Comedor" pisaban el marco del letrero */
+@media (max-width:370px){.tool .nm{font-size:10.5px}}
 
 .toast{
   position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:4;

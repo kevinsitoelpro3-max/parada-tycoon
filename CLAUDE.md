@@ -21,7 +21,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Mapa:** 8 columnas por 10 filas. La columna `x = 0` es la carretera principal, de un solo sentido hacia abajo. El terreno se puede ampliar de 2 en 2 filas hasta 16.
 - **Construcción:** calle $20, gasolinera $250, comedor $400, hotel de paso $600, tiendita $200, lavado $350, taller $700, demoler $10 (quitar árbol $15; demoler un negocio devuelve la mitad). Las calles deben salir de la carretera o de otra calle; los negocios deben quedar pegados a una calle.
 - **Tráileres:** aparecen arriba de la carretera. El 82 % pide algo (⛽ diésel, 🍗 comida o 💤 descanso). Al aparecer buscan con BFS un negocio de ese tipo con espacio libre y conectado; si lo hay, apartan un lugar, entran, esperan el servicio y pagan. Si no, pasan de largo enojados.
-- **Negocios extra** (`extra: true` en `KINDS`): 🛒 tiendita (cobra $20, 1.5 s, gasto $25), 🧽 lavado ($45, 3.5 s, $45) y 🔧 taller ($110, 7 s, $90); gastos en base a días de 75 s, antes de `DAY_SCALE`. Cada uno abre un mercado nuevo: al elegir qué pide un tráiler, los tres básicos pesan 1 en total y cada tipo extra que ya tengas suma `EXTRA_WEIGHT` (0.15). Sin negocios extra el reparto es el mismo de siempre (y nadie pide algo que no tienes).
+- **Negocios extra** (`extra: true` en `KINDS`): 🛒 tiendita (cobra $20, 1.5 s, gasto $25), 🚿 lavado ($45, 3.5 s, $45) y 🔧 taller ($110, 7 s, $90); gastos en base a días de 75 s, antes de `DAY_SCALE`. Cada uno abre un mercado nuevo **sin quitarles clientes a los básicos**: atienden a tráileres que antes pasaban de largo (el 18 % sin pedido). Cada tipo extra que ya tengas se queda con `EXTRA_SHARE` (0.3) de esos tráileres; con los tres, el 90 %. El reparto de gasolina, comida y descanso no cambia. Sin negocios extra no hay sorteo extra: el azar es idéntico a antes y nadie pide algo que no tienes. Pedidos: 🍫, 💦 y 🔧 (usar emojis que existen desde Android 7: la app soporta minSdk 24).
 - **Negocios:** nivel 1 a 3. Cada nivel suma un lugar y +50 % de cobro. Mejorar cuesta el precio base por el nivel actual.
 - **Días:** cada día dura 180 segundos de juego (`DAY_LEN`), con un reloj de 06:00 a 24:00 en el marcador. Al cierre ("corte de caja") se pagan gastos de negocios y calles, con inflación de 6 % por día.
 - **Escala del día:** el balance se hizo con días de 75 s. `DAY_SCALE = DAY_LEN / 75` multiplica los gastos diarios y la hora de los eventos, así que cambiar `DAY_LEN` no cambia lo que se gana o paga por minuto. Las metas que dependen del largo del día usan $5,000 en un día, `PERFECT_DAY_MIN` (25) clientes sin enojados y llegar al día 10.
@@ -42,7 +42,7 @@ index.html              HUD, mapa, ficha, menú, quiebra y barra de herramientas
 src/styles.css          estilos (tema claro y oscuro)
 src/main.js             conecta los controles, arranca la partida y corre el ciclo de cuadros
 src/config.js           tamaño del mapa, negocios (KINDS), modos (MODES), precios y colores
-src/goals.js            las 17 metas
+src/goals.js            las 22 metas (tres temporadas)
 src/state.js            estado compartido (game), fórmulas de cobro y gastos, partida nueva, guardar y cargar
 src/routes.js           rutas con BFS y lugar de estacionamiento
 src/trucks.js           aparición, movimiento y cobro de los tráileres
