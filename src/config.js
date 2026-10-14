@@ -1,7 +1,11 @@
 /* ---------- Configuración ---------- */
-export const W = 8, H0 = 10, HMAX = 16;   // x = 0 es la carretera principal
+// Terreno: x = 0 es la carretera principal. Ancho (columnas) y alto (filas) viven en game.W y game.H.
+export const W0 = 10, H0 = 12;              // terreno de una partida nueva
+export const WMAX = 20, HMAX = 30;          // tamaño máximo comprando terreno
+export const LAND_STEP = 2;                 // cada compra agrega 2 columnas o 2 filas
+export const LAND_BASE = 2500;              // la compra número n cuesta LAND_BASE × n
 export const TW = 64, TH = 32, ZU = 30;
-export const ZMIN = 0.35, ZMAX = 2.6;
+export const ZMIN = 0.22, ZMAX = 2.6;
 export const KEY = 'parada-tycoon-v1';
 export const DAY_LEN = 180;                // segundos de juego por día (a ×1: 3 minutos)
 // El balance original se hizo con días de 75 s. Los gastos diarios y la hora de los eventos

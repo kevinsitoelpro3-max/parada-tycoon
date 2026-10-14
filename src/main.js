@@ -48,9 +48,10 @@ new ResizeObserver(resize).observe(stage);
 resize();
 if (game.S.over) gameOver();
 // Primero la pantalla de inicio; el aviso de bienvenida sale al tocar Continuar
-openStart(game.upgradedFromV1
-  ? () => setTimeout(() => toast('Temporada 2: ahora hay días con gastos, reputación, hora pico y eventos. Toca ☰ para ver cómo funciona.', 6000), 400)
-  : null);
+const welcome = [];
+if (game.upgradedFromV1) welcome.push(['Temporada 2: ahora hay días con gastos, reputación, hora pico y eventos. Toca ☰ para ver cómo funciona.', 6000]);
+if (game.grewFromOld) welcome.push([`Tu terreno creció gratis a ${game.W - 1} × ${game.H} casillas. Desde ☰ puedes ampliarlo hacia abajo o a la derecha.`, 5000]);
+openStart(welcome.length ? () => setTimeout(() => welcome.forEach(([m, ms]) => toast(m, ms, true)), 400) : null);
 
 // Música y lluvia siguen lo que pasa en la partida
 function tickSound() {

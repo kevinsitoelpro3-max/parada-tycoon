@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galería de dibujos · Parada Tycoon</title>
+<style>
+  body{margin:0;background:#D2E4D8;font:600 14px/1.3 system-ui,sans-serif;color:#13261C}
+  #stage{position:relative;width:1500px;height:1700px}
+  canvas{display:block;width:1500px;height:1700px}
+  .dark #stage{background:#13201B}
+</style>
+</head>
+<body>
+<!-- Solo para desarrollo (npm run dev → /tools/galeria.html): dibuja cada negocio en sus 3 niveles,
+     sin luz y de noche, más una escena chica con calles, carretera, agua, árboles y tráileres.
+     Agrega ?noche para ver el tema oscuro. -->
+<main id="stage"><canvas id="c"></canvas></main>
+<script type="module" src="./galeria.js"></script>
+</body>
+</html>

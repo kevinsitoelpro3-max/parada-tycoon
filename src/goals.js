@@ -1,4 +1,4 @@
-import { H0, PERFECT_DAY_MIN, KINDS } from './config.js';
+import { PERFECT_DAY_MIN, KINDS } from './config.js';
 import { game, countK } from './state.js';
 
 /* ---------- Metas ---------- */
@@ -14,7 +14,7 @@ export const GOALS = [
   { text: 'Ten 3 negocios en nivel 3',                 prize: 2000, ok: () => game.S.tiles.filter(t => t.t === 'bld' && t.lvl >= 3).length >= 3 },
   // Temporada 2
   { text: 'Llega a 4 estrellas de reputación',         prize: 500,  ok: () => game.S.rep >= 4 },
-  { text: 'Amplía tu terreno desde el menú ☰',         prize: 500,  ok: () => game.H > H0 },
+  { text: 'Amplía tu terreno desde el menú ☰',         prize: 500,  ok: () => (game.S.land || 0) > 0 },
   { text: `Cierra un día con ${PERFECT_DAY_MIN} clientes o más y nadie enojado`, prize: 800, ok: () => game.S.perfectDays >= 1 },
   { text: 'Vende $5,000 en un solo día',               prize: 1000, ok: () => Math.max(game.S.bestDay, game.S.dayEarn) >= 5000 },
   { text: 'Atiende 500 tráileres',                     prize: 1500, ok: () => game.S.served >= 500 },

@@ -1,4 +1,4 @@
-import { W, HMAX, DAY_SCALE, PERFECT_DAY_MIN, CLOSE_HOUR } from './config.js';
+import { WMAX, HMAX, LAND_STEP, DAY_SCALE, PERFECT_DAY_MIN, CLOSE_HOUR } from './config.js';
 import { $, pick, fmt, money } from './utils.js';
 import { game, mode, totalUpkeep, landCost, emptyEvent, save } from './state.js';
 import { fit, clampCam } from './camera.js';
@@ -26,7 +26,7 @@ export function closeDay() {
   S.money -= bill;
   if (S.dayLost === 0 && S.dayServed >= PERFECT_DAY_MIN) S.perfectDays++;
   S.bestDay = Math.max(S.bestDay, S.dayEarn);
-  game.floats.push({ x: 4, y: game.H / 2, z: 2, text: '−$' + fmt(bill) + ' gastos', t: 0, neg: true });
+  game.floats.push({ x: game.W / 2, y: game.H / 2, z: 2, text: '−$' + fmt(bill) + ' gastos', t: 0, neg: true });
   let msg = `Corte de caja de las ${CLOSE_HOUR}:00, día ${S.day}: vendiste $${fmt(S.dayEarn)} y pagaste $${fmt(bill)} de gastos.`;
   if (S.money < 0) {
     S.red++;
@@ -50,22 +50,37 @@ export function gameOver() {
   overEl.hidden = false;
   save();
 }
-export function expandLand() {
+// Compra LAND_STEP filas hacia abajo ('down') o columnas hacia la derecha ('right')
+export function expandLand(dir) {
   const S = game.S;
-  if (game.H >= HMAX) return;
+  const canDown = game.H + LAND_STEP <= HMAX, canRight = game.W + LAND_STEP <= WMAX;
+  if ((dir === 'down' && !canDown) || (dir === 'right' && !canRight) || S.over) return;
   const c = landCost();
   if (S.money < c) { sfx.nope(); toast('Te faltan ' + money(c - S.money)); return; }
   S.money -= c;
+  S.land = (S.land || 0) + 1;
   sfx.build();
-  const oldEnd = game.H + 2.6;
-  for (let y = game.H; y < game.H + 2; y++) for (let x = 0; x < W; x++) {
-    S.tiles.push({ t: x === 0 ? 'hwy' : (x >= 2 && Math.random() < 0.2 ? 'tree' : 'grass') });
+  const newTile = x => ({ t: x === 0 ? 'hwy' : (x >= 2 && Math.random() < 0.2 ? 'tree' : 'grass') });
+  if (dir === 'down') {
+    const oldEnd = game.H + 2.6;
+    for (let y = game.H; y < game.H + LAND_STEP; y++) for (let x = 0; x < game.W; x++) S.tiles.push(newTile(x));
+    game.H += LAND_STEP; S.h = game.H;
+    // los tráileres que iban a salir por el borde de abajo ahora salen por el nuevo borde
+    for (const tr of game.trucks) for (const p of tr.path) if (Math.abs(p[1] - oldEnd) < 1e-6) p[1] = game.H + 2.6;
+  } else {
+    // rearmar la lista fila por fila: las casillas existentes son los mismos objetos y no cambian
+    // de coordenadas, así que los tráileres en camino siguen igual
+    const W = game.W, tiles = [];
+    for (let y = 0; y < game.H; y++) {
+      for (let x = 0; x < W; x++) tiles.push(S.tiles[y * W + x]);
+      for (let x = W; x < W + LAND_STEP; x++) tiles.push(newTile(x));
+    }
+    S.tiles = tiles;
+    game.W += LAND_STEP; S.w = game.W;
   }
-  game.H += 2; S.h = game.H;
-  for (const tr of game.trucks) for (const p of tr.path) if (Math.abs(p[1] - oldEnd) < 1e-6) p[1] = game.H + 2.6;
   buildOuterTrees();
   if (!game.userCam) fit(); else clampCam();
-  toast('Compraste 2 filas más de terreno');
+  toast(dir === 'down' ? 'Compraste 2 filas más de terreno hacia abajo' : 'Compraste 2 columnas más de terreno hacia la derecha');
   renderMenu();
   save();
 }

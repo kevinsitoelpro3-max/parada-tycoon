@@ -1,18 +1,19 @@
-import { W } from '../config.js';
 import { canvas, ctx, clamp } from '../utils.js';
 import { game, T } from '../state.js';
-import { cam } from '../camera.js';
-import { drawGround, drawHighlights, drawTree, drawBld, drawTruck, drawRain, outerTrees, truckAlpha } from './scene.js';
+import { drawGround, drawHighlights, drawTree, drawTruck, drawRain, outerTrees, truckAlpha } from './scene.js';
+import { worldXform } from './iso.js';
+import { bldFrame, drawBldCached } from './bldcache.js';
 import { drawOverlays } from './overlays.js';
 
 /* ---------- Dibujo de un cuadro completo ---------- */
 export function draw() {
-  const H = game.H;
+  const W = game.W, H = game.H;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = game.sky;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.setTransform(game.dpr * cam.z, 0, 0, game.dpr * cam.z, game.dpr * cam.x, game.dpr * cam.y);
+  worldXform();
   ctx.lineCap = 'round';
+  bldFrame();
   drawGround();
   drawHighlights();
 
@@ -21,7 +22,7 @@ export function draw() {
   for (let y = 0; y < H; y++) for (let x = 1; x < W; x++) {
     const t = T(x, y);
     if (t.t === 'tree') objs.push({ d: x + y + 1, a: 1, f: () => drawTree(x, y, 1) });
-    else if (t.t === 'bld') objs.push({ d: x + y + 1, a: 1, f: () => drawBld(x, y, t) });
+    else if (t.t === 'bld') objs.push({ d: x + y + 1, a: 1, f: () => drawBldCached(x, y, t) });
   }
   for (const [x, y, s] of outerTrees) {
     const d = Math.max(0, -x, x - (W - 1), -y, y - (H - 1));

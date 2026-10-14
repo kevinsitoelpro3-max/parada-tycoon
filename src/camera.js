@@ -1,4 +1,4 @@
-import { W, TW, TH, ZMIN, ZMAX } from './config.js';
+import { TW, TH, ZMIN, ZMAX } from './config.js';
 import { canvas, stage, clamp } from './utils.js';
 import { game } from './state.js';
 
@@ -6,7 +6,7 @@ import { game } from './state.js';
 export const cam = { x: 0, y: 0, z: 1 };
 
 export function fit() {
-  const H = game.H;
+  const W = game.W, H = game.H;
   const cw = stage.clientWidth, ch = stage.clientHeight;
   const mapW = (W + H) * TW / 2, mapH = (W + H) * TH / 2 + 50;
   cam.z = clamp(Math.min(cw / mapW, ch / mapH) * 1.12, ZMIN, 2.2);
@@ -15,7 +15,7 @@ export function fit() {
   cam.y = ch / 2 - midY * cam.z;
 }
 export function clampCam() {
-  const H = game.H;
+  const W = game.W, H = game.H;
   const cw = stage.clientWidth, ch = stage.clientHeight;
   const cx = (cw / 2 - cam.x) / cam.z, cy = (ch / 2 - cam.y) / cam.z;
   const nx = clamp(cx, -H * TW / 2, W * TW / 2), ny = clamp(cy, -40, (W + H) * TH / 2);

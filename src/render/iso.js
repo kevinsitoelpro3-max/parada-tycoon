@@ -1,10 +1,13 @@
 import { TW, TH, ZU } from '../config.js';
 import { ctx } from '../utils.js';
 import { cam } from '../camera.js';
+import { game } from '../state.js';
 
 /* ---------- Primitivas isométricas ---------- */
 export const P = (x, y, z = 0) => [(x - y) * TW / 2, (x + y) * TH / 2 - z * ZU];
 export const scr = (x, y, z = 0) => { const [wx, wy] = P(x, y, z); return [wx * cam.z + cam.x, wy * cam.z + cam.y]; };
+// Dibujar en coordenadas del mundo: zoom y desplazamiento de la cámara, por la densidad de píxeles
+export function worldXform() { ctx.setTransform(game.dpr * cam.z, 0, 0, game.dpr * cam.z, game.dpr * cam.x, game.dpr * cam.y); }
 export function poly(pts, fill) {
   ctx.beginPath();
   ctx.moveTo(pts[0][0], pts[0][1]);

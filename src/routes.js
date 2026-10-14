@@ -1,4 +1,4 @@
-import { W, DIRS } from './config.js';
+import { DIRS } from './config.js';
 import { game, T, isRoad } from './state.js';
 
 /* ---------- Rutas ---------- */
@@ -22,15 +22,34 @@ export function pathToHighway(sx, sy) {
   }
   return null;
 }
+// Al aparecer, cada tráiler pide la ruta desde cada calle junto a cada negocio libre; en un mapa
+// grande eso son cientos de búsquedas. Las rutas solo cambian cuando cambian las calles, así que
+// se guardan hasta entonces. Son compartidas: quien las use solo debe leerlas.
+const memo = new Map();
+let memoRoads = '';
+function roadsKey() {
+  let s = game.W + ':';
+  for (const t of game.S.tiles) s += t.t === 'road' ? '1' : '0';
+  return s;
+}
+function routeFrom(x, y) {
+  if (!isRoad(x, y)) return null;
+  const k = y * game.W + x;
+  let p = memo.get(k);
+  if (p === undefined) { p = pathToHighway(x, y); memo.set(k, p); }
+  return p;
+}
 export function findService(need) {
+  const key = roadsKey();
+  if (key !== memoRoads) { memo.clear(); memoRoads = key; }
   let best = null;
-  for (let y = 0; y < game.H; y++) for (let x = 1; x < W; x++) {
+  for (let y = 0; y < game.H; y++) for (let x = 1; x < game.W; x++) {
     const t = T(x, y);
     if (!t || t.t !== 'bld' || t.k !== need || t.off > 0) continue;
     const slot = t.slots.indexOf(null);
     if (slot < 0) continue;
     for (const [dx, dy] of DIRS) {
-      const p = pathToHighway(x + dx, y + dy);
+      const p = routeFrom(x + dx, y + dy);
       if (!p) continue;
       const score = p.length + p[p.length - 1][1] * 0.1;
       if (!best || score < best.score) best = { score, bx: x, by: y, slot, p, tile: t };
