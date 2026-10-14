@@ -1,0 +1,68 @@
+# Construye el APK de prueba de Android.
+# - En cada pull request: comprueba que la app se construye y deja el APK como "artifact".
+# - En cada cambio a main: además lo publica en la release "prueba-android",
+#   con un enlace fijo para descargarlo desde el celular.
+name: APK de Android
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Armar el juego y copiarlo a la app
+        run: npm run android
+
+      - name: Construir el APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../parada-tycoon-prueba.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parada-tycoon-prueba-apk
+          path: parada-tycoon-prueba.apk
+
+      - name: Publicar en la release "prueba-android"
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git tag -f prueba-android
+          git push -f origin prueba-android
+          NOTES="APK de prueba construido desde ${GITHUB_SHA::7}. Descárgalo en el celular e instálalo (Android pedirá permiso para instalar apps de origen desconocido). Se instala encima del anterior sin perder la partida."
+          if gh release view prueba-android > /dev/null 2>&1; then
+            gh release edit prueba-android --prerelease --title "Parada Tycoon (prueba)" --notes "$NOTES"
+          else
+            gh release create prueba-android --prerelease --title "Parada Tycoon (prueba)" --notes "$NOTES"
+          fi
+          gh release upload prueba-android parada-tycoon-prueba.apk --clobber

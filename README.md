@@ -26,4 +26,19 @@ El juego abre con una pantalla de inicio: ahí sigues tu partida o empiezas otra
 
 La partida se guarda en el navegador (`localStorage`), por separado en cada dirección web donde abras el juego.
 
+## App de Android
+
+Cada vez que se sube algo a `main`, GitHub construye el APK de prueba y lo deja en la release **prueba-android** del repo (pestaña *Releases*). Desde el celular:
+
+1. Abre la release `prueba-android` y descarga `parada-tycoon-prueba.apk`.
+2. Ábrelo. La primera vez Android te pide permitir "instalar apps de origen desconocido" para el navegador o el administrador de archivos.
+3. Las siguientes versiones se instalan encima, sin perder tu partida.
+
+Para construirlo en tu computadora necesitas Android Studio:
+
+```bash
+npm run android        # arma el juego y lo copia a android/
+npm run android:open   # abre el proyecto en Android Studio (botón ▶ para instalarlo)
+```
+
 Detalles de cómo funciona el juego y cómo está organizado el código: [CLAUDE.md](CLAUDE.md).

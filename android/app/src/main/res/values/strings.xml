@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Parada Tycoon</string>
+    <string name="title_activity_main">Parada Tycoon</string>
+    <string name="package_name">com.kevinsito.paradatycoon</string>
+    <string name="custom_url_scheme">com.kevinsito.paradatycoon</string>
+</resources>

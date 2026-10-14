@@ -44,6 +44,7 @@ export function openStart(onFirstContinue = null) {
   renderStart();
   startEl.hidden = false;
 }
+export const isStartOpen = () => !startEl.hidden;
 function closeStart() {
   disarm();
   startEl.hidden = true;

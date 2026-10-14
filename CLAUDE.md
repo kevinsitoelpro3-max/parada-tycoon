@@ -7,8 +7,14 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - Proyecto con Vite: HTML en `index.html`, estilos en `src/styles.css` y el juego en módulos de JavaScript dentro de `src/` (sin dependencias en tiempo de juego; dibuja con canvas 2D).
 - `npm install` una vez; `npm run dev` para jugar mientras programas (también abre en el celular por la red local); `npm run build` genera la versión publicable en `dist/`; `npm run preview` la sirve para probarla.
 - La partida se guarda en `localStorage` con la clave `parada-tycoon-v1` (el formato interno ya va en la versión 2; carga partidas de la versión 1).
-- La única fuente externa es la tipografía Overpass de Google Fonts. Los sonidos y la música se generan con Web Audio, sin archivos.
+- No hay fuentes externas: la tipografía Overpass viene del paquete `@fontsource/overpass` (licencia OFL) y los sonidos y la música se generan con Web Audio. El juego funciona sin internet.
 - Las preferencias de sonido se guardan aparte, con la clave `parada-tycoon-audio` (`{ music, sfx }`).
+- **App de Android con Capacitor 8** (`capacitor.config.json`, carpeta `android/`). Identificador `com.kevinsito.paradatycoon` (no cambiarlo nunca: es el de Play Store). Solo vertical.
+  - `npm run android` arma el juego y lo copia a `android/`; `npm run android:open` abre Android Studio.
+  - GitHub Actions (`.github/workflows/android.yml`) construye el APK de prueba en cada pull request y, en cada cambio a `main`, lo publica en la release `prueba-android` del repo.
+  - El APK de prueba se firma con `android/app/debug.keystore` (contraseña pública `android`) para que se instale encima del anterior sin perder la partida. La llave de Play Store es otra y nunca se sube (`*.jks` y `keystore.properties` están en `.gitignore`).
+  - Al publicar una versión nueva, subir `versionCode` (entero, +1 cada vez) y `versionName` en `android/app/build.gradle`, y `version` en `package.json`.
+  - La app guarda sus partidas por separado de la versión web.
 
 ## Cómo funciona
 
@@ -24,6 +30,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Modos:** Fácil, Normal y Difícil (dinero inicial, gastos, tráfico, castigo de reputación y días en rojo permitidos).
 - **Metas:** 17 metas con premio, en dos temporadas.
 - **Pantalla de inicio:** sale al abrir el juego y desde ☰ → Volver al inicio. Mientras está abierta el juego queda en pausa (`game.paused`). Tiene Continuar (si hay partida), los tres modos (tocar dos veces si hay partida que perder) e interruptores de Música y Efectos. El primer toque desbloquea el audio del celular.
+- **Android:** el botón atrás cierra la ficha, luego el menú, luego quita la herramienta; en pleno juego abre el menú; en la pantalla de inicio o en la quiebra sale de la app. Al pasar a segundo plano guarda la partida y pausa el sonido. Los márgenes de las barras del sistema llegan como `--safe-area-inset-*`.
 - **Sonido:** efectos para construir, demoler, cobrar, tráiler enojado, mejorar, meta, cierre del día, hora pico, caravana, apagón, quiebra, errores y botones; lluvia de fondo; música en bucle que va 15 % más rápido en hora pico y se detiene en la quiebra.
 
 ## Estructura del código
@@ -51,6 +58,9 @@ src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negoci
 src/audio/sound.js      contexto de audio, volúmenes, desbloqueo y preferencias
 src/audio/sfx.js        efectos de sonido y lluvia
 src/audio/music.js      música en bucle
+src/native.js           solo en la app de Android: botón atrás, pausa/reanudar y pantalla de carga
+assets/src/*.svg        dibujos del ícono y la pantalla de carga (fuente editable)
+assets/*.png            esos dibujos en PNG; con `npx @capacitor/assets generate --android` se generan todos los tamaños en android/
 ```
 
 Todo lo que cambia durante la partida vive en el objeto `game` de `src/state.js` (`game.S` es la partida guardable, `game.H` las filas, `game.trucks`, `game.tool`, etc.). Los módulos lo importan y lo modifican ahí, nunca con variables globales sueltas.
@@ -68,7 +78,7 @@ Todo lo que cambia durante la partida vive en el objeto `game` de `src/state.js`
 
 1. ~~Pasar el archivo único a un proyecto ordenado con Vite, separando el código en módulos, sin cambiar cómo se juega.~~ Hecho.
 2. ~~Agregar sonidos, música y una pantalla de inicio.~~ Hecho.
-3. Empaquetarlo como app de Android (por ejemplo con Capacitor) o migrarlo a un motor como Godot si se quiere 3D real.
+3. ~~Empaquetarlo como app de Android con Capacitor.~~ Hecho (APK de prueba). Migrar a un motor como Godot queda solo si se quiere 3D real.
 4. Preparar la publicación en Play Store.
 
 Ideas pendientes: tráileres que piden dos cosas en la misma visita, taller y lavado de tráileres, filas que se atascan, ciclo de noche, más tipos de terreno.
