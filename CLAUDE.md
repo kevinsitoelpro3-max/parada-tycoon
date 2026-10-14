@@ -53,14 +53,19 @@ src/camera.js           cámara, zoom y conversión de pantalla a casilla
 src/input.js            tocar, arrastrar, pellizcar y rueda del mouse
 src/theme.js            lee el tema claro u oscuro para el mapa
 src/render/iso.js       primitivas isométricas (P, poly, box, shade...)
-src/render/scene.js     suelo, calles, árboles, negocios, tráileres y lluvia
-src/render/overlays.js  íconos de negocios, burbujas y números flotantes
+src/render/scene.js     reúne y reexporta lo de abajo (draw.js lo importa de aquí)
+src/render/terrain.js   pasto, calles, carretera, agua, árboles, resaltados y orilla del terreno
+src/render/buildings/   un archivo por negocio (gas, food, sleep, shop, wash, repair) y index.js; cada uno exporta draw(x, y, t) y devuelve la altura del techo
+src/render/vehicles.js  tráileres en las 4 direcciones (faros de noche)
+src/render/weather.js   lluvia
+src/render/overlays.js  íconos de negocios (letrerito con punta y estrellas encima del techo), burbujas y números flotantes
 src/render/draw.js      dibuja un cuadro completo en orden de profundidad
 src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negocio), menu y start (pantalla de inicio)
 src/audio/sound.js      contexto de audio, volúmenes, desbloqueo y preferencias
 src/audio/sfx.js        efectos de sonido y lluvia
 src/audio/music.js      música en bucle
 src/native.js           solo en la app de Android: botón atrás, pausa/reanudar y pantalla de carga
+tools/galeria.html      galería de diseño, solo para programar (npm run dev → /tools/galeria.html, ?noche para tema oscuro): cada negocio en nivel 1, 2, 3 y sin luz, y una escena de muestra; no entra en el build
 assets/src/*.svg        dibujos del ícono y la pantalla de carga (fuente editable)
 assets/*.png            esos dibujos en PNG; con `npx @capacitor/assets generate --android` se generan todos los tamaños en android/
 ```
@@ -74,7 +79,7 @@ Todo lo que cambia durante la partida vive en el objeto `game` de `src/state.js`
 - No usar nombres, logos ni personajes de otros juegos o marcas.
 - Antes de cambiar el balance (precios, tiempos, tráfico), explica qué número cambia y por qué.
 - Probar en el navegador después de cada cambio grande y no romper las partidas guardadas.
-- El código de audio nunca usa `Math.random` (usa `mulberry32`), para no cambiar el azar de la partida.
+- El código de audio y el de dibujo nunca usan `Math.random` (usa `mulberry32` o un hash de x e y), para no cambiar el azar de la partida.
 
 ## Plan sugerido (por decidir con Kevin)
 
@@ -83,4 +88,4 @@ Todo lo que cambia durante la partida vive en el objeto `game` de `src/state.js`
 3. ~~Empaquetarlo como app de Android con Capacitor.~~ Hecho (APK de prueba). Migrar a un motor como Godot queda solo si se quiere 3D real.
 4. Preparar la publicación en Play Store.
 
-Ideas pendientes: tráileres que piden dos cosas en la misma visita, taller y lavado de tráileres, filas que se atascan, ciclo de noche, más tipos de terreno.
+Ideas pendientes: tráileres que piden dos cosas en la misma visita, filas que se atascan, ciclo de noche, más tipos de terreno.
