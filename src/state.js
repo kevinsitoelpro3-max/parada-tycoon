@@ -27,7 +27,9 @@ export const payNow = t => Math.round(payOf(t) * repMult());
 export const inflation = () => 1 + 0.06 * (game.S.day - 1);
 export const upkeepOf = (t, lvl = t.lvl) => Math.round(KINDS[t.k].upkeep * lvl * mode().upkeep * inflation() * DAY_SCALE);
 export const upCost = t => KINDS[t.k].cost * t.lvl;
-export const landCost = () => LAND_BASE * ((game.S.land || 0) + 1);
+// La compra número n cuesta LAND_BASE × n, contando las compras por el tamaño del terreno
+// (no por S.land: las partidas de antes ya traen gratis lo que compraron hasta 10 × 12).
+export const landCost = () => LAND_BASE * ((game.W - W0) / 2 + (game.H - H0) / 2 + 1);
 export const countK = k => game.S.tiles.filter(t => t.t === 'bld' && t.k === k).length;
 export const inRush = () => { const f = game.S.dayT / DAY_LEN; return f >= RUSH[0] && f < RUSH[1]; };
 // Hora del reloj de la parada para una fracción del día (0 = apertura, 1 = cierre), en pasos de 10 minutos
