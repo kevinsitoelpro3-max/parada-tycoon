@@ -4,6 +4,7 @@ import { game, T } from '../state.js';
 import { cam } from '../camera.js';
 import { scr, circle, rrect } from './iso.js';
 import { truckAlpha } from './scene.js';
+import { tutoTile } from '../ui/tuto.js';
 
 /* ---------- Encima del mapa: íconos de negocios, burbujas de tráileres y números flotantes ---------- */
 // Estrella de 5 puntas centrada en (x, y), de radio r
@@ -92,4 +93,27 @@ export function drawOverlays() {
     ctx.lineWidth = 3; ctx.strokeStyle = '#FFFFFF'; ctx.stroke();
   }
   ctx.globalAlpha = 1;
+}
+
+// Marca de la guía de Lupe: rombo amarillo en la casilla sugerida y una flecha ▼ que rebota encima.
+// Solo dibuja; la casilla la elige ui/tuto.js al cambiar de paso. Fuera de la pantalla no pasa nada.
+export function drawTutoMark() {
+  const m = tutoTile();
+  if (!m) return;
+  const { x, y } = m, k = clamp(cam.z, 0.7, 1.4);
+  const pts = [scr(x, y), scr(x + 1, y), scr(x + 1, y + 1), scr(x, y + 1)];
+  ctx.save();
+  ctx.beginPath();
+  for (const [px, py] of pts) ctx.lineTo(px, py);
+  ctx.closePath();
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 3 * k + 2; ctx.stroke();   // contorno para la noche
+  ctx.strokeStyle = '#F2C230'; ctx.lineWidth = 3 * k; ctx.stroke();
+  // Flecha: rebota con el reloj de la pantalla (sin azar)
+  const [ax, ay0] = scr(x + 0.5, y + 0.5, m.z || 0.6);
+  const ay = ay0 - 6 * k + Math.sin(performance.now() / 180) * 4, w = 9 * k, h = 11 * k;
+  ctx.beginPath(); ctx.moveTo(ax - w, ay - h); ctx.lineTo(ax + w, ay - h); ctx.lineTo(ax, ay); ctx.closePath();
+  ctx.fillStyle = '#F2C230'; ctx.fill();
+  ctx.lineWidth = 1.5; ctx.strokeStyle = '#3B2F00'; ctx.stroke();
+  ctx.restore();
 }

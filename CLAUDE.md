@@ -9,6 +9,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - La partida se guarda en `localStorage` con la clave `parada-tycoon-v1` (formato interno versión 3, con ancho `w`, alto `h` y compras de terreno `land`; carga partidas v1 y v2, que tenían 8 columnas fijas, y las agranda gratis al tamaño inicial nuevo sin mover lo construido).
 - No hay fuentes externas: la tipografía Overpass viene del paquete `@fontsource/overpass` (licencia OFL) y los sonidos y la música se generan con Web Audio. El juego funciona sin internet.
 - Las preferencias de sonido se guardan aparte, con la clave `parada-tycoon-audio` (`{ music, sfx }`).
+- La guía de primera partida se guarda aparte, con la clave `parada-tycoon-tuto` (`{ v: 1, st }`, con `st` = `on`, `done`, `skip` o `vet`). No toca la partida guardada.
 - **App de Android con Capacitor 8** (`capacitor.config.json`, carpeta `android/`). Identificador `com.kevinsito.paradatycoon` (no cambiarlo nunca: es el de Play Store). Solo vertical.
   - `npm run android` arma el juego y lo copia a `android/`; `npm run android:open` abre Android Studio.
   - GitHub Actions (`.github/workflows/android.yml`) construye el APK de prueba en cada pull request y, en cada cambio a `main`, lo publica en la release `prueba-android` del repo.
@@ -34,6 +35,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Metas:** 22 metas con premio, en tres temporadas (la tercera, de negocios extra).
 - **Pantalla de inicio:** sale al abrir el juego y desde ☰ → Volver al inicio. Mientras está abierta el juego queda en pausa (`game.paused`). Tiene Continuar (si hay partida), los tres modos (tocar dos veces si hay partida que perder) e interruptores de Música y Efectos. El primer toque desbloquea el audio del celular.
 - **Android:** el botón atrás cierra la ficha, luego el menú, luego quita la herramienta; en pleno juego abre el menú; en la pantalla de inicio o en la quiebra sale de la app. Al pasar a segundo plano guarda la partida y pausa el sonido. Los márgenes de las barras del sistema llegan como `--safe-area-inset-*`.
+- **Guía de Lupe (tutorial):** Lupe 👷, la encargada, explica las primeras 6 metas con un letrero abajo del mapa, un aro amarillo en el botón que toca usar y una marca ▼ en la casilla sugerida. El paso sale de `S.goal` y de la herramienta elegida (no se guarda), así que se retoma solo al recargar. Solo lee la partida: no cambia herramienta, dinero, pausa ni velocidad, no usa `Math.random` y deja pasar los toques (solo sus botones los reciben); el arnés determinista da la misma partida con o sin guía. Sale sola en una partida sin avance; quien ya tenía partida (aunque esté en quiebra) queda como `vet` y no la ve. Si falta una calle o la gasolinera (por ejemplo, porque la demoliste), vuelve a pedirla; si no tienes negocios ni dinero para la gasolinera, sugiere empezar otra partida. Se salta con ✕ y se vuelve a ver desde ☰ → Repasar la guía (con la meta 7 o más, 4 tarjetas de repaso; en una partida nueva el repaso cambia a la guía paso a paso). Se oculta con la pantalla de inicio, el menú, la quiebra o una ficha abierta (salvo en el paso de Mejorar, donde sube arriba). Su estado vive en `game.tuto`, fuera de `game.S`.
 - **Sonido:** efectos para construir, demoler, cobrar, tráiler enojado, mejorar, meta, cierre del día, hora pico, caravana, apagón, quiebra, errores y botones; lluvia de fondo; música en bucle que va 15 % más rápido en hora pico y se detiene en la quiebra.
 
 ## Estructura del código
@@ -61,9 +63,9 @@ src/render/bldcache.js  caché de negocios: cada uno se dibuja una vez en un lie
 src/render/vehicles.js  tráileres en las 4 direcciones (faros de noche)
 src/render/weather.js   lluvia
 src/render/night.js     cielo, velo y resplandor de los negocios de noche
-src/render/overlays.js  íconos de negocios (letrerito con punta y estrellas encima del techo), burbujas y números flotantes
+src/render/overlays.js  íconos de negocios (letrerito con punta y estrellas encima del techo), burbujas, números flotantes y la marca de la guía
 src/render/draw.js      dibuja un cuadro completo en orden de profundidad
-src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negocio), menu y start (pantalla de inicio)
+src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negocio), menu, start (pantalla de inicio) y tuto (guía de Lupe)
 src/audio/sound.js      contexto de audio, volúmenes, desbloqueo y preferencias
 src/audio/sfx.js        efectos de sonido y lluvia
 src/audio/music.js      música en bucle
@@ -96,7 +98,7 @@ Todo lo que cambia durante la partida vive en el objeto `game` de `src/state.js`
 Kevin pidió hacerla en partes chicas para cuidar los créditos: programar directo, sin grupos de agentes, y probar solo lo que toca cada parte.
 
 1. ~~Día y noche~~
-2. Tutorial de primera partida
+2. ~~Tutorial de primera partida~~
 3. Tráileres con dos pedidos (propina si los negocios están cerca)
 4. Decoración y vecinos (bancas, jardín, letrero luminoso; comedor junto a hotel cobra más)
 5. Precio por negocio (barato o caro)

@@ -14,11 +14,18 @@ export const game = {
   sky: '#D2E4D8', themeDark: false, night: 0, dark: false,   // tema oscuro; oscuridad de 0 a 1; luces encendidas
   ev: emptyEvent(),
   upgradedFromV1: false, grewFromOld: false,
-  paused: false         // true mientras está abierta la pantalla de inicio
+  paused: false,        // true mientras está abierta la pantalla de inicio
+  // Guía de Lupe (ui/tuto.js): solo lee la partida; vive fuera de game.S y se guarda aparte
+  tuto: { on: false, review: -1, key: '', tile: null, sig: '', scrolled: '' }
 };
 
 export const T = (x, y) => (x >= 0 && x < game.W && y >= 0 && y < game.H) ? game.S.tiles[y * game.W + x] : null;
 export const isRoad = (x, y) => { const t = T(x, y); return !!t && t.t === 'road'; };
+// Hay algo que perder si ya se jugó algo y la partida no terminó en quiebra
+export const hasProgress = () => {
+  const S = game.S;
+  return !S.over && (S.day > 1 || S.served > 0 || S.lost > 0 || S.tiles.some(t => t.t === 'road' || t.t === 'bld'));
+};
 export const mode = () => MODES[game.S.mode] || MODES.normal;
 export const capOf = t => t.lvl + 1;
 export const payOf = (t, lvl = t.lvl) => Math.round(KINDS[t.k].pay * (1 + 0.5 * (lvl - 1)));

@@ -29,6 +29,13 @@
 <main id="stage">
   <canvas id="c" aria-label="Mapa de tu parada de tráileres"></canvas>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <p class="sr-only" id="tutoLive" aria-live="polite"></p>
+  <div class="tuto sign" id="tuto" hidden>
+    <span class="tuto-av" aria-hidden="true">👷</span>
+    <p class="tuto-txt" id="tutoTxt"></p>
+    <button class="tuto-x" id="tutoSkip" aria-label="Saltar la guía">✕</button>
+    <div class="tuto-row" id="tutoRow" hidden><button class="btn primary" id="tutoNext"></button></div>
+  </div>
   <div class="zoom">
     <button class="sign" id="zin" aria-label="Acercar">+</button>
     <button class="sign" id="zout" aria-label="Alejar">−</button>
@@ -67,6 +74,7 @@
       <li>En la hora pico, de 13:10 a 17:40 (la franja naranja de la barra), llegan el doble de tráileres. También hay lluvia, apagones y caravanas.</li>
       <li>Toca un negocio con ✋ Ver para mejorarlo. Con ✋ Ver arrastras para moverte y pellizcas para acercar.</li>
     </ul>
+    <button class="btn" id="tutoBtn">👷 Repasar la guía</button>
     <h3>Partida nueva</h3>
     <p class="small" id="modeTxt"></p>
     <div class="modes" id="menuModes">
@@ -134,6 +142,7 @@
   <button class="sign tool" data-tool="wash" aria-pressed="false"><span class="ic">🚿</span><span class="nm">Lavado</span><span class="pr">$350</span></button>
   <button class="sign tool" data-tool="repair" aria-pressed="false"><span class="ic">🔧</span><span class="nm">Taller</span><span class="pr">$700</span></button>
 </nav>
+<div class="tuto-ring" id="tutoRing" hidden aria-hidden="true"></div>
 <script type="module" src="/src/main.js"></script>
 </body>
 </html>
