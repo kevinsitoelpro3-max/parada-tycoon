@@ -3,13 +3,14 @@ import { game, T } from '../state.js';
 import { drawGround, drawHighlights, drawTree, drawTruck, drawRain, outerTrees, truckAlpha } from './scene.js';
 import { worldXform } from './iso.js';
 import { bldFrame, drawBldCached } from './bldcache.js';
+import { drawNight, skyColor } from './night.js';
 import { drawOverlays } from './overlays.js';
 
 /* ---------- Dibujo de un cuadro completo ---------- */
 export function draw() {
   const W = game.W, H = game.H;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillStyle = game.sky;
+  ctx.fillStyle = skyColor();
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   worldXform();
   ctx.lineCap = 'round';
@@ -39,7 +40,7 @@ export function draw() {
 
   ctx.setTransform(game.dpr, 0, 0, game.dpr, 0, 0);
   const vw = canvas.width / game.dpr, vh = canvas.height / game.dpr;
-  if (game.dark) { ctx.fillStyle = 'rgba(8,18,32,.22)'; ctx.fillRect(0, 0, vw, vh); }
+  drawNight(vw, vh);
   if (game.ev.rain) drawRain(vw, vh);
   drawOverlays();
 }

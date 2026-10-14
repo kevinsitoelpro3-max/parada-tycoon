@@ -28,6 +28,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Quiebra:** depende del modo; si cierras en rojo demasiados días seguidos, termina la partida.
 - **Reputación (1 a 5 estrellas):** sube al atender y baja al perder clientes (baja más si tenías el negocio pero estaba lleno o sin luz). Afecta el tráfico y las propinas.
 - **Hora pico:** del 40 % al 65 % del día (13:10 a 17:40) llegan el doble de tráileres.
+- **Día y noche:** oscurece de 18:30 a 20:30 y amanece de 06:00 a 07:00 (`DUSK`, `DAWN` en config.js). `game.night` es la oscuridad (0 a 1) según el reloj y `game.dark` indica si van las luces encendidas (de noche o con el tema oscuro). Desde las 20:00 (`NIGHT_FROM`) cambia el reparto de pedidos: de cada 100 con pedido, ⛽ 45, 🍗 20 y 💤 35 (de día 45, 30 y 25), y sale un aviso.
 - **Eventos (desde cierto día):** lluvia (tráileres más lentos), apagón (un negocio sin luz 25 s), más diésel y caravana.
 - **Modos:** Fácil, Normal y Difícil (dinero inicial, gastos, tráfico, castigo de reputación y días en rojo permitidos).
 - **Metas:** 22 metas con premio, en tres temporadas (la tercera, de negocios extra).
@@ -51,7 +52,7 @@ src/tools.js            qué se puede construir dónde y aplicar la herramienta
 src/sim.js              update: avanza la simulación un paso
 src/camera.js           cámara, zoom y conversión de pantalla a casilla
 src/input.js            tocar, arrastrar, pellizcar y rueda del mouse
-src/theme.js            lee el tema claro u oscuro para el mapa
+src/theme.js            lee el tema claro u oscuro y calcula la luz del día (game.night, game.dark)
 src/render/iso.js       primitivas isométricas (P, poly, box, shade...)
 src/render/scene.js     reúne y reexporta lo de abajo (draw.js lo importa de aquí)
 src/render/terrain.js   pasto, calles, carretera, agua, árboles, resaltados y orilla del terreno
@@ -59,6 +60,7 @@ src/render/buildings/   un archivo por negocio (gas, food, sleep, shop, wash, re
 src/render/bldcache.js  caché de negocios: cada uno se dibuja una vez en un lienzo chico y luego solo se pega (si un dibujo empieza a depender de algo nuevo, agrégalo a `sig`)
 src/render/vehicles.js  tráileres en las 4 direcciones (faros de noche)
 src/render/weather.js   lluvia
+src/render/night.js     cielo, velo y resplandor de los negocios de noche
 src/render/overlays.js  íconos de negocios (letrerito con punta y estrellas encima del techo), burbujas y números flotantes
 src/render/draw.js      dibuja un cuadro completo en orden de profundidad
 src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negocio), menu y start (pantalla de inicio)
@@ -89,4 +91,19 @@ Todo lo que cambia durante la partida vive en el objeto `game` de `src/state.js`
 3. ~~Empaquetarlo como app de Android con Capacitor.~~ Hecho (APK de prueba). Migrar a un motor como Godot queda solo si se quiere 3D real.
 4. Preparar la publicación en Play Store.
 
-Ideas pendientes: tráileres que piden dos cosas en la misma visita, filas que se atascan, ciclo de noche, más tipos de terreno.
+## Actualización 1.0 (por partes, un PR cada una)
+
+Kevin pidió hacerla en partes chicas para cuidar los créditos: programar directo, sin grupos de agentes, y probar solo lo que toca cada parte.
+
+1. ~~Día y noche~~
+2. Tutorial de primera partida
+3. Tráileres con dos pedidos (propina si los negocios están cerca)
+4. Decoración y vecinos (bancas, jardín, letrero luminoso; comedor junto a hotel cobra más)
+5. Precio por negocio (barato o caro)
+6. Contratos de flotillas (encargos diarios, empresas inventadas)
+7. Pensión de tráileres (pasan la noche y pagan al amanecer)
+8. Filas (esperan en la calle antes de enojarse)
+9. Eventos donde decides (inspección, feria, paro de transportistas)
+10. Segunda carretera (se abre al ampliar el terreno)
+11. Terrenos nuevos (río con puente, cerro, desierto)
+12. Play Store: llave de firma, AAB, política de privacidad, ficha de la tienda, prueba cerrada; subir a versión 1.0.0

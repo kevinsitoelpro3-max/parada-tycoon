@@ -10,7 +10,7 @@ import { gameOver } from './days.js';
 import { draw } from './render/draw.js';
 import { buildOuterTrees } from './render/scene.js';
 import { setupInput } from './input.js';
-import { readTheme, setupTheme } from './theme.js';
+import { readTheme, setupTheme, updateLight } from './theme.js';
 import { toast } from './ui/toast.js';
 import { hud, renderGoal, setupHud } from './ui/hud.js';
 import { setupDock } from './ui/dock.js';
@@ -65,6 +65,7 @@ function frame(now) {
   const rdt = Math.min(0.1, Math.max(0, (now - last) / 1000));
   last = now;
   if (!game.paused) update(rdt * game.speed, rdt);
+  updateLight();
   draw();
   tickSound();
   hud();

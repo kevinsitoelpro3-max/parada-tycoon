@@ -1,6 +1,6 @@
 import { CABS, TRAILERS, KINDS, EXTRA_SHARE } from './config.js';
 import { clamp, pick } from './utils.js';
-import { game, T, mode, inRush, countK, payNow } from './state.js';
+import { game, T, mode, inRush, isNight, countK, payNow } from './state.js';
 import { findService, parkSpot } from './routes.js';
 import { sfx } from './audio/sfx.js';
 
@@ -26,7 +26,9 @@ export function spawn() {
   };
   if (Math.random() < 0.82) {
     const q = Math.random();
-    const w = ev.diesel ? [0.65, 0.85] : [0.45, 0.75];
+    // De noche (desde NIGHT_FROM) 10 de cada 100 que pedían comida buscan dónde dormir
+    const nf = isNight() ? 0.1 : 0;
+    const w = ev.diesel ? [0.65, 0.85 - nf] : [0.45, 0.75 - nf];
     tr.need = q < w[0] ? 'gas' : q < w[1] ? 'food' : 'sleep';
   } else {
     // Los negocios extra atienden a tráileres que antes pasaban de largo, así que nunca le

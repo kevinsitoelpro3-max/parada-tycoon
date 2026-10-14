@@ -12,6 +12,9 @@ export const DAY_LEN = 180;                // segundos de juego por día (a ×1:
 // se escalan con este factor, así que cambiar DAY_LEN no cambia lo que se gana o paga por minuto.
 export const DAY_SCALE = DAY_LEN / 75;
 export const OPEN_HOUR = 6, CLOSE_HOUR = 24;  // reloj de la parada: abre a las 06:00 y cierra a las 24:00
+// Día y noche (horas del reloj): oscurece de 18:30 a 20:30 y amanece de 06:00 a 07:00.
+// Desde NIGHT_FROM, de cada 100 tráileres con pedido: ⛽ 45, 🍗 20 y 💤 35 (de día 45, 30 y 25).
+export const DUSK = [18.5, 20.5], DAWN = 7, NIGHT_FROM = 20;
 export const PERFECT_DAY_MIN = 25;            // clientes para un "día perfecto" (sin nadie enojado)
 export const RUSH = [0.4, 0.65];           // franja de hora pico dentro del día
 export const KINDS = {
