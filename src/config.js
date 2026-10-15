@@ -29,6 +29,10 @@ export const KINDS = {
 // De los tráileres que pasan de largo sin pedir nada (18 %), cada tipo de negocio extra que ya
 // tengas se queda con esta parte: con uno, el 30 % de ellos; con los tres, el 90 %.
 export const EXTRA_SHARE = 0.3;
+// Tráileres con dos pedidos: de los que ya encontraron un negocio básico, COMBO_CHANCE también
+// quiere otro tipo básico que tengas. Si los dos negocios están a COMBO_NEAR casillas o menos
+// (sumando filas y columnas), el segundo cobro lleva COMBO_TIP de propina.
+export const COMBO_CHANCE = 0.25, COMBO_NEAR = 3, COMBO_TIP = 0.3;
 export const MODES = {
   facil:   { name: 'Fácil',   money: 800, upkeep: 0.6, traffic: 0.9,  repLoss: 0.07, redDays: 3, eventsFrom: 4,
              desc: 'Fácil: gastos bajos y puedes cerrar 3 días seguidos en rojo antes de quebrar.' },
