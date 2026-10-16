@@ -16,6 +16,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
   - El APK de prueba se firma con `android/app/debug.keystore` (contraseña pública `android`) para que se instale encima del anterior sin perder la partida. La llave de Play Store es otra y nunca se sube (`*.jks` y `keystore.properties` están en `.gitignore`).
   - Al publicar una versión nueva, subir `versionCode` (entero, +1 cada vez) y `versionName` en `android/app/build.gradle`, y `version` en `package.json`.
   - La app guarda sus partidas por separado de la versión web.
+  - **Play Store** (guía completa en `docs/play-store.md`): `build.gradle` firma la versión release con la llave de Kevin si existe `android/keystore.properties`; la acción manual "Paquete para Play Store" (`.github/workflows/play-store.yml`) arma el `.aab` con los secretos `PLAY_KEYSTORE_BASE64`, `PLAY_KEYSTORE_PASSWORD`, `PLAY_KEY_ALIAS` y `PLAY_KEY_PASSWORD`. Política de privacidad en `docs/privacidad.html` (GitHub Pages desde `/docs`) e imágenes de la ficha en `docs/tienda/`.
 
 ## Cómo funciona
 
@@ -102,7 +103,7 @@ Todo lo que cambia durante la partida vive en el objeto `game` de `src/state.js`
 1. ~~Pasar el archivo único a un proyecto ordenado con Vite, separando el código en módulos, sin cambiar cómo se juega.~~ Hecho.
 2. ~~Agregar sonidos, música y una pantalla de inicio.~~ Hecho.
 3. ~~Empaquetarlo como app de Android con Capacitor.~~ Hecho (APK de prueba). Migrar a un motor como Godot queda solo si se quiere 3D real.
-4. Preparar la publicación en Play Store.
+4. ~~Preparar la publicación en Play Store.~~ Hecho del lado del código (versión 1.0.0); falta lo que hace Kevin en la consola (ver `docs/play-store.md`).
 
 ## Actualización 1.0 (por partes, un PR cada una)
 
@@ -119,4 +120,4 @@ Kevin pidió hacerla en partes chicas para cuidar los créditos: programar direc
 9. ~~Eventos donde decides (inspección, feria, paro de transportistas)~~
 10. ~~Segunda carretera (se abre al ampliar el terreno)~~
 11. ~~Terrenos nuevos (río con puente, cerro, desierto)~~
-12. Play Store: llave de firma, AAB, política de privacidad, ficha de la tienda, prueba cerrada; subir a versión 1.0.0
+12. ~~Play Store: llave de firma, AAB, política de privacidad, ficha de la tienda, prueba cerrada; subir a versión 1.0.0~~ (lo de la consola lo hace Kevin)
