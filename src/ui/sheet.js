@@ -1,12 +1,13 @@
-import { KINDS, PRICES, STOCK_BONUS, STOCK_REACH } from '../config.js';
+import { KINDS, PRICES, STOCK_BONUS, STOCK_REACH, HOME, HAP_GROW, HAP_LEAVE } from '../config.js';
 import { $, fmt, money } from '../utils.js';
-import { game, T, payOf, payNow, repMult, upkeepOf, upCost, bonusAt, priceOf, perkVal } from '../state.js';
+import { game, T, payOf, payNow, repMult, upkeepOf, upCost, bonusAt, priceOf, perkVal, homeUpkeepOf } from '../state.js';
 import { toast } from './toast.js';
 import { hudCache } from './hud.js';
 import { menuEl } from './menu.js';
 import { sfx } from '../audio/sfx.js';
 import { track } from '../daily.js';
 import { pop, dust } from '../fx.js';
+import { capOfHome, hap, hapFace } from '../city.js';
 
 /* ---------- Ficha del negocio (ver y mejorar) ---------- */
 export const sheetEl = $('#sheet');
@@ -17,7 +18,10 @@ export function renderSheet() {
   const sel = game.sel;
   if (!sel) return;
   const t = T(sel.x, sel.y);
+  if (t && t.t === 'home') return renderHome(t);
   if (!t || t.t !== 'bld') { closeSheet(); return; }
+  setLabels('tráileres a la vez', 'por cliente hoy', 'de gasto al día', 'ganado aquí');
+  $('#shPrice').hidden = false;
   const k = KINDS[t.k];
   $('#shTitle').textContent = k.emoji + ' ' + k.name;
   $('#shLvl').textContent = 'Nivel ' + t.lvl + ' de 3' + (t.off > 0 ? '. Sin luz por ahora.' : '');
@@ -56,19 +60,46 @@ export function renderSheet() {
     ? ` 📦 Surtido para ${t.stock} ${t.stock > 1 ? 'clientes' : 'cliente'} más (+${Math.round(STOCK_BONUS * 100)} %).`
     : ` Sin surtido: una 📦 zona de descarga cerca le sube ${Math.round(STOCK_BONUS * 100)} % el cobro.`;
 }
+// Las 4 cajitas de datos cambian de letrero entre negocio y casa
+function setLabels(...txt) {
+  ['#shCap', '#shPay', '#shUpk', '#shEarn'].forEach((id, i) => { $(id).nextElementSibling.textContent = txt[i]; });
+}
+const homeUp = t => HOME.cost * t.lvl;
+function renderHome(t) {
+  const h = hap(), cap = capOfHome(t);
+  $('#shTitle').textContent = '🏠 ' + HOME.name;
+  $('#shLvl').textContent = 'Nivel ' + t.lvl + ' de 3';
+  setLabels('habitantes', 'de renta al día', 'de gasto al día', 'felicidad del barrio');
+  $('#shPrice').hidden = true;
+  $('#shCap').textContent = `${t.res} / ${cap}`;
+  $('#shPay').textContent = '$' + fmt(HOME.rent * t.res);
+  $('#shUpk').textContent = '$' + fmt(homeUpkeepOf(t));
+  $('#shEarn').textContent = `${hapFace(h)} ${Math.round(h)} %`;
+  let txt = `Cada vecino sale una vez al día en coche a comprar en 🛒 tiendita, 🍗 comedor o ⛽ gasolinera con surtido 📦 y paga ahí.`;
+  txt += h >= HAP_GROW ? (t.res < cap ? ' El barrio está contento: mañana llega un vecino más.' : ' La casa está llena: mejórala para que quepan más.')
+    : h < HAP_LEAVE ? ' El barrio está triste: si no encuentran surtido, se irán vecinos.' : ` Si la felicidad pasa de ${HAP_GROW} %, llegan vecinos nuevos.`;
+  const up = $('#shUp');
+  if (t.lvl < 3) {
+    txt += ` Al mejorarla caben ${HOME.cap[t.lvl]} vecinos.`;
+    up.textContent = 'Mejorar por $' + fmt(homeUp(t));
+    up.disabled = game.S.money < homeUp(t) || game.S.over;
+  } else { up.textContent = 'Nivel máximo'; up.disabled = true; }
+  $('#shNext').textContent = txt;
+}
 export function setupSheet() {
   $('#shUp').addEventListener('click', () => {
     const S = game.S, sel = game.sel;
     if (!sel || S.over) return;
     const t = T(sel.x, sel.y);
-    if (!t || t.t !== 'bld' || t.lvl >= 3) return;
-    const c = upCost(t);
+    if (!t || (t.t !== 'bld' && t.t !== 'home') || t.lvl >= 3) return;
+    const c = t.t === 'home' ? homeUp(t) : upCost(t);
     if (S.money < c) { sfx.nope(); toast('Te faltan ' + money(c - S.money)); return; }
-    S.money -= c; t.lvl++; t.slots.push(null);
+    S.money -= c; t.lvl++;
+    if (t.slots) t.slots.push(null);
     sfx.upgrade(); pop(t, 0.75); dust(sel.x, sel.y, 10);
     game.floats.push({ x: sel.x + 0.5, y: sel.y + 0.5, z: 1.1, text: '−$' + fmt(c), t: 0, neg: true });
     game.puffs.push({ x: sel.x, y: sel.y, t: 0 });
-    toast(KINDS[t.k].name + ' subió a nivel ' + t.lvl);
+    toast((t.t === 'home' ? 'La casa' : KINDS[t.k].name) + ' subió a nivel ' + t.lvl);
     track('up');
     hudCache.m = null;
     renderSheet();

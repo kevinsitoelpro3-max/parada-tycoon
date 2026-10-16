@@ -1,10 +1,11 @@
 import { KINDS, NEED_EMOJI, EMOJI_FONT, UI_FONT } from '../config.js';
-import { ctx, clamp } from '../utils.js';
+import { ctx, clamp, setCtx, canvas } from '../utils.js';
 import { game, T, serviceTime } from '../state.js';
 import { cam } from '../camera.js';
 import { scr, circle, rrect } from './iso.js';
 import { truckAlpha } from './scene.js';
 import { tutoTile } from '../ui/tuto.js';
+import { hapFace } from '../city.js';
 
 /* ---------- Encima del mapa: íconos de negocios, burbujas de tráileres y números flotantes ---------- */
 // Estrella de 5 puntas centrada en (x, y), de radio r
@@ -22,11 +23,11 @@ function star(x, y, r) {
 // Con el zoom normal del celular (cam.z < 0.8) el letrerito es más chico y flota un poco más alto,
 // para no tapar los letreros de azotea que identifican cada negocio. Entre 0.7 y 0.8 pasa poco a poco
 // de un tamaño al otro, para que no brinque al pellizcar.
-function drawBadge(x, y, t, kb) {
-  const off = t.off > 0, col = off ? '#5E6670' : KINDS[t.k].color;
-  const [sx, ay] = scr(x + 0.5, y + 0.5, t.top || 0.6);
-  const n = clamp((cam.z - 0.7) / 0.1, 0, 1);   // 0 = zoom de celular, 1 = cerca (como antes)
-  const s = (20 + 4 * n) * kb, tip = ay - (5 - 3 * n) * kb, bot = tip - 6 * kb, sy = bot - s / 2;
+// Se dibuja una vez en un lienzo chico (badgeSprite) y en cada cuadro solo se pega: con cientos de
+// negocios, armar cada letrerito (marco, emoji y estrellas) en cada cuadro era de lo más lento.
+function paintBadge(t, kb, n) {
+  const off = t.off > 0, col = off ? '#5E6670' : KINDS[t.k].color, sx = 0;
+  const s = (20 + 4 * n) * kb, tip = -(5 - 3 * n) * kb, bot = tip - 6 * kb, sy = bot - s / 2;
   ctx.beginPath(); ctx.moveTo(sx - 5 * kb, bot - 1); ctx.lineTo(sx, tip); ctx.lineTo(sx + 5 * kb, bot - 1); ctx.closePath();
   ctx.fillStyle = col; ctx.fill();
   rrect(sx - s / 2, sy - s / 2, s, s, 6 * kb);
@@ -41,6 +42,46 @@ function drawBadge(x, y, t, kb) {
     ctx.lineWidth = 1.5 * kb; ctx.strokeStyle = '#6B4A22'; ctx.stroke();
     ctx.fillStyle = '#6B4A22'; ctx.fillRect(bx - 1 * kb, by - 5.5 * kb, 2 * kb, 11 * kb);
   }
+  if (cam.z < 0.4) return;            // muy lejos: solo el ícono
+  const r = (3.6 + 0.6 * n) * kb, gap = r * 1.9;
+  ctx.lineWidth = 1.6 * kb; ctx.strokeStyle = '#3B2F00'; ctx.fillStyle = '#F2C230';
+  for (let i = 0; i < t.lvl; i++) {
+    star(sx + (i - (t.lvl - 1) / 2) * gap, bot, r);
+    ctx.stroke(); ctx.fill();
+  }
+}
+// Letreritos ya dibujados, por tipo, nivel, sin luz y surtido. Se tiran al cambiar el tamaño (zoom o
+// densidad); mientras el zoom cambia de un cuadro a otro se dibujan directo.
+const badges = new Map();
+let badgeKey = '', direct = false;
+function badgeFrame(kb, n) {
+  const k = `${kb.toFixed(3)}|${n.toFixed(3)}|${game.dpr}|${cam.z < 0.4 ? 1 : 0}`;
+  direct = k !== badgeKey;
+  if (direct) { badges.clear(); badgeKey = k; }
+}
+function drawBadge(x, y, t, kb, n, vw, vh) {
+  const [sx, ay] = scr(x + 0.5, y + 0.5, t.top || 0.6);
+  const s = (20 + 4 * n) * kb, tip = ay - (5 - 3 * n) * kb, bot = tip - 6 * kb, sy = bot - s / 2;
+  if (sx < -60 || sx > vw + 60 || ay < -20 || ay > vh + 120) return;   // fuera de la pantalla
+  if (direct) { ctx.save(); ctx.translate(sx, ay); paintBadge(t, kb, n); ctx.restore(); }
+  else {
+    const off = t.off > 0, key = `${t.k}${t.lvl}${off ? 'x' : ''}${t.stock > 0 && !off ? 's' : ''}`;
+    let e = badges.get(key);
+    if (!e) {
+      const D = game.dpr, hw = s / 2 + 9 * kb, top = -(5 - 3 * n) * kb - 6 * kb - s - 9 * kb, bottom = 4 * kb + 2;
+      const cv = document.createElement('canvas');
+      cv.width = Math.ceil(2 * hw * D); cv.height = Math.ceil((bottom - top) * D);
+      const c = cv.getContext('2d');
+      c.setTransform(D, 0, 0, D, hw * D, -top * D);
+      c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+      const prev = setCtx(c);
+      try { paintBadge(t, kb, n); } finally { setCtx(prev); }
+      e = { cv, hw, top };
+      badges.set(key, e);
+    }
+    const D = game.dpr;
+    ctx.drawImage(e.cv, Math.round((sx - e.hw) * D) / D, Math.round((ay + e.top) * D) / D, e.cv.width / D, e.cv.height / D);
+  }
   // Propina 💰 por cobrar: bolsa dorada que rebota encima del letrerito (late más cuando se va a acabar)
   if (t.cash) {
     const now = performance.now() / 1000, fast = t.cash.ttl < 3 ? 9 : 4.5, kc = Math.max(kb, 0.95);
@@ -50,13 +91,6 @@ function drawBadge(x, y, t, kb) {
     ctx.font = `${17 * kc}px ${EMOJI_FONT}`; ctx.fillStyle = '#000';
     ctx.fillText('💰', sx, cy + 1);
     cashSpots.push({ x, y, sx, sy: cy, r: Math.max(26, cr * 1.7) });
-  }
-  if (cam.z < 0.4) return;            // muy lejos: solo el ícono
-  const r = (3.6 + 0.6 * n) * kb, gap = r * 1.9;
-  ctx.lineWidth = 1.6 * kb; ctx.strokeStyle = '#3B2F00'; ctx.fillStyle = '#F2C230';
-  for (let i = 0; i < t.lvl; i++) {
-    star(sx + (i - (t.lvl - 1) / 2) * gap, bot, r);
-    ctx.stroke(); ctx.fill();
   }
 }
 
@@ -68,17 +102,33 @@ export function cashAt(px, py) {
   return best;
 }
 
+// Casa: pastilla con la carita del barrio y cuántos viven ahí (solo de cerca)
+function drawHomeBadge(x, y, t, kb) {
+  if (cam.z < 0.5) return;
+  const [sx, ay] = scr(x + 0.5, y + 0.5, (t.top || 0.5) + 0.12);
+  const w = 34 * kb, h = 17 * kb, sy = ay - h / 2;
+  rrect(sx - w / 2, sy - h / 2, w, h, h / 2); ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fill();
+  ctx.lineWidth = 1.5 * kb; ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.stroke();
+  ctx.font = `${11 * kb}px ${EMOJI_FONT}`; ctx.fillStyle = '#000';
+  ctx.fillText(hapFace(), sx - 7 * kb, sy + 0.5);
+  ctx.font = `800 ${10.5 * kb}px ${UI_FONT}`; ctx.fillStyle = '#13261C';
+  ctx.fillText(String(t.res), sx + 8 * kb, sy + 1);
+}
+
 export function drawOverlays() {
   cashSpots.length = 0;
   const k = clamp(cam.z, 0.85, 1.35);
   const kb = clamp(cam.z * 1.1, 0.55, 1.2), kt = clamp(cam.z * 1.15, 0.7, 1.3);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
+  const nb = clamp((cam.z - 0.7) / 0.1, 0, 1), vw = canvas.width / game.dpr, vh = canvas.height / game.dpr;
+  badgeFrame(kb, nb);
   // De atrás hacia adelante, para que el ícono de un negocio cercano quede encima del de atrás
   for (let d = 1; d < game.W + game.H - 1; d++) {
     for (let x = Math.max(1, d - game.H + 1); x <= Math.min(game.W - 1, d); x++) {
       const t = T(x, d - x);
-      if (t.t === 'bld') drawBadge(x, d - x, t, kb);
+      if (t.t === 'bld') drawBadge(x, d - x, t, kb, nb, vw, vh);
+      else if (t.t === 'home') drawHomeBadge(x, d - x, t, kb);
     }
   }
   ctx.lineJoin = 'miter';
@@ -113,6 +163,15 @@ export function drawOverlays() {
     circle(sx, sy, p.r * (0.6 + f) * cam.z, p.c);
   }
   ctx.globalAlpha = 1;
+  // Coches de ciudadanos: burbuja chica con lo que van a comprar, o la carita al volver
+  for (const c of cam.z < 0.5 ? [] : game.cars) {
+    const em = c.happy > 0 ? '😊' : c.sad ? '😟' : c.state === 'go' ? NEED_EMOJI[c.need] : null;
+    if (!em) continue;
+    const [sx, sy] = scr(c.x + c.ox, c.y + c.oy, 0.75), r = 8.5 * kt;
+    circle(sx, sy, r, '#FFFFFF');
+    ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.stroke();
+    ctx.font = `${9.5 * kt}px ${EMOJI_FONT}`; ctx.fillStyle = '#000'; ctx.fillText(em, sx, sy + 1);
+  }
   for (const f of game.floats) {
     const [sx, sy] = scr(f.x, f.y, f.z);
     ctx.globalAlpha = clamp(1 - f.t / 1.6, 0, 1);

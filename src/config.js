@@ -98,6 +98,21 @@ export const XP_BASE = 30, XP_STEP = 20;
 // Propina 💰: al terminar un servicio, CASH_CHANCE de las veces el negocio deja una bolsa que se cobra
 // tocándolo (vale un cobro más). Dura CASH_TTL segundos reales.
 export const CASH_CHANCE = 0.12, CASH_TTL = 8;
+// Ciudad (1.3): casas con habitantes que van en coche a comprar al comercio surtido.
+// HOME.cap: habitantes según el nivel. Al cierre del día cobras HOME.rent por habitante.
+export const HOME = { name: 'Casa', emoji: '🏠', cost: 350, upkeep: 5, rent: 3, cap: [4, 8, 12], start: 2 };
+// Dónde compran los ciudadanos (solo si tienen surtido) y qué parte del cobro de un tráiler pagan.
+export const CITY_KINDS = ['shop', 'food', 'gas'], CITIZEN_PAY = 0.6;
+// Viajes: cada habitante sale una vez por día, entre CITY_HOURS (reloj de la parada).
+export const CITY_HOURS = [7, 22], CITY_SHOP_TIME = 1.2;
+// Coches en la calle a la vez: si ya hay CAR_MAX, el vecino compra sin que se dibuje su coche
+// (mismo cobro, surtido y felicidad), para que un barrio enorme no frene el juego.
+export const CAR_MAX = 30;
+// Felicidad del barrio (0 a 100): sube al comprar (más con decoración junto a la casa), baja si no
+// encuentran comercio surtido. Al cierre: arriba de HAP_GROW llega un vecino por casa, abajo de
+// HAP_LEAVE se va uno.
+export const HAP_START = 65, HAP_UP = 1, HAP_DECO = 0.4, HAP_DOWN = 2, HAP_GROW = 70, HAP_LEAVE = 40;
+export const CAR_COLORS = ['#E63946', '#F4A261', '#2A9D8F', '#457B9D', '#F1FAEE', '#8D99AE', '#FFB703', '#6A4C93'];
 export const CABS = ['#D7263D', '#1B998B', '#F46036', '#3F88C5', '#E2B33C', '#6A4C93', '#33363F', '#2A9D5C'];
 export const TRAILERS = ['#F1F1F1', '#C7CDD6', '#E6DFCF', '#9DB6C8', '#D9534F', '#5C7F67'];
 export const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];

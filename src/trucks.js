@@ -123,7 +123,7 @@ export function finishService(tr) {
     S.rep = Math.min(5, S.rep + priceOf(b).rep);
     b.earned = (b.earned || 0) + pay;
     contractServed(b.k);
-    if (b.k === 'dock') supply(tr.bx, tr.by);
+    if (b.k === 'dock') { supply(tr.bx, tr.by); track('unload'); }
     else if (b.stock > 0) b.stock--;
     addXp(1);
     track('serve'); track('earn', pay); track('kind', 1, b.k);

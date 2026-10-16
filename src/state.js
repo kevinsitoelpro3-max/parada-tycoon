@@ -1,4 +1,4 @@
-import { DECOS, PAIRS, NEIGHBOR_BONUS, BONUS_MAX, PRICES, PERKS, PERK_MAX, XP_BASE, XP_STEP, STOCK_BONUS, STOCK_MAX } from './config.js';
+import { DECOS, PAIRS, NEIGHBOR_BONUS, BONUS_MAX, PRICES, PERKS, PERK_MAX, XP_BASE, XP_STEP, STOCK_BONUS, STOCK_MAX, HOME } from './config.js';
 import { W0, H0, WMAX, HMAX, LAND_BASE, KEY, DAY_LEN, DAY_SCALE, RUSH, KINDS, MODES, OPEN_HOUR, CLOSE_HOUR, DUSK, DAWN, NIGHT_FROM } from './config.js';
 import { clamp, mulberry32 } from './utils.js';
 import { GOALS } from './goals.js';
@@ -9,7 +9,7 @@ import { GOALS } from './goals.js';
 export const game = {
   S: null,              // partida: dinero, casillas, día, reputación...
   W: W0, H: H0,         // columnas y filas de terreno (crecen al ampliar)
-  trucks: [], floats: [], puffs: [],
+  trucks: [], floats: [], puffs: [], cars: [], fx: [],   // cars: coches de ciudadanos (city.js); fx: polvo (fx.js)
   tool: 'none', speed: 1, sel: null,
   spawnT: 1.2, goalT: 0, saveT: 0, userCam: false, dpr: 1, rainT: 0, billCache: 0,
   sky: '#D2E4D8', themeDark: false, night: 0, dark: false,   // tema oscuro; oscuridad de 0 a 1; luces encendidas
@@ -59,6 +59,7 @@ export const priceOf = t => PRICES[t.price ?? 1] || PRICES[1];
 export const payNow = (t, x, y) => Math.round(payOf(t) * repMult() * priceOf(t).mult * (1 + (x === undefined ? 0 : bonusAt(x, y))) * (1 + perkVal('cobro')) * (t.stock > 0 ? 1 + STOCK_BONUS : 1));
 export const inflation = () => 1 + 0.06 * (game.S.day - 1);
 export const upkeepOf = (t, lvl = t.lvl) => Math.round(KINDS[t.k].upkeep * lvl * mode().upkeep * inflation() * DAY_SCALE * (1 - perkVal('ahorro')));
+export const homeUpkeepOf = (t, lvl = t.lvl) => Math.round(HOME.upkeep * lvl * mode().upkeep * inflation() * DAY_SCALE * (1 - perkVal('ahorro')));
 export const upCost = t => KINDS[t.k].cost * t.lvl;
 // La compra número n cuesta LAND_BASE × n, contando las compras por el tamaño del terreno
 // (no por S.land: las partidas de antes ya traen gratis lo que compraron hasta 10 × 12).
@@ -87,6 +88,7 @@ export function totalUpkeep() {
     if (t.t === 'bld') c += KINDS[t.k].upkeep * t.lvl;
     else if (t.t === 'road') c += 1;
     else if (t.t === 'deco' && DECOS[t.d]) c += DECOS[t.d].upkeep;
+    else if (t.t === 'home') c += HOME.upkeep * t.lvl;
   }
   return Math.round(c * mode().upkeep * inflation() * DAY_SCALE * (1 - perkVal('ahorro')));
 }
@@ -127,8 +129,9 @@ export function save() {
       v: 3, mode: S.mode, money: S.money, served: S.served, lost: S.lost, goal: S.goal,
       day: S.day, dayT: S.dayT, rep: S.rep, red: S.red, perfectDays: S.perfectDays, bestDay: S.bestDay,
       dayEarn: S.dayEarn, dayServed: S.dayServed, dayLost: S.dayLost, w: game.W, h: game.H, land: S.land || 0, over: S.over, ct: S.contract || null, h2: !!S.hwy2,
-      xp: S.xp || 0, pk: S.perks || {}, te: S.total || 0, rt: S.retos || 0, cs: S.cash || 0, ...(S.river !== undefined ? { rv: S.river } : {}),
-      tiles: S.tiles.map(t => t.t === 'bld' ? { t: 'bld', k: t.k, l: t.lvl, e: t.earned || 0, ...(t.price !== undefined && t.price !== 1 ? { p: t.price } : {}), ...(t.stock > 0 ? { st: t.stock } : {}) } : t.t === 'deco' ? { t: 'deco', d: t.d } : t.br ? { t: 'road', b: 1 } : t.sand ? { t: t.t, s: 1 } : { t: t.t })
+      xp: S.xp || 0, pk: S.perks || {}, te: S.total || 0, rt: S.retos || 0, cs: S.cash || 0,
+      ...(S.hap !== undefined ? { hp: Math.round(S.hap * 10) / 10 } : {}), ci: S.cit || 0, ...(S.river !== undefined ? { rv: S.river } : {}),
+      tiles: S.tiles.map(t => t.t === 'bld' ? { t: 'bld', k: t.k, l: t.lvl, e: t.earned || 0, ...(t.price !== undefined && t.price !== 1 ? { p: t.price } : {}), ...(t.stock > 0 ? { st: t.stock } : {}) } : t.t === 'deco' ? { t: 'deco', d: t.d } : t.t === 'home' ? { t: 'home', l: t.lvl, n: t.res } : t.br ? { t: 'road', b: 1 } : t.sand ? { t: t.t, s: 1 } : { t: t.t })
     };
     localStorage.setItem(KEY, JSON.stringify(data));
   } catch (e) { /* sin almacenamiento: el juego sigue */ }
@@ -148,6 +151,7 @@ export function load() {
     const old = d.tiles.map(o => (o && o.t === 'bld' && KINDS[o.k])
       ? { t: 'bld', k: o.k, lvl: clamp(o.l | 0, 1, 3), earned: o.e | 0, ...(o.p === 0 || o.p === 2 ? { price: o.p } : {}), ...(o.st > 0 ? { stock: clamp(o.st | 0, 0, STOCK_MAX) } : {}) }
       : (o && o.t === 'deco' && DECOS[o.d]) ? { t: 'deco', d: o.d }
+      : (o && o.t === 'home') ? { t: 'home', k: 'home', lvl: clamp(o.l | 0, 1, 3), res: clamp(o.n | 0, 1, HOME.cap[clamp(o.l | 0, 1, 3) - 1]) }
       : (o && o.t === 'road' && o.b) ? { t: 'road', br: true }
       : (o && o.s && (o.t === 'grass' || o.t === 'tree' || o.t === 'rock')) ? { t: o.t, sand: true }
       : { t: (o && valid.includes(o.t)) ? o.t : 'grass' });
@@ -169,6 +173,7 @@ export function load() {
       dayEarn: +d.dayEarn || 0, dayServed: +d.dayServed || 0, dayLost: +d.dayLost || 0,
       w: game.W, h: game.H, land, over: !!d.over, tiles,
       // nivel de dueño, mejoras, total vendido, retos cumplidos y propinas 💰 (las partidas de antes empiezan en 0)
+      ...(Number.isFinite(+d.hp) && d.hp !== undefined ? { hap: clamp(+d.hp, 0, 100) } : {}), cit: Math.max(0, d.ci | 0),
       xp: Math.max(0, +d.xp || 0), total: Math.max(0, +d.te || 0), retos: Math.max(0, d.rt | 0), cash: Math.max(0, d.cs | 0),
       perks: Object.fromEntries(Object.keys(PERKS).filter(k => d.pk && d.pk[k] > 0).map(k => [k, clamp(d.pk[k] | 0, 0, PERK_MAX)])), hwy2: !!d.h2, ...(Number.isInteger(d.rv) && d.rv > 0 && d.rv < game.H ? { river: d.rv } : {}),
       // contrato de flotilla del día (si el guardado trae uno válido)
