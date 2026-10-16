@@ -24,11 +24,15 @@ export const KINDS = {
   // Negocios extra: atienden a tráileres que antes pasaban de largo (ver EXTRA_SHARE y spawn)
   shop:  { name: 'Tiendita',      emoji: '🛒', cost: 200, pay: 20, time: 1.5, upkeep: 25, color: '#2A9D5C', extra: true },
   wash:  { name: 'Lavado',        emoji: '🚿', cost: 350, pay: 45, time: 3.5, upkeep: 45, color: '#1B8FC4', extra: true },
-  repair:{ name: 'Taller',        emoji: '🔧', cost: 700, pay: 110, time: 7, upkeep: 90, color: '#6B7280', extra: true }
+  repair:{ name: 'Taller',        emoji: '🔧', cost: 700, pay: 110, time: 7, upkeep: 90, color: '#6B7280', extra: true },
+  // Pensión: solo de noche (desde NIGHT_FROM); los tráileres se quedan y pagan al cierre del día
+  park:  { name: 'Pensión',       emoji: '🅿️', cost: 500, pay: 120, time: Infinity, upkeep: 40, color: '#3B5BA5', night: true }
 };
 // De los tráileres que pasan de largo sin pedir nada (18 %), cada tipo de negocio extra que ya
 // tengas se queda con esta parte: con uno, el 30 % de ellos; con los tres, el 90 %.
 export const EXTRA_SHARE = 0.3;
+// De noche, de los tráileres sin pedido, esta parte busca dónde pasar la noche si tienes pensión
+export const PARK_SHARE = 0.5;
 // Tráileres con dos pedidos: de los que ya encontraron un negocio básico, COMBO_CHANCE también
 // quiere otro tipo básico que tengas. Si los dos negocios están a COMBO_NEAR casillas o menos
 // (sumando filas y columnas), el segundo cobro lleva COMBO_TIP de propina.
@@ -41,7 +45,7 @@ export const MODES = {
   dificil: { name: 'Difícil', money: 400, upkeep: 1.5, traffic: 1.15, repLoss: 0.18, redDays: 1, eventsFrom: 2,
              desc: 'Difícil: gastos altos, más tráfico, la reputación cae rápido y quiebras al primer cierre en rojo.' }
 };
-export const NEED_EMOJI = { gas: '⛽', food: '🍗', sleep: '💤', shop: '🍫', wash: '💦', repair: '🔧' };  // emojis que existen desde Android 7
+export const NEED_EMOJI = { gas: '⛽', food: '🍗', sleep: '💤', shop: '🍫', wash: '💦', repair: '🔧', park: '🅿️' };  // emojis que existen desde Android 7
 export const COST = { road: 20, tree: 15, demo: 10 };
 // Decoración: va en el pasto (sin calle) y sube el cobro de los negocios de las 8 casillas de alrededor.
 // upkeep: gasto diario en días de 75 s, como KINDS. Emojis que existen desde Android 7.

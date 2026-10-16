@@ -27,6 +27,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Decoración y vecinos:** 💺 banca ($60, gasto $2), 🌷 jardín ($90, $3) y 💡 letrero luminoso ($180, $6) van en el pasto (`DECOS`, casillas `t: 'deco'` con `d`; se guardan como `{ t: 'deco', d }`). Suben el cobro de los negocios de las 8 casillas de alrededor: +5 %, +8 % y +12 %. Parejas que se ayudan (`PAIRS`): comedor y hotel, gasolinera y tiendita, lavado y taller; con su pareja al lado cobran +10 %. Tope +30 % por negocio (`bonusAt`, `payNow(t, x, y)`). La ficha del negocio muestra cuánto suma.
 - **Precio por negocio:** en la ficha se elige Barato, Normal o Caro (`PRICES`, `t.price` 0/1/2, se guarda como `p` solo si no es normal). Barato cobra ×0.8, da +0.045 de reputación por cliente y los tráileres lo prefieren; Caro cobra ×1.3, da +0.01 y lo dejan al último (`avoid` en `findService`). Normal es como antes (+0.03).
 - **Contratos de flotillas** (`src/contracts.js`): desde el día 2, al empezar cada día una empresa inventada encarga N tráileres en un tipo de negocio que ya tienes antes de las 20:00; N = 5 + 3 × negocios de ese tipo + día / 2 (máximo 30) y el premio es N × el cobro base (como si pagaran doble). Sin castigo si no llegas. Se ve en una línea del marcador y se guarda como `ct`.
+- **Pensión de tráileres** (`park` en `KINDS`, con `night: true`): 🅿️ $500, cobra $120 por noche, gasto $40. Desde las 20:00, si tienes pensión, la mitad de los tráileres sin pedido (`PARK_SHARE`) buscan dónde quedarse (sin pensión no hay sorteo). Su servicio no termina solo (`time: Infinity`): al cierre del día pagan y se van (`closeDay`). No cuenta para la meta de los 6 tipos ni para los contratos.
 - **Negocios:** nivel 1 a 3. Cada nivel suma un lugar y +50 % de cobro. Mejorar cuesta el precio base por el nivel actual.
 - **Días:** cada día dura 180 segundos de juego (`DAY_LEN`), con un reloj de 06:00 a 24:00 en el marcador. Al cierre ("corte de caja") se pagan gastos de negocios y calles, con inflación de 6 % por día.
 - **Escala del día:** el balance se hizo con días de 75 s. `DAY_SCALE = DAY_LEN / 75` multiplica los gastos diarios y la hora de los eventos, así que cambiar `DAY_LEN` no cambia lo que se gana o paga por minuto. Las metas que dependen del largo del día usan $5,000 en un día, `PERFECT_DAY_MIN` (25) clientes sin enojados y llegar al día 10.
@@ -63,7 +64,7 @@ src/theme.js            lee el tema claro u oscuro y calcula la luz del día (ga
 src/render/iso.js       primitivas isométricas (P, poly, box, shade...)
 src/render/scene.js     reúne y reexporta lo de abajo (draw.js lo importa de aquí)
 src/render/terrain.js   pasto, calles, carretera, agua, árboles, resaltados y orilla del terreno
-src/render/buildings/   un archivo por negocio (gas, food, sleep, shop, wash, repair) y index.js; cada uno exporta draw(x, y, t) y devuelve la altura del techo
+src/render/buildings/   un archivo por negocio (gas, food, sleep, shop, wash, repair, park) y index.js; cada uno exporta draw(x, y, t) y devuelve la altura del techo
 src/render/bldcache.js  caché de negocios: cada uno se dibuja una vez en un lienzo chico y luego solo se pega (si un dibujo empieza a depender de algo nuevo, agrégalo a `sig`)
 src/render/vehicles.js  tráileres en las 4 direcciones (faros de noche)
 src/render/weather.js   lluvia
@@ -109,7 +110,7 @@ Kevin pidió hacerla en partes chicas para cuidar los créditos: programar direc
 4. ~~Decoración y vecinos (bancas, jardín, letrero luminoso; comedor junto a hotel cobra más)~~
 5. ~~Precio por negocio (barato o caro)~~
 6. ~~Contratos de flotillas (encargos diarios, empresas inventadas)~~
-7. Pensión de tráileres (pasan la noche y pagan al amanecer)
+7. ~~Pensión de tráileres (pasan la noche y pagan al amanecer)~~
 8. Filas (esperan en la calle antes de enojarse)
 9. Eventos donde decides (inspección, feria, paro de transportistas)
 10. Segunda carretera (se abre al ampliar el terreno)

@@ -17,7 +17,7 @@ export function newContract() {
   const S = game.S;
   S.contract = null;
   if (S.day < 2) return null;
-  const owned = Object.keys(KINDS).filter(k => countK(k) > 0);
+  const owned = Object.keys(KINDS).filter(k => !KINDS[k].night && countK(k) > 0);
   if (!owned.length) return null;
   const k = pick(owned);
   const n = Math.min(30, 5 + 3 * countK(k) + Math.floor(S.day / 2));

@@ -10,7 +10,7 @@ import { drawTruck } from '../src/render/vehicles.js';
 const night = new URLSearchParams(location.search).has('noche');
 if (night) document.body.classList.add('dark');
 game.dark = night;
-const CW = 1500, CH = 1700, DPR = 2;
+const CW = 1500, CH = 1900, DPR = 2;
 canvas.width = CW * DPR; canvas.height = CH * DPR;
 ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 ctx.fillStyle = night ? '#13201B' : '#D2E4D8'; ctx.fillRect(0, 0, CW, CH);
@@ -44,7 +44,7 @@ kinds.forEach((k, r) => {
 });
 
 // --- Escena chica: carretera, calles, agua, árboles, negocios y tráileres ---
-const sy0 = 1230;
+const sy0 = 1420;
 label('Escena: carretera, calles, agua, árboles y tráileres', CW / 2, sy0 - 10);
 game.W = 7; game.H = 6;
 const map = [

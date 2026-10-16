@@ -8,6 +8,7 @@ import { closeSheet } from './ui/sheet.js';
 import { menuEl, overEl, renderMenu } from './ui/menu.js';
 import { sfx } from './audio/sfx.js';
 import { newContract } from './contracts.js';
+import { finishService } from './trucks.js';
 
 /* ---------- Días, gastos y eventos ---------- */
 export function rollEvent() {
@@ -23,6 +24,13 @@ export function rollEvent() {
 }
 export function closeDay() {
   const S = game.S;
+  // Amanece: los tráileres que pasaron la noche en la pensión pagan y se van
+  const parked = game.trucks.filter(tr => tr.state === 'service' && tr.need === 'park');
+  if (parked.length) {
+    const before = S.money;
+    for (const tr of parked) finishService(tr);
+    toast(`🅿️ ${parked.length > 1 ? parked.length + ' tráileres pasaron' : 'Un tráiler pasó'} la noche en tu pensión: +$${fmt(S.money - before)}`, 3000, true);
+  }
   const bill = totalUpkeep();
   S.money -= bill;
   if (S.dayLost === 0 && S.dayServed >= PERFECT_DAY_MIN) S.perfectDays++;

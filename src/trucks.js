@@ -1,4 +1,4 @@
-import { CABS, TRAILERS, KINDS, EXTRA_SHARE, COMBO_CHANCE, COMBO_NEAR, COMBO_TIP } from './config.js';
+import { CABS, TRAILERS, KINDS, EXTRA_SHARE, PARK_SHARE, COMBO_CHANCE, COMBO_NEAR, COMBO_TIP } from './config.js';
 import { clamp, pick } from './utils.js';
 import { game, T, mode, inRush, isNight, countK, payNow, priceOf } from './state.js';
 import { findService, parkSpot } from './routes.js';
@@ -37,7 +37,9 @@ export function spawn() {
     // quitan un cliente a gasolina, comida o descanso. Cada tipo extra que ya tengas se queda
     // con EXTRA_SHARE de esos tráileres. Sin negocios extra no hay sorteo y todo sigue igual.
     const extras = ownedExtras();
-    if (extras.length) {
+    // De noche, con pensión, la mitad de estos busca dónde quedarse (sin pensión no hay sorteo)
+    if (isNight() && countK('park') > 0 && Math.random() < PARK_SHARE) tr.need = 'park';
+    else if (extras.length) {
       const r = Math.random();
       if (r < EXTRA_SHARE * extras.length) tr.need = extras[Math.min(extras.length - 1, Math.floor(r / EXTRA_SHARE))];
     }
