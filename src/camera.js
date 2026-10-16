@@ -35,7 +35,8 @@ export function screenToTile(sx, sy) {
   return [Math.floor((a + b) / 2), Math.floor((b - a) / 2)];
 }
 export function resize() {
-  game.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  // Densidad de píxeles con tope (game.dprCap baja solo si el celular no alcanza los cuadros; ver main.js)
+  game.dpr = Math.min(window.devicePixelRatio || 1, game.dprCap || 2);
   canvas.width = Math.max(1, Math.round(stage.clientWidth * game.dpr));
   canvas.height = Math.max(1, Math.round(stage.clientHeight * game.dpr));
   if (!game.userCam) fit(); else clampCam();

@@ -1,6 +1,6 @@
 import { canvas, ctx, clamp } from '../utils.js';
 import { game, T } from '../state.js';
-import { drawGround, drawHighlights, drawTree, drawTruck, drawRain, outerTrees, truckAlpha } from './scene.js';
+import { drawHighlights, drawTree, drawTruck, drawRain, outerTrees, truckAlpha } from './scene.js';
 import { drawCar } from './vehicles.js';
 import { worldXform, P } from './iso.js';
 import { drawDeco, drawRock } from './decor.js';
@@ -8,6 +8,7 @@ import { bldFrame, drawBldCached } from './bldcache.js';
 import { drawNight, skyColor } from './night.js';
 import { drawOverlays, drawTutoMark } from './overlays.js';
 import { popScale } from '../fx.js';
+import { drawGroundCached } from './groundcache.js';
 
 /* ---------- Dibujo de un cuadro completo ---------- */
 export function draw() {
@@ -18,7 +19,7 @@ export function draw() {
   worldXform();
   ctx.lineCap = 'round';
   bldFrame();
-  drawGround();
+  drawGroundCached();
   drawHighlights();
 
   // Se dibuja de atrás hacia adelante para que lo cercano tape a lo lejano

@@ -1,4 +1,4 @@
-import { HOME, CITY_KINDS, CITIZEN_PAY, CITY_HOURS, CITY_SHOP_TIME, HAP_START, HAP_UP, HAP_DECO, HAP_DOWN, HAP_GROW, HAP_LEAVE, CAR_COLORS, DIRS, DAY_LEN, OPEN_HOUR, CLOSE_HOUR } from './config.js';
+import { CAR_MAX, HOME, CITY_KINDS, CITIZEN_PAY, CITY_HOURS, CITY_SHOP_TIME, HAP_START, HAP_UP, HAP_DECO, HAP_DOWN, HAP_GROW, HAP_LEAVE, CAR_COLORS, DIRS, DAY_LEN, OPEN_HOUR, CLOSE_HOUR } from './config.js';
 import { mulberry32, clamp, fmt } from './utils.js';
 import { game, T, isRoad, payNow, hourNow } from './state.js';
 import { moveAlong } from './trucks.js';
@@ -61,6 +61,13 @@ function depart(h) {
     game.floats.push({ x: h.x + 0.5, y: h.y + 0.5, z: 1, text: '😟 sin surtido', t: 0, neg: true });
     return;
   }
+  // Calle llena de coches: compra de una vez, sin coche en el mapa (el resultado es el mismo)
+  if (game.cars.length >= CAR_MAX) {
+    const c = { bx: f.bx, by: f.by, hx: h.x, hy: h.y, quiet: true };
+    buy(c);
+    S.trips = (S.trips || 0) + 1;
+    return;
+  }
   const last = f.path[f.path.length - 1];
   const pts = f.path.map(([x, y]) => [x + 0.5, y + 0.5]);
   const stop = [last[0] + 0.5 + (f.bx - last[0]) * 0.22, last[1] + 0.5 + (f.by - last[1]) * 0.22];
@@ -87,9 +94,11 @@ function buy(c) {
   setHap(hap() + HAP_UP + (decoNear(c.hx, c.hy) ? HAP_DECO : 0));
   addXp(1);
   track('cit');
-  sfx.cash();
   c.happy = 1.4;
-  game.floats.push({ x: c.bx + 0.5, y: c.by + 0.5, z: 1.1, text: '+$' + pay, t: 0, neg: false });
+  // sin coche no hay sonido ni número flotante (con barrios enormes serían cientos)
+  if (c.quiet) return;
+  sfx.cash();
+  if (game.floats.length < 40) game.floats.push({ x: c.bx + 0.5, y: c.by + 0.5, z: 1.1, text: '+$' + pay, t: 0, neg: false });
 }
 
 // Cada paso de la simulación (dt: tiempo de juego)

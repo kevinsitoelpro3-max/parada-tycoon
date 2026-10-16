@@ -1,7 +1,7 @@
 import { canvas, ctx, setCtx } from '../utils.js';
 import { game } from '../state.js';
 import { cam } from '../camera.js';
-import { P, worldXform } from './iso.js';
+import { P } from './iso.js';
 import { drawBld } from './buildings/index.js';
 import { popScale } from '../fx.js';
 
@@ -68,12 +68,13 @@ export function drawBldCached(x, y, t) {
   }
   e.used = frame;
   t.top = e.top;                              // demoler borra t.top y al reconstruir igual se reusa el dibujo
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  // Se pega con la transformación del mundo puesta (sin cambiarla: setTransform por cada negocio
+  // costaba mucho), en la posición que cae justo en el píxel entero (dx, dy) del lienzo
+  const X = (dx - game.dpr * cam.x) / D, Y = (dy - game.dpr * cam.y) / D;
   const ps = popScale(t);
   if (ps) {
     // rebote: escala desde el centro del piso de la casilla
-    const [px, py] = P(x + 0.5, y + 0.5), ax = D * px + game.dpr * cam.x, ay = D * py + game.dpr * cam.y;
-    ctx.drawImage(e.cv, ax + (dx - ax) * ps[0], ay + (dy - ay) * ps[1], w * ps[0], h * ps[1]);
-  } else ctx.drawImage(e.cv, dx, dy);
-  worldXform();
+    const [px, py] = P(x + 0.5, y + 0.5);
+    ctx.drawImage(e.cv, px + (X - px) * ps[0], py + (Y - py) * ps[1], w / D * ps[0], h / D * ps[1]);
+  } else ctx.drawImage(e.cv, X, Y, w / D, h / D);
 }

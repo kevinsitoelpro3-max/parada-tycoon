@@ -1,5 +1,5 @@
 import { WMAX, HMAX, TW, TH, ZU } from '../config.js';
-import { canvas, ctx, mulberry32 } from '../utils.js';
+import { ctx, mulberry32 } from '../utils.js';
 import { game, T, isRoad } from '../state.js';
 import { check } from '../tools.js';
 import { P, poly, tile, cbox, circle } from './iso.js';
@@ -274,7 +274,7 @@ function water(x, y, detail) {
 export function drawGround() {
   const W = game.W, H = game.H;
   // Solo se arman las casillas que caen en pantalla; el detalle fino se salta cuando el mapa se ve muy chico
-  const m = ctx.getTransform(), cw = canvas.width, ch = canvas.height;
+  const m = ctx.getTransform(), cw = ctx.canvas.width, ch = ctx.canvas.height;
   const detail = m.a / (game.dpr || 1) >= 0.45;
   for (let y = -4; y <= H + 3; y++) for (let x = -3; x <= W + 2; x++) {
     const inLot = x >= 0 && x < W && y >= 0 && y < H;

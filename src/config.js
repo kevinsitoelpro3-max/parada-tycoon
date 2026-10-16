@@ -105,6 +105,9 @@ export const HOME = { name: 'Casa', emoji: '🏠', cost: 350, upkeep: 5, rent: 3
 export const CITY_KINDS = ['shop', 'food', 'gas'], CITIZEN_PAY = 0.6;
 // Viajes: cada habitante sale una vez por día, entre CITY_HOURS (reloj de la parada).
 export const CITY_HOURS = [7, 22], CITY_SHOP_TIME = 1.2;
+// Coches en la calle a la vez: si ya hay CAR_MAX, el vecino compra sin que se dibuje su coche
+// (mismo cobro, surtido y felicidad), para que un barrio enorme no frene el juego.
+export const CAR_MAX = 30;
 // Felicidad del barrio (0 a 100): sube al comprar (más con decoración junto a la casa), baja si no
 // encuentran comercio surtido. Al cierre: arriba de HAP_GROW llega un vecino por casa, abajo de
 // HAP_LEAVE se va uno.
