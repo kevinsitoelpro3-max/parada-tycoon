@@ -25,6 +25,6 @@ export const GOALS = [
   { text: 'Abre una tiendita',                         prize: 100,  ok: () => countK('shop') >= 1 },
   { text: 'Abre un lavado de tráileres',               prize: 200,  ok: () => countK('wash') >= 1 },
   { text: 'Abre un taller',                            prize: 400,  ok: () => countK('repair') >= 1 },
-  { text: 'Ten los 6 tipos de negocio a la vez',       prize: 1500, ok: () => Object.keys(KINDS).every(k => countK(k) >= 1) },
+  { text: 'Ten los 6 tipos de negocio a la vez',       prize: 1500, ok: () => Object.keys(KINDS).filter(k => !KINDS[k].night).every(k => countK(k) >= 1) },
   { text: 'Atiende 1,000 tráileres',                   prize: 3000, ok: () => game.S.served >= 1000 }
 ];

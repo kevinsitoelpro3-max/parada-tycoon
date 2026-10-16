@@ -1,8 +1,9 @@
-import { CABS, TRAILERS, KINDS, EXTRA_SHARE, COMBO_CHANCE, COMBO_NEAR, COMBO_TIP } from './config.js';
+import { CABS, TRAILERS, KINDS, EXTRA_SHARE, PARK_SHARE, QUEUE_WAIT, COMBO_CHANCE, COMBO_NEAR, COMBO_TIP } from './config.js';
 import { clamp, pick } from './utils.js';
-import { game, T, mode, inRush, isNight, countK, payNow } from './state.js';
-import { findService, parkSpot } from './routes.js';
+import { game, T, mode, inRush, isNight, countK, payNow, priceOf } from './state.js';
+import { findService, findQueue, parkSpot } from './routes.js';
 import { sfx } from './audio/sfx.js';
+import { contractServed } from './contracts.js';
 
 /* ---------- Tráileres ---------- */
 // Tipos de negocio extra que ya tienes (tiendita, lavado, taller)
@@ -13,15 +14,17 @@ export function spawnInterval() {
   const S = game.S;
   if (game.ev.burst > 0) return 0.5;
   let base = clamp(2.6 - S.served * 0.004 - (S.day - 1) * 0.07, 0.75, 2.6);
-  base /= mode().traffic * (0.7 + 0.1 * S.rep);
+  base /= mode().traffic * (0.7 + 0.1 * S.rep) * (game.ev.traffic || 1);
   if (inRush()) base *= 0.5;
   return base * (0.8 + Math.random() * 0.4);
 }
-export function spawn() {
+// top = true: el tráiler llega por la carretera de arriba (de derecha a izquierda) y luego baja
+// por la principal; no hace fila ni segundo pedido.
+export function spawn(top = false) {
   const S = game.S, ev = game.ev;
-  if (game.trucks.some(tr => tr.x < 1.2 && tr.y < -0.9)) return false;
+  if (top ? game.trucks.some(tr => tr.y < 1 && tr.x > game.W + 0.8) : game.trucks.some(tr => tr.x < 1.2 && tr.y < -0.9)) return false;
   const tr = {
-    x: 0.5, y: -2.6, ox: 0, oy: 0, dir: [0, 1], path: [], speed: 2.6,
+    x: top ? game.W + 2.5 : 0.5, y: top ? 0.5 : -2.6, ox: 0, oy: 0, dir: top ? [-1, 0] : [0, 1], path: [], speed: 2.6, top,
     need: null, state: 'pass', t: 0, happy: 0, angry: false, tiles: null,
     cab: pick(CABS), trailer: pick(TRAILERS)
   };
@@ -36,22 +39,32 @@ export function spawn() {
     // quitan un cliente a gasolina, comida o descanso. Cada tipo extra que ya tengas se queda
     // con EXTRA_SHARE de esos tráileres. Sin negocios extra no hay sorteo y todo sigue igual.
     const extras = ownedExtras();
-    if (extras.length) {
+    // De noche, con pensión, la mitad de estos busca dónde quedarse (sin pensión no hay sorteo)
+    if (isNight() && countK('park') > 0 && Math.random() < PARK_SHARE) tr.need = 'park';
+    else if (extras.length) {
       const r = Math.random();
       if (r < EXTRA_SHARE * extras.length) tr.need = extras[Math.min(extras.length - 1, Math.floor(r / EXTRA_SHARE))];
     }
   }
   if (tr.need) {
-    const plan = findService(tr.need);
-    if (plan) {
+    const plan = findService(tr.need, 0, top);
+    const line = plan || top ? null : findQueue(tr.need);
+    if (line) {
+      // Todo lleno: se forma en la calle de enfrente y espera un lugar
+      (line.tile.queue || (line.tile.queue = [])).push(tr);
+      Object.assign(tr, { state: 'wait', bx: line.bx, by: line.by, slot: -1, route: line.p, patience: QUEUE_WAIT });
+      const entry = line.p[line.p.length - 1];
+      tr.path = [[0.5, entry[1] + 0.5], ...line.p.slice().reverse().map(([x, y]) => [x + 0.5, y + 0.5])];
+      tr.tiles = new Set(line.p.map(([x, y]) => x + ',' + y));
+    } else if (plan) {
       plan.tile.slots[plan.slot] = tr;
       Object.assign(tr, { state: 'arrive', bx: plan.bx, by: plan.by, slot: plan.slot, route: plan.p });
       const entry = plan.p[plan.p.length - 1];
       const inward = plan.p.slice().reverse().map(([x, y]) => [x + 0.5, y + 0.5]);
-      tr.path = [[0.5, entry[1] + 0.5], ...inward, parkSpot(tr, plan.tile)];
+      tr.path = [top ? [entry[0] + 0.5, 0.5] : [0.5, entry[1] + 0.5], ...inward, parkSpot(tr, plan.tile)];
       tr.tiles = new Set(plan.p.map(([x, y]) => x + ',' + y));
       // Segundo pedido: solo si tienes otro tipo básico (si no, no hay sorteo y el azar sigue igual)
-      if (BASIC.includes(tr.need)) {
+      if (!top && BASIC.includes(tr.need)) {
         const others = BASIC.filter(k => k !== tr.need && countK(k) > 0);
         if (others.length) {
           const r = Math.random();
@@ -67,8 +80,8 @@ export function spawn() {
       S.rep = Math.max(1, S.rep - mode().repLoss * (had ? 1 : 0.25));
     }
   }
-  if (tr.state === 'pass') tr.path = [[0.5, game.H + 2.6]];
-  if (ev.burst > 0) ev.burst--;
+  if (tr.state === 'pass') tr.path = top ? [[0.5, 0.5], [0.5, game.H + 2.6]] : [[0.5, game.H + 2.6]];
+  if (!top && ev.burst > 0) ev.burst--;
   game.trucks.push(tr);
   return true;
 }
@@ -88,18 +101,19 @@ export function finishService(tr) {
   const S = game.S;
   const b = T(tr.bx, tr.by);
   if (b && b.t === 'bld') {
-    let pay = payNow(b);
+    let pay = payNow(b, tr.bx, tr.by);
     const tip = tr.tip ? Math.round(pay * COMBO_TIP) : 0;
     pay += tip;
     S.money += pay; S.served++; S.dayServed++; S.dayEarn += pay;
-    S.rep = Math.min(5, S.rep + 0.03);
+    S.rep = Math.min(5, S.rep + priceOf(b).rep);
     b.earned = (b.earned || 0) + pay;
+    contractServed(b.k);
     sfx.cash();
     if (b.slots[tr.slot] === tr) b.slots[tr.slot] = null;
     game.floats.push({ x: tr.bx + 0.5, y: tr.by + 0.5, z: 1.1, text: '+$' + pay + (tip ? ' propina' : ''), t: 0, neg: false });
   }
   const r = tr.route, exit = r[r.length - 1];
-  const out = [...r.map(([x, y]) => [x + 0.5, y + 0.5]), [0.5, exit[1] + 0.5]];
+  const out = [...r.map(([x, y]) => [x + 0.5, y + 0.5]), ...(tr.top ? [[exit[0] + 0.5, 0.5], [0.5, 0.5]] : [[0.5, exit[1] + 0.5]])];
   // Segundo pedido: busca otro negocio más abajo en la carretera; si no hay lugar, se va contento
   if (tr.need2) {
     const need = tr.need2, plan = findService(need, exit[1]);
@@ -119,4 +133,30 @@ export function finishService(tr) {
   tr.tip = false;
   tr.state = 'leave'; tr.need = null; tr.happy = 1.6;
   tr.path = [...out, [0.5, game.H + 2.6]];
+}
+
+// Tráiler formado en la fila: entra cuando se libera un lugar (en orden) o se va enojado
+export function waitInLine(tr, dt) {
+  const S = game.S, b = T(tr.bx, tr.by);
+  const q = b && b.t === 'bld' ? (b.queue || []) : [];
+  if (b && b.t === 'bld' && !(b.off > 0) && q[0] === tr) {
+    const slot = b.slots.indexOf(null);
+    if (slot >= 0) {
+      q.shift();
+      b.slots[slot] = tr;
+      Object.assign(tr, { state: 'arrive', slot });
+      tr.path = [parkSpot(tr, b)];
+      return;
+    }
+  }
+  tr.patience -= dt;
+  if (tr.patience > 0 && b && b.t === 'bld') return;
+  const i = q.indexOf(tr);
+  if (i >= 0) q.splice(i, 1);
+  tr.angry = true; tr.need = null; tr.state = 'leave';
+  sfx.angry();
+  S.lost++; S.dayLost++;
+  S.rep = Math.max(1, S.rep - mode().repLoss);
+  const r = tr.route, exit = r[r.length - 1];
+  tr.path = [...r.map(([x, y]) => [x + 0.5, y + 0.5]), [0.5, exit[1] + 0.5], [0.5, game.H + 2.6]];
 }

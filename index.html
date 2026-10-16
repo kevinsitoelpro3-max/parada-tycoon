@@ -18,6 +18,7 @@
 </header>
 <div class="info">
   <div class="goal" id="goal"><span class="tag" id="goalTag">Meta</span><span class="txt" id="goalTxt"></span><span class="prize" id="goalPrize"></span></div>
+  <div class="contract" id="contract" hidden></div>
   <div class="day">
     <b id="dayName"><span id="dayNum">Día 1</span><span class="clk" id="dayClock">06:00</span></b>
     <div class="track" aria-hidden="true"><div class="rush"></div><div class="done" id="dayDone"></div><div class="mark" id="dayMark"></div></div>
@@ -51,6 +52,9 @@
       <div class="fact"><b id="shUpk"></b><span>de gasto al día</span></div>
       <div class="fact"><b id="shEarn"></b><span>ganado aquí</span></div>
     </div>
+    <div class="modes price" id="shPrice" role="group" aria-label="Precio">
+      <button class="btn" data-price="0">Barato</button><button class="btn" data-price="1">Normal</button><button class="btn" data-price="2">Caro</button>
+    </div>
     <p class="next" id="shNext"></p>
     <div class="row">
       <button class="btn" id="shClose">Cerrar</button>
@@ -63,6 +67,8 @@
     <h3>Terreno</h3>
     <p class="small" id="landTxt"></p>
     <div class="row land"><button class="btn primary" id="landDown"></button><button class="btn primary" id="landRight"></button></div>
+    <p class="small" id="topTxt" hidden></p>
+    <button class="btn primary" id="openTop" hidden></button>
     <h3>Cómo se juega</h3>
     <ul class="how">
       <li>Traza calles desde la carretera y pon negocios pegados a ellas.</li>
@@ -93,6 +99,11 @@
     </div>
   </div>
 
+  <div class="sheet" id="choice" hidden role="dialog" aria-labelledby="chTitle">
+    <h2 id="chTitle"></h2>
+    <p class="next" id="chTxt"></p>
+    <div class="row"><button class="btn" id="chB"></button><button class="btn primary" id="chA"></button></div>
+  </div>
   <div class="sheet bad" id="over" hidden>
     <h2>Quebraste</h2>
     <p class="next" id="overTxt"></p>
@@ -141,6 +152,10 @@
   <button class="sign tool" data-tool="shop" aria-pressed="false"><span class="ic">🛒</span><span class="nm">Tiendita</span><span class="pr">$200</span></button>
   <button class="sign tool" data-tool="wash" aria-pressed="false"><span class="ic">🚿</span><span class="nm">Lavado</span><span class="pr">$350</span></button>
   <button class="sign tool" data-tool="repair" aria-pressed="false"><span class="ic">🔧</span><span class="nm">Taller</span><span class="pr">$700</span></button>
+  <button class="sign tool" data-tool="park" aria-pressed="false"><span class="ic">🅿️</span><span class="nm">Pensión</span><span class="pr">$500</span></button>
+  <button class="sign tool" data-tool="bench" aria-pressed="false"><span class="ic">💺</span><span class="nm">Banca</span><span class="pr">$60</span></button>
+  <button class="sign tool" data-tool="garden" aria-pressed="false"><span class="ic">🌷</span><span class="nm">Jardín</span><span class="pr">$90</span></button>
+  <button class="sign tool" data-tool="neon" aria-pressed="false"><span class="ic">💡</span><span class="nm">Letrero</span><span class="pr">$180</span></button>
 </nav>
 <div class="tuto-ring" id="tutoRing" hidden aria-hidden="true"></div>
 <script type="module" src="/src/main.js"></script>

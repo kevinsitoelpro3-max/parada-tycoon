@@ -86,9 +86,18 @@ function flush() {
 const GRASS = [['#86BC5F', '#83B85B', '#8ABF62'], ['#8CC265', '#88BE60', '#90C569']];
 const GRASS_OUT = [['#95C16E', '#92BD6A', '#99C472'], ['#9AC673', '#97C26F', '#9ECA77']];
 const FLOWERS = ['#FFFFFF', '#F6D44A', '#F29AB8', '#C9B2EE'];
-function grass(x, y, inLot, detail) {
-  const pal = inLot ? GRASS : GRASS_OUT;
+const SAND = [['#E3CD98', '#DEC690', '#E7D3A2'], ['#DBC28A', '#E0C994', '#D6BC84']];
+function grass(x, y, inLot, detail, sand = false) {
+  const pal = sand ? SAND : inLot ? GRASS : GRASS_OUT;
   base(F(0, pal[(x + y) & 1][(hash(x, y) * 3) | 0]), x, y, 1, 1, 1, 1);
+  if (sand) {
+    // desierto: piedritas y, a veces, un nopal chico
+    if (!detail) return;
+    const d = hash(x, y, 1), u = x + 0.3 + hash(x, y, 2) * 0.4, v = y + 0.3 + hash(x, y, 3) * 0.4, px = sx(u, v), py = sy(u, v);
+    if (d < 0.18) { E(7, '#4F8A3C').push(px, py - 4, 2.2, 4.2); E(8, '#4F8A3C').push(px + 3, py - 5, 1.5, 2.6); }
+    else if (d < 0.4) E(7, '#B79F6E').push(px, py, 2.6, 1.6);
+    return;
+  }
   if (!detail) return;
   const d = hash(x, y, 1);
   if (d > 0.36) return;
@@ -113,9 +122,18 @@ const ASPH = '#4B4F57', WALK = '#D9D3C3', CURB = '#A1998A', SW = 0.13;
 const roadish = (nx, ny) => nx === 0 || isRoad(nx, ny);
 const NOOP = { push() {} };
 function road(x, y, detail) {
-  const e = isRoad(x + 1, y), w = isRoad(x - 1, y) || x === 1, s = isRoad(x, y + 1), n = isRoad(x, y - 1);
+  const e = isRoad(x + 1, y), w = isRoad(x - 1, y) || x === 1, s = isRoad(x, y + 1), n = isRoad(x, y - 1) || (y === 1 && !!game.S.hwy2);
   base(F(1, ASPH), x, y, w, n, e, s);
   const x0 = x, x1 = x + 1, y0 = y, y1 = y + 1;
+  if (T(x, y).br) {
+    // puente: barandal en los lados que dan al agua
+    const rail = L(8, '#C9CED6', 1.6), z = 0.12;
+    if (!n) seg(rail, x0, y0 + 0.06, x1, y0 + 0.06, z);
+    if (!s) seg(rail, x0, y1 - 0.06, x1, y1 - 0.06, z);
+    if (!w) seg(rail, x0 + 0.06, y0, x0 + 0.06, y1, z);
+    if (!e) seg(rail, x1 - 0.06, y0, x1 - 0.06, y1, z);
+    return;
+  }
   // Banquetas en los lados sin salida. El bordillo (la cara de la banqueta que da a la calle) solo se ve
   // en las banquetas de atrás (lados -x y -y), que le dan la cara a la cámara; se arma solo si el mapa se ve de cerca.
   const walk = F(2, WALK), curb = detail ? L(6, CURB, 1.5) : NOOP;
@@ -146,6 +164,22 @@ function road(x, y, detail) {
 
 /* Carretera principal (x = 0): acotamientos, rayas blancas en la orilla, raya central amarilla y valla */
 const HS = 0.15;
+// Carretera de arriba: va a lo largo de x en la fila 0; abajo se junta con las calles de la fila 1
+function highwayTop(x, detail) {
+  const jn = x >= 1 && x < game.W && isRoad(x, 1), x1 = x + 1;
+  quad(F(1, '#3A3D43'), x, 0, x1, 1);
+  quad(F(2, '#4E5259'), x, 0, x1, HS);
+  quad(F(2, jn ? ASPH : '#4E5259'), x, 1 - HS, x1, 1);
+  const edge = L(6, 'rgba(255,255,255,.85)', 1.4);
+  seg(edge, x, HS, x1, HS);
+  if (!jn) seg(edge, x, 1 - HS, x1, 1 - HS);
+  seg(L(6, '#F2C230', 1.9), x + 0.14, 0.5, x + 0.62, 0.5);
+  if (game.dark) {
+    const r = E(8, '#FFE9A0');
+    r.push(sx(x + 0.5, HS), sy(x + 0.5, HS), 1.7, 1.7);
+    if (!jn) r.push(sx(x + 0.5, 1 - HS), sy(x + 0.5, 1 - HS), 1.7, 1.7);
+  }
+}
 function highway(y, detail) {
   const jn = isRoad(1, y), y1 = y + 1;
   base(F(1, '#3A3D43'), 0, y, 0, 1, 0, 1);
@@ -223,13 +257,14 @@ export function drawGround() {
     if (px + m.a * (HX + 2) < 0 || px - m.a * (HX + 2) > cw || py + m.d * (TH + 6) < 0 || py - m.d * 8 > ch) continue;
     lvl = d;
     if (x === 0) highway(y, detail);
+    else if (game.S.hwy2 && y === 0 && x >= 1) highwayTop(x, detail);
     else if (!inLot) grass(x, y, false, detail && d < 3);
     else {
       const t = T(x, y);
       if (t.t === 'road') road(x, y, detail);
       else if (t.t === 'water') water(x, y, detail);
       else if (t.t === 'bld') quad(F(1, '#CEC9BD'), x, y, x + 1, y + 1);   // concreto bajo los negocios
-      else grass(x, y, true, detail && t.t !== 'tree');
+      else grass(x, y, true, detail && t.t !== 'tree' && t.t !== 'rock', !!t.sand);
     }
   }
   lvl = 0;

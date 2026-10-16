@@ -2,6 +2,7 @@ import { DAY_LEN } from '../config.js';
 import { $, stage, clamp, fmt, money } from '../utils.js';
 import { game, inRush, clockNow } from '../state.js';
 import { GOALS } from '../goals.js';
+import { contractLabel } from '../contracts.js';
 import { cam, fit, zoomAt } from '../camera.js';
 import { toolCost } from '../tools.js';
 import { tools } from './dock.js';
@@ -11,6 +12,7 @@ import { menuEl, renderMenu } from './menu.js';
 /* ---------- Marcador (HUD), meta actual y botones de velocidad y zoom ---------- */
 const moneyEl = $('#money'), moneySign = $('#moneySign'), moneyLabel = $('#moneyLabel');
 const servedEl = $('#served'), lostEl = $('#lost'), repStars = $('#repStars'), repNum = $('#repNum');
+const contractEl = $('#contract');
 const goalEl = $('#goal'), goalTag = $('#goalTag'), goalTxt = $('#goalTxt'), goalPrize = $('#goalPrize');
 const dayNum = $('#dayNum'), dayClock = $('#dayClock'), dayDone = $('#dayDone'), dayMark = $('#dayMark'), dayChip = $('#dayChip'), dayBill = $('#dayBill');
 // Últimos valores mostrados, para tocar el DOM solo cuando algo cambia
@@ -49,6 +51,8 @@ export function hud() {
     repStars.textContent = '★'.repeat(n) + '☆'.repeat(5 - n);
     repNum.textContent = rr.toFixed(1);
   }
+  const ct = contractLabel();
+  if (hudCache.ct !== ct) { hudCache.ct = ct; contractEl.textContent = ct; contractEl.hidden = !ct; contractEl.classList.toggle('ok', !!S.contract && S.contract.done); }
   if (hudCache.d !== S.day) { hudCache.d = S.day; dayNum.textContent = 'Día ' + S.day; }
   const clk = clockNow();
   if (hudCache.k !== clk) { hudCache.k = clk; dayClock.textContent = clk; }

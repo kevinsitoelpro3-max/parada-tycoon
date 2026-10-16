@@ -7,6 +7,7 @@ import { setTool } from './ui/dock.js';
 import { sheetEl, closeSheet } from './ui/sheet.js';
 import { menuEl, renderMenu } from './ui/menu.js';
 import { isStartOpen } from './ui/start.js';
+import { isChoiceOpen, pickChoice } from './ui/choice.js';
 
 /* ---------- App de Android ---------- */
 // Solo hace algo dentro de la app (Capacitor); en el navegador no cambia nada.
@@ -15,7 +16,8 @@ export const isNative = () => Capacitor.isNativePlatform();
 // Botón "atrás" de Android: cierra lo que esté abierto, de lo más chico a lo más grande.
 // En la pantalla de inicio (o con la partida en quiebra) sale de la app.
 export function handleBack() {
-  if (!sheetEl.hidden) closeSheet();
+  if (isChoiceOpen()) pickChoice(1);
+  else if (!sheetEl.hidden) closeSheet();
   else if (!menuEl.hidden) menuEl.hidden = true;
   else if (isStartOpen() || game.S.over) return 'exit';
   else if (game.tool !== 'none') setTool('none');

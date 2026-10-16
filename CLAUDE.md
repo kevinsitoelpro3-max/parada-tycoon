@@ -16,6 +16,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
   - El APK de prueba se firma con `android/app/debug.keystore` (contraseña pública `android`) para que se instale encima del anterior sin perder la partida. La llave de Play Store es otra y nunca se sube (`*.jks` y `keystore.properties` están en `.gitignore`).
   - Al publicar una versión nueva, subir `versionCode` (entero, +1 cada vez) y `versionName` en `android/app/build.gradle`, y `version` en `package.json`.
   - La app guarda sus partidas por separado de la versión web.
+  - **Play Store** (guía completa en `docs/play-store.md`): `build.gradle` firma la versión release con la llave de Kevin si existe `android/keystore.properties`; la acción manual "Paquete para Play Store" (`.github/workflows/play-store.yml`) arma el `.aab` con los secretos `PLAY_KEYSTORE_BASE64`, `PLAY_KEYSTORE_PASSWORD`, `PLAY_KEY_ALIAS` y `PLAY_KEY_PASSWORD`. Política de privacidad en `docs/privacidad.html` (GitHub Pages desde `/docs`) e imágenes de la ficha en `docs/tienda/`.
 
 ## Cómo funciona
 
@@ -24,6 +25,11 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Tráileres:** aparecen arriba de la carretera. El 82 % pide algo (⛽ diésel, 🍗 comida o 💤 descanso). Al aparecer buscan con BFS un negocio de ese tipo con espacio libre y conectado; si lo hay, apartan un lugar, entran, esperan el servicio y pagan. Si no, pasan de largo enojados.
 - **Negocios extra** (`extra: true` en `KINDS`): 🛒 tiendita (cobra $20, 1.5 s, gasto $25), 🚿 lavado ($45, 3.5 s, $45) y 🔧 taller ($110, 7 s, $90); gastos en base a días de 75 s, antes de `DAY_SCALE`. Cada uno abre un mercado nuevo **sin quitarles clientes a los básicos**: atienden a tráileres que antes pasaban de largo (el 18 % sin pedido). Cada tipo extra que ya tengas se queda con `EXTRA_SHARE` (0.3) de esos tráileres; con los tres, el 90 %. El reparto de gasolina, comida y descanso no cambia. Sin negocios extra no hay sorteo extra: el azar es idéntico a antes y nadie pide algo que no tienes. Pedidos: 🍫, 💦 y 🔧 (usar emojis que existen desde Android 7: la app soporta minSdk 24).
 - **Tráileres con dos pedidos:** de los tráileres que ya encontraron un negocio básico (⛽, 🍗 o 💤), el 25 % (`COMBO_CHANCE`) también quiere otro tipo básico que tengas; sin un segundo tipo básico no hay sorteo y el azar sigue igual. Al terminar el primer servicio busca ese segundo negocio en la misma fila de la carretera o más abajo (es de un sentido; `findService(need, minRow)`); si no hay lugar, se va contento. Si los dos negocios están a 3 casillas o menos (`COMBO_NEAR`, filas + columnas), el segundo cobro lleva 30 % de propina (`COMBO_TIP`). Cada servicio cuenta como un cliente atendido.
+- **Decoración y vecinos:** 💺 banca ($60, gasto $2), 🌷 jardín ($90, $3) y 💡 letrero luminoso ($180, $6) van en el pasto (`DECOS`, casillas `t: 'deco'` con `d`; se guardan como `{ t: 'deco', d }`). Suben el cobro de los negocios de las 8 casillas de alrededor: +5 %, +8 % y +12 %. Parejas que se ayudan (`PAIRS`): comedor y hotel, gasolinera y tiendita, lavado y taller; con su pareja al lado cobran +10 %. Tope +30 % por negocio (`bonusAt`, `payNow(t, x, y)`). La ficha del negocio muestra cuánto suma.
+- **Precio por negocio:** en la ficha se elige Barato, Normal o Caro (`PRICES`, `t.price` 0/1/2, se guarda como `p` solo si no es normal). Barato cobra ×0.8, da +0.045 de reputación por cliente y los tráileres lo prefieren; Caro cobra ×1.3, da +0.01 y lo dejan al último (`avoid` en `findService`). Normal es como antes (+0.03).
+- **Contratos de flotillas** (`src/contracts.js`): desde el día 2, al empezar cada día una empresa inventada encarga N tráileres en un tipo de negocio que ya tienes antes de las 20:00; N = 5 + 3 × negocios de ese tipo + día / 2 (máximo 30) y el premio es N × el cobro base (como si pagaran doble). Sin castigo si no llegas. Se ve en una línea del marcador y se guarda como `ct`.
+- **Pensión de tráileres** (`park` en `KINDS`, con `night: true`): 🅿️ $500, cobra $120 por noche, gasto $40. Desde las 20:00, si tienes pensión, la mitad de los tráileres sin pedido (`PARK_SHARE`) buscan dónde quedarse (sin pensión no hay sorteo). Su servicio no termina solo (`time: Infinity`): al cierre del día pagan y se van (`closeDay`). No cuenta para la meta de los 6 tipos ni para los contratos.
+- **Filas:** si todos los negocios de ese tipo están llenos, el tráiler se forma en la calle de enfrente de uno con lugar en su fila (`findQueue`, `t.queue`, hasta `QUEUE_MAX` = 2) y espera hasta `QUEUE_WAIT` = 10 s de juego; entra en orden cuando se libera un lugar (`waitInLine`). Si se le acaba la paciencia se va enojado con el mismo castigo de antes. No se puede demoler un negocio con fila.
 - **Negocios:** nivel 1 a 3. Cada nivel suma un lugar y +50 % de cobro. Mejorar cuesta el precio base por el nivel actual.
 - **Días:** cada día dura 180 segundos de juego (`DAY_LEN`), con un reloj de 06:00 a 24:00 en el marcador. Al cierre ("corte de caja") se pagan gastos de negocios y calles, con inflación de 6 % por día.
 - **Escala del día:** el balance se hizo con días de 75 s. `DAY_SCALE = DAY_LEN / 75` multiplica los gastos diarios y la hora de los eventos, así que cambiar `DAY_LEN` no cambia lo que se gana o paga por minuto. Las metas que dependen del largo del día usan $5,000 en un día, `PERFECT_DAY_MIN` (25) clientes sin enojados y llegar al día 10.
@@ -32,6 +38,9 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Hora pico:** del 40 % al 65 % del día (13:10 a 17:40) llegan el doble de tráileres.
 - **Día y noche:** oscurece de 18:30 a 20:30 y amanece de 06:00 a 07:00 (`DUSK`, `DAWN` en config.js). `game.night` es la oscuridad (0 a 1) según el reloj y `game.dark` indica si van las luces encendidas (de noche o con el tema oscuro). Desde las 20:00 (`NIGHT_FROM`) cambia el reparto de pedidos: de cada 100 con pedido, ⛽ 45, 🍗 20 y 💤 35 (de día 45, 30 y 25), y sale un aviso.
 - **Eventos (desde cierto día):** lluvia (tráileres más lentos), apagón (un negocio sin luz 25 s), más diésel y caravana.
+- **Eventos donde decides** (`src/ui/choice.js`): desde el día 3, el 35 % de las mañanas sale una decisión y el juego se pausa (`#choice`). 🔎 Inspección sanitaria (solo con comedor): arreglar ($250 por comedor, +0.2 de reputación) o arriesgarte (50 %: multa $600 y −0.3). 🎡 Feria: patrocinar ($500, hoy 30 % más tráileres) o no. ✊ Paro: apoyar ($250, +0.2) o ignorar (hoy 40 % menos tráileres). El efecto de tráfico vive en `game.ev.traffic` y dura el día. El botón atrás de Android elige la segunda opción.
+- **Carretera de arriba:** con el terreno de 14 columnas o más (`HWY2_W`), ☰ ofrece abrirla por $8,000 (`openTopRoad` en days.js): la fila y = 0 se vuelve carretera (casillas `hwy2`, se guarda `h2`); las calles que había ahí pasan a ser parte de ella y no se puede si hay negocios o agua. Por ella llegan tráileres de derecha a izquierda (`spawn(true)`, `tr.top`), con la mitad de frecuencia que la principal (`HWY2_RATE`), entran por calles de la fila 1 (`findService(need, 0, true)`) y salen bajando por la principal; no hacen fila ni segundo pedido. Al ampliar a la derecha, la fila de arriba sigue siendo carretera.
+- **Terrenos nuevos** (solo en el terreno que compras; la partida nueva no cambia): rocas del cerro (`rock`, no se construye encima; demolerlas cuesta $150), desierto desde la fila 16 o la columna 14 (`DESERT_Y`, `DESERT_X`: pasto con `sand`, se construye igual; más rocas que árboles) y un río (`S.river`, la fila donde está) la primera vez que amplías hacia abajo con 14 filas o más (`RIVER_FROM`); al ampliar a la derecha el río sigue. Los puentes se hacen con 🛣️ Calle sobre el agua ($120, calle con `br`; al demolerlos vuelve el agua). Se guardan como `{ t: 'road', b: 1 }`, `s: 1` y `rv`.
 - **Modos:** Fácil, Normal y Difícil (dinero inicial, gastos, tráfico, castigo de reputación y días en rojo permitidos).
 - **Metas:** 22 metas con premio, en tres temporadas (la tercera, de negocios extra).
 - **Pantalla de inicio:** sale al abrir el juego y desde ☰ → Volver al inicio. Mientras está abierta el juego queda en pausa (`game.paused`). Tiene Continuar (si hay partida), los tres modos (tocar dos veces si hay partida que perder) e interruptores de Música y Efectos. El primer toque desbloquea el audio del celular.
@@ -51,6 +60,7 @@ src/state.js            estado compartido (game), fórmulas de cobro y gastos, p
 src/routes.js           rutas con BFS y lugar de estacionamiento
 src/trucks.js           aparición, movimiento y cobro de los tráileres
 src/days.js             cierre del día, eventos, quiebra y ampliar terreno
+src/contracts.js        contratos de flotillas: encargo del día, avance y premio
 src/tools.js            qué se puede construir dónde y aplicar la herramienta
 src/sim.js              update: avanza la simulación un paso
 src/camera.js           cámara, zoom y conversión de pantalla a casilla
@@ -59,14 +69,15 @@ src/theme.js            lee el tema claro u oscuro y calcula la luz del día (ga
 src/render/iso.js       primitivas isométricas (P, poly, box, shade...)
 src/render/scene.js     reúne y reexporta lo de abajo (draw.js lo importa de aquí)
 src/render/terrain.js   pasto, calles, carretera, agua, árboles, resaltados y orilla del terreno
-src/render/buildings/   un archivo por negocio (gas, food, sleep, shop, wash, repair) y index.js; cada uno exporta draw(x, y, t) y devuelve la altura del techo
+src/render/buildings/   un archivo por negocio (gas, food, sleep, shop, wash, repair, park) y index.js; cada uno exporta draw(x, y, t) y devuelve la altura del techo
 src/render/bldcache.js  caché de negocios: cada uno se dibuja una vez en un lienzo chico y luego solo se pega (si un dibujo empieza a depender de algo nuevo, agrégalo a `sig`)
 src/render/vehicles.js  tráileres en las 4 direcciones (faros de noche)
 src/render/weather.js   lluvia
+src/render/decor.js     decoración: banca, jardín y letrero luminoso
 src/render/night.js     cielo, velo y resplandor de los negocios de noche
 src/render/overlays.js  íconos de negocios (letrerito con punta y estrellas encima del techo), burbujas, números flotantes y la marca de la guía
 src/render/draw.js      dibuja un cuadro completo en orden de profundidad
-src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negocio), menu, start (pantalla de inicio) y tuto (guía de Lupe)
+src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negocio), menu, start (pantalla de inicio), tuto (guía de Lupe) y choice (eventos donde decides)
 src/audio/sound.js      contexto de audio, volúmenes, desbloqueo y preferencias
 src/audio/sfx.js        efectos de sonido y lluvia
 src/audio/music.js      música en bucle
@@ -92,7 +103,7 @@ Todo lo que cambia durante la partida vive en el objeto `game` de `src/state.js`
 1. ~~Pasar el archivo único a un proyecto ordenado con Vite, separando el código en módulos, sin cambiar cómo se juega.~~ Hecho.
 2. ~~Agregar sonidos, música y una pantalla de inicio.~~ Hecho.
 3. ~~Empaquetarlo como app de Android con Capacitor.~~ Hecho (APK de prueba). Migrar a un motor como Godot queda solo si se quiere 3D real.
-4. Preparar la publicación en Play Store.
+4. ~~Preparar la publicación en Play Store.~~ Hecho del lado del código (versión 1.0.0); falta lo que hace Kevin en la consola (ver `docs/play-store.md`).
 
 ## Actualización 1.0 (por partes, un PR cada una)
 
@@ -101,12 +112,12 @@ Kevin pidió hacerla en partes chicas para cuidar los créditos: programar direc
 1. ~~Día y noche~~
 2. ~~Tutorial de primera partida~~
 3. ~~Tráileres con dos pedidos (propina si los negocios están cerca)~~
-4. Decoración y vecinos (bancas, jardín, letrero luminoso; comedor junto a hotel cobra más)
-5. Precio por negocio (barato o caro)
-6. Contratos de flotillas (encargos diarios, empresas inventadas)
-7. Pensión de tráileres (pasan la noche y pagan al amanecer)
-8. Filas (esperan en la calle antes de enojarse)
-9. Eventos donde decides (inspección, feria, paro de transportistas)
-10. Segunda carretera (se abre al ampliar el terreno)
-11. Terrenos nuevos (río con puente, cerro, desierto)
-12. Play Store: llave de firma, AAB, política de privacidad, ficha de la tienda, prueba cerrada; subir a versión 1.0.0
+4. ~~Decoración y vecinos (bancas, jardín, letrero luminoso; comedor junto a hotel cobra más)~~
+5. ~~Precio por negocio (barato o caro)~~
+6. ~~Contratos de flotillas (encargos diarios, empresas inventadas)~~
+7. ~~Pensión de tráileres (pasan la noche y pagan al amanecer)~~
+8. ~~Filas (esperan en la calle antes de enojarse)~~
+9. ~~Eventos donde decides (inspección, feria, paro de transportistas)~~
+10. ~~Segunda carretera (se abre al ampliar el terreno)~~
+11. ~~Terrenos nuevos (río con puente, cerro, desierto)~~
+12. ~~Play Store: llave de firma, AAB, política de privacidad, ficha de la tienda, prueba cerrada; subir a versión 1.0.0~~ (lo de la consola lo hace Kevin)

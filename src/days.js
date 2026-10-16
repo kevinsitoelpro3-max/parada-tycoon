@@ -1,4 +1,4 @@
-import { WMAX, HMAX, LAND_STEP, DAY_SCALE, PERFECT_DAY_MIN, CLOSE_HOUR } from './config.js';
+import { WMAX, HMAX, LAND_STEP, DAY_SCALE, PERFECT_DAY_MIN, CLOSE_HOUR, HWY2_W, HWY2_COST, DESERT_X, DESERT_Y, RIVER_FROM } from './config.js';
 import { $, pick, fmt, money } from './utils.js';
 import { game, mode, totalUpkeep, landCost, emptyEvent, save } from './state.js';
 import { fit, clampCam } from './camera.js';
@@ -7,6 +7,9 @@ import { toast } from './ui/toast.js';
 import { closeSheet } from './ui/sheet.js';
 import { menuEl, overEl, renderMenu } from './ui/menu.js';
 import { sfx } from './audio/sfx.js';
+import { newContract } from './contracts.js';
+import { finishService } from './trucks.js';
+import { rollChoice } from './ui/choice.js';
 
 /* ---------- Días, gastos y eventos ---------- */
 export function rollEvent() {
@@ -22,6 +25,13 @@ export function rollEvent() {
 }
 export function closeDay() {
   const S = game.S;
+  // Amanece: los tráileres que pasaron la noche en la pensión pagan y se van
+  const parked = game.trucks.filter(tr => tr.state === 'service' && tr.need === 'park');
+  if (parked.length) {
+    const before = S.money;
+    for (const tr of parked) finishService(tr);
+    toast(`🅿️ ${parked.length > 1 ? parked.length + ' tráileres pasaron' : 'Un tráiler pasó'} la noche en tu pensión: +$${fmt(S.money - before)}`, 3000, true);
+  }
   const bill = totalUpkeep();
   S.money -= bill;
   if (S.dayLost === 0 && S.dayServed >= PERFECT_DAY_MIN) S.perfectDays++;
@@ -39,6 +49,9 @@ export function closeDay() {
   const em = rollEvent();
   toast(msg, 4200, true);
   toast(`Día ${S.day}` + (em ? `. ${em}.` : '.'), 3000, true);
+  const cm = newContract();
+  if (cm) toast(cm, 4200, true);
+  rollChoice();
   save();
 }
 export function gameOver() {
@@ -60,10 +73,20 @@ export function expandLand(dir) {
   S.money -= c;
   S.land = (S.land || 0) + 1;
   sfx.build();
-  const newTile = x => ({ t: x === 0 ? 'hwy' : (x >= 2 && Math.random() < 0.2 ? 'tree' : 'grass') });
+  // Casilla nueva: árboles y rocas del cerro; en la zona de desierto, arena y más rocas que árboles
+  const newTile = (x, y) => {
+    if (x === 0) return { t: 'hwy' };
+    const r = Math.random(), desert = y >= DESERT_Y || x >= DESERT_X;
+    if (x >= 2 && r < (desert ? 0.06 : 0.16)) return desert ? { t: 'tree', sand: true } : { t: 'tree' };
+    if (x >= 2 && r < (desert ? 0.16 : 0.22)) return desert ? { t: 'rock', sand: true } : { t: 'rock' };
+    return desert && r < 0.85 ? { t: 'grass', sand: true } : { t: 'grass' };
+  };
+  // El río cruza la primera fila nueva la primera vez que amplías hacia abajo desde RIVER_FROM filas
+  const river = dir === 'down' && S.river === undefined && game.H >= RIVER_FROM;
+  if (river) S.river = game.H;      // fila del río (para seguirlo al ampliar a la derecha)
   if (dir === 'down') {
     const oldEnd = game.H + 2.6;
-    for (let y = game.H; y < game.H + LAND_STEP; y++) for (let x = 0; x < game.W; x++) S.tiles.push(newTile(x));
+    for (let y = game.H; y < game.H + LAND_STEP; y++) for (let x = 0; x < game.W; x++) S.tiles.push(river && y === game.H && x > 0 ? { t: 'water' } : newTile(x, y));
     game.H += LAND_STEP; S.h = game.H;
     // los tráileres que iban a salir por el borde de abajo ahora salen por el nuevo borde
     for (const tr of game.trucks) for (const p of tr.path) if (Math.abs(p[1] - oldEnd) < 1e-6) p[1] = game.H + 2.6;
@@ -73,7 +96,7 @@ export function expandLand(dir) {
     const W = game.W, tiles = [];
     for (let y = 0; y < game.H; y++) {
       for (let x = 0; x < W; x++) tiles.push(S.tiles[y * W + x]);
-      for (let x = W; x < W + LAND_STEP; x++) tiles.push(newTile(x));
+      for (let x = W; x < W + LAND_STEP; x++) tiles.push(S.hwy2 && y === 0 ? { t: 'hwy2' } : y === S.river ? { t: 'water' } : newTile(x, y));
     }
     S.tiles = tiles;
     game.W += LAND_STEP; S.w = game.W;
@@ -81,6 +104,27 @@ export function expandLand(dir) {
   buildOuterTrees();
   if (!game.userCam) fit(); else clampCam();
   toast(dir === 'down' ? 'Compraste 2 filas más de terreno hacia abajo' : 'Compraste 2 columnas más de terreno hacia la derecha');
+  renderMenu();
+  save();
+}
+
+// Carretera de arriba: la fila y = 0 (sin contar la principal) se vuelve carretera. Las calles que ya
+// estaban ahí pasan a ser parte de ella; si hay un negocio o agua, primero hay que quitarlo.
+export const canOpenTop = () => !game.S.hwy2 && game.W >= HWY2_W;
+export function openTopRoad() {
+  const S = game.S;
+  if (!canOpenTop() || S.over) return;
+  if (S.money < HWY2_COST) { sfx.nope(); toast('Te faltan ' + money(HWY2_COST - S.money)); return; }
+  for (let x = 1; x < game.W; x++) {
+    const t = S.tiles[x];
+    if (t.t === 'bld' || t.t === 'water') { sfx.nope(); toast('Primero quita lo que hay en la fila de hasta arriba (negocios o agua)'); return; }
+  }
+  if (game.trucks.some(tr => tr.tiles && [...tr.tiles].some(k => k.endsWith(',0')))) { sfx.nope(); toast('Hay tráileres usando calles de la fila de arriba, espera tantito'); return; }
+  S.money -= HWY2_COST;
+  for (let x = 1; x < game.W; x++) { const t = S.tiles[x]; for (const k of Object.keys(t)) delete t[k]; t.t = 'hwy2'; }
+  S.hwy2 = true;
+  sfx.build();
+  toast('🛣️ ¡Abriste la carretera de arriba! Traza calles que lleguen a ella: por ahí llegan más tráileres', 4200, true);
   renderMenu();
   save();
 }

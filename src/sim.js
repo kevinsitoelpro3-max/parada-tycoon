@@ -1,12 +1,13 @@
-import { KINDS, DAY_LEN, RUSH, NIGHT_FROM } from './config.js';
+import { KINDS, DAY_LEN, RUSH, NIGHT_FROM, HWY2_RATE } from './config.js';
 import { pick, fmt } from './utils.js';
 import { game, T, inRush, isNight, totalUpkeep, save, clockAt } from './state.js';
 import { GOALS } from './goals.js';
-import { spawn, spawnInterval, moveAlong, finishService } from './trucks.js';
+import { spawn, spawnInterval, moveAlong, finishService, waitInLine } from './trucks.js';
 import { closeDay } from './days.js';
 import { toast } from './ui/toast.js';
 import { renderGoal } from './ui/hud.js';
 import { sfx } from './audio/sfx.js';
+import { contractTick } from './contracts.js';
 
 /* ---------- Simulación ---------- */
 // dt: tiempo de juego (con la velocidad ×1/×2/×3); rdt: tiempo real, para animaciones.
@@ -26,6 +27,7 @@ export function update(dt, rdt) {
     if (rush) sfx.rush();
     if (rush) toast(`🚨 Son las ${clockAt(RUSH[0])}: empieza la hora pico y llegan el doble de tráileres`, 2600, true);
   }
+  contractTick();
   const night = isNight();
   if (night !== game.ev.nightOn) {
     game.ev.nightOn = night;
@@ -50,16 +52,21 @@ export function update(dt, rdt) {
 
   game.spawnT -= dt;
   if (game.spawnT <= 0) game.spawnT = spawn() ? spawnInterval() : 0.3;
+  if (S.hwy2) {
+    game.spawnT2 = (game.spawnT2 ?? 2) - dt;
+    if (game.spawnT2 <= 0) game.spawnT2 = spawn(true) ? spawnInterval() / HWY2_RATE : 0.3;
+  }
 
   const slow = game.ev.rain ? 0.7 : 1;
   for (const tr of game.trucks) {
-    tr.speed = (tr.x < 1 ? 2.6 : 1.5) * slow;
+    tr.speed = (tr.x < 1 || (S.hwy2 && tr.y < 1) ? 2.6 : 1.5) * slow;
     if (tr.state === 'service') {
       const b = T(tr.bx, tr.by);
       if (!(b && b.off > 0)) tr.t += dt;
       if (!b || b.t !== 'bld' || tr.t >= KINDS[b.k].time) finishService(tr);
     } else if (moveAlong(tr, dt)) {
-      if (tr.state === 'arrive') {
+      if (tr.state === 'wait') waitInLine(tr, dt);
+      else if (tr.state === 'arrive') {
         tr.state = 'service'; tr.t = 0;
         tr.dir = [tr.bx - tr.route[0][0], tr.by - tr.route[0][1]];
       } else tr.dead = true;

@@ -210,7 +210,7 @@ function placeTop(id) {
 // Se llama en cada cuadro, después de hud(). Escribe en el DOM solo cuando algo cambia.
 export function tickTuto() {
   const tu = game.tuto;
-  if (!tu.on || isStartOpen() || !menuEl.hidden || !overEl.hidden || game.S.over) return hideAll();
+  if (!tu.on || isStartOpen() || !menuEl.hidden || !overEl.hidden || game.S.over || !document.getElementById('choice').hidden) return hideAll();
   const id = stepId();
   if (!sheetEl.hidden && id !== 'up3') return hideAll();
   const X = shortBy(id), key = id + '|' + (X === null ? '' : X);
