@@ -2,6 +2,7 @@ import { WMAX, HMAX, LAND_STEP, KEY, MODES, HWY2_W, HWY2_COST, PERKS, PERK_MAX }
 import { $, fmt } from '../utils.js';
 import { game, mode, landCost, newGame, emptyEvent, totalUpkeep, save, levelInfo, perk, perkVal } from '../state.js';
 import { GOALS } from '../goals.js';
+import { population, hap, hapFace, homes } from '../city.js';
 import { buyPerk } from '../progress.js';
 import { coinsFrom, confetti } from '../fx.js';
 import { dailyInfo, claimDaily, retosInfo, retoText, retoDone, claimReto, dailyReady, RETOS_DAY } from '../daily.js';
@@ -52,6 +53,8 @@ function renderParada() {
     ['$' + fmt(S.bestDay), 'tu mejor día'], ['$' + fmt(S.total || 0), 'vendido en total'],
     [fmt(nb), nb === 1 ? 'negocio' : 'negocios'], [fmt(S.cash || 0), 'propinas 💰 cobradas'],
   ];
+  // Ciudad: solo cuando ya hay casas
+  if (homes().length) f.push([`🏠 ${fmt(population())}`, 'habitantes'], [`${hapFace()} ${Math.round(hap())} %`, 'felicidad del barrio'], [fmt(S.cit || 0), 'ciudadanos atendidos']);
   setHTML($('#mnStats'), f.map(([b, s]) => `<div class="fact"><b>${b}</b><span>${s}</span></div>`).join(''));
   const g = GOALS[S.goal];
   $('#mnGoal').textContent = g ? `Meta ${S.goal + 1} de ${GOALS.length}: ${g.text}. Premio $${fmt(g.prize)}.` : 'Ya cumpliste todas las metas. ¡Eres leyenda de la carretera!';
@@ -142,7 +145,7 @@ function renderLand() {
 export function startNew(modeKey) {
   try { localStorage.removeItem(KEY); } catch (_) {}
   newGame(modeKey);
-  game.trucks = []; game.floats = []; game.puffs = []; game.ev = emptyEvent(); game.spawnT = 1.2;
+  game.trucks = []; game.cars = []; game.floats = []; game.puffs = []; game.ev = emptyEvent(); game.spawnT = 1.2;
   toastQueue.length = 0;
   for (const k in hudCache) delete hudCache[k];
   game.billCache = totalUpkeep();

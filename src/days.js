@@ -11,6 +11,7 @@ import { newContract } from './contracts.js';
 import { finishService } from './trucks.js';
 import { rollChoice } from './ui/choice.js';
 import { track } from './daily.js';
+import { cityDay } from './city.js';
 
 /* ---------- Días, gastos y eventos ---------- */
 export function rollEvent() {
@@ -33,6 +34,8 @@ export function closeDay() {
     for (const tr of parked) finishService(tr);
     toast(`🅿️ ${parked.length > 1 ? parked.length + ' tráileres pasaron' : 'Un tráiler pasó'} la noche en tu pensión: +$${fmt(S.money - before)}`, 3000, true);
   }
+  const city = cityDay();
+  if (city) toast(city, 3600, true);
   const bill = totalUpkeep();
   S.money -= bill;
   if (S.dayLost === 0 && S.dayServed >= PERFECT_DAY_MIN) S.perfectDays++;
@@ -118,7 +121,7 @@ export function openTopRoad() {
   if (S.money < HWY2_COST) { sfx.nope(); toast('Te faltan ' + money(HWY2_COST - S.money)); return; }
   for (let x = 1; x < game.W; x++) {
     const t = S.tiles[x];
-    if (t.t === 'bld' || t.t === 'water') { sfx.nope(); toast('Primero quita lo que hay en la fila de hasta arriba (negocios o agua)'); return; }
+    if (t.t === 'bld' || t.t === 'home' || t.t === 'water') { sfx.nope(); toast('Primero quita lo que hay en la fila de hasta arriba (negocios, casas o agua)'); return; }
   }
   if (game.trucks.some(tr => tr.tiles && [...tr.tiles].some(k => k.endsWith(',0')))) { sfx.nope(); toast('Hay tráileres usando calles de la fila de arriba, espera tantito'); return; }
   S.money -= HWY2_COST;

@@ -1,6 +1,7 @@
 import { canvas, ctx, clamp } from '../utils.js';
 import { game, T } from '../state.js';
 import { drawGround, drawHighlights, drawTree, drawTruck, drawRain, outerTrees, truckAlpha } from './scene.js';
+import { drawCar } from './vehicles.js';
 import { worldXform, P } from './iso.js';
 import { drawDeco, drawRock } from './decor.js';
 import { bldFrame, drawBldCached } from './bldcache.js';
@@ -33,7 +34,7 @@ export function draw() {
       drawDeco(x, y, t); ctx.restore();
     } });
     else if (t.t === 'rock') objs.push({ d: x + y + 1, a: 1, f: () => drawRock(x, y) });
-    else if (t.t === 'bld') objs.push({ d: x + y + 1, a: 1, f: () => drawBldCached(x, y, t) });
+    else if (t.t === 'bld' || t.t === 'home') objs.push({ d: x + y + 1, a: 1, f: () => drawBldCached(x, y, t) });
   }
   for (const [x, y, s] of outerTrees) {
     const d = Math.max(0, -x, x - (W - 1), -y, y - (H - 1));
@@ -44,6 +45,7 @@ export function draw() {
     const a = truckAlpha(tr);
     if (a > 0) objs.push({ d: tr.x + tr.ox + tr.y + tr.oy, a, f: () => drawTruck(tr) });
   }
+  for (const c of game.cars) objs.push({ d: c.x + c.ox + c.y + c.oy, a: 1, f: () => drawCar(c) });
   objs.sort((p, q) => p.d - q.d);
   for (const o of objs) { ctx.globalAlpha = o.a; o.f(); }
   ctx.globalAlpha = 1;

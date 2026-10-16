@@ -153,3 +153,34 @@ export function truckAlpha(tr) {
   const d = Math.max(0, -tr.y, tr.y - game.H);
   return clamp(1 - d * 0.42, 0, 1);
 }
+
+/* ---------- Coches de los ciudadanos ---------- */
+// Coche compacto: carrocería del color del coche, cabina con vidrios y cuatro llantas.
+// Mismas coordenadas locales que el tráiler (a a lo largo, b de lado), pero mucho más chico.
+export function drawCar(c) {
+  const d = c.dir, cx = c.x + c.ox, cy = c.y + c.oy, ax = d[0] !== 0, sg = ax ? d[0] : d[1], front = sg > 0;
+  const K = 1.4;   // escala: las medidas de abajo son de un coche chico; así se lee bien en el celular
+  const W = ax ? (a, b, z) => P(cx + sg * a * K, cy + b * K, z * K) : (a, b, z) => P(cx + b * K, cy + sg * a * K, z * K);
+  const lbox = (a0, a1, b0, b1, z0, z1, col) => {
+    a0 *= K; a1 *= K; b0 *= K; b1 *= K; z0 *= K; z1 *= K;
+    const p = cx + sg * a0, q = cx + sg * a1, u = cy + sg * a0, v = cy + sg * a1;
+    if (ax) cbox(Math.min(p, q), cy + b0, Math.max(p, q), cy + b1, z0, z1, col);
+    else cbox(cx + b0, Math.min(u, v), cx + b1, Math.max(u, v), z0, z1, col);
+  };
+  const HB = 0.075;
+  poly([W(-0.17, -0.09, 0), W(0.17, -0.09, 0), W(0.17, 0.09, 0), W(-0.17, 0.09, 0)].map(([x, y]) => [x + 2, y + 1.8]), 'rgba(0,0,0,.2)');
+  lbox(-0.16, 0.16, -HB, HB, 0.03, 0.11, c.col);                       // carrocería
+  lbox(-0.09, 0.07, -HB + 0.01, HB - 0.01, 0.11, 0.19, shade(c.col, 0.08)); // cabina
+  const e = HB - 0.006;
+  poly([W(-0.075, e, 0.12), W(0.055, e, 0.12), W(0.055, e, 0.18), W(-0.075, e, 0.18)], GLASS_SIDE);
+  const fa = front ? 0.072 : -0.092;
+  poly([W(fa, -0.055, 0.12), W(fa, 0.055, 0.12), W(fa, 0.055, 0.18), W(fa, -0.055, 0.18)], GLASS);
+  for (const a of [-0.1, 0.1]) {
+    const p = W(a, HB + 0.004, 0.035);
+    circle(p[0], p[1], 2.1 * K, TIRE);
+  }
+  if (game.dark && front && c.state !== 'shop') {
+    const l1 = W(0.162, -0.05, 0.08), l2 = W(0.162, 0.05, 0.08);
+    circle(l1[0], l1[1], 1.4 * K, '#FFF6C8'); circle(l2[0], l2[1], 1.4 * K, '#FFF6C8');
+  }
+}

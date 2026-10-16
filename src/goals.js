@@ -1,5 +1,6 @@
 import { PERFECT_DAY_MIN, KINDS } from './config.js';
 import { game, countK, levelInfo } from './state.js';
+import { population, hap, homes } from './city.js';
 
 /* ---------- Metas ---------- */
 export const GOALS = [
@@ -36,5 +37,11 @@ export const GOALS = [
   { text: 'Llega al día 20 sin quebrar',               prize: 6000, ok: () => game.S.day >= 20 },
   { text: 'Llega al nivel 15 de dueño',                prize: 8000, ok: () => levelInfo().lvl >= 15 },
   { text: 'Junta $100,000 en caja',                    prize: 15000, ok: () => game.S.money >= 100000 },
-  { text: 'Atiende 5,000 tráileres',                   prize: 20000, ok: () => game.S.served >= 5000 }
+  { text: 'Atiende 5,000 tráileres',                   prize: 20000, ok: () => game.S.served >= 5000 },
+  // Temporada 5: la ciudad
+  { text: 'Pon tu primera 🏠 casa junto a una calle',  prize: 300,  ok: () => homes().length >= 1 },
+  { text: 'Llega a 20 habitantes',                     prize: 1500, ok: () => population() >= 20 },
+  { text: 'Atiende a 100 ciudadanos',                  prize: 3000, ok: () => (game.S.cit || 0) >= 100 },
+  { text: 'Ten el barrio al 80 % de felicidad',        prize: 4000, ok: () => homes().length > 0 && hap() >= 80 },
+  { text: 'Llega a 100 habitantes',                    prize: 10000, ok: () => population() >= 100 }
 ];
