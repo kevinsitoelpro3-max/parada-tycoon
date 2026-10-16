@@ -1,4 +1,4 @@
-import { DIRS } from './config.js';
+import { DIRS, QUEUE_MAX } from './config.js';
 import { game, T, isRoad, priceOf } from './state.js';
 
 /* ---------- Rutas ---------- */
@@ -54,6 +54,23 @@ export function findService(need, minRow = 0) {
       if (!p || p[p.length - 1][1] < minRow) continue;
       const score = p.length + p[p.length - 1][1] * 0.1 + priceOf(t).avoid;
       if (!best || score < best.score) best = { score, bx: x, by: y, slot, p, tile: t };
+    }
+  }
+  return best;
+}
+// Si todos están llenos: el negocio de ese tipo con lugar en su fila (y conectado) más a la mano
+export function findQueue(need) {
+  const key = roadsKey();
+  if (key !== memoRoads) { memo.clear(); memoRoads = key; }
+  let best = null;
+  for (let y = 0; y < game.H; y++) for (let x = 1; x < game.W; x++) {
+    const t = T(x, y);
+    if (!t || t.t !== 'bld' || t.k !== need || t.off > 0 || (t.queue || []).length >= QUEUE_MAX) continue;
+    for (const [dx, dy] of DIRS) {
+      const p = routeFrom(x + dx, y + dy);
+      if (!p) continue;
+      const score = p.length + (t.queue || []).length * 3;
+      if (!best || score < best.score) best = { score, bx: x, by: y, p, tile: t };
     }
   }
   return best;

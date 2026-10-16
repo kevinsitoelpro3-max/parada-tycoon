@@ -45,7 +45,7 @@ export function check(k, x, y) {
       return { ok: true, cost: COST.demo };
     }
     if (t.t === 'bld') {
-      if (t.slots.some(Boolean)) return { ok: false, msg: 'Espera a que salgan los clientes' };
+      if (t.slots.some(Boolean) || (t.queue && t.queue.length)) return { ok: false, msg: 'Espera a que salgan los clientes' };
       return { ok: true, cost: COST.demo, refund: Math.round(KINDS[t.k].cost * 0.5) };
     }
   }

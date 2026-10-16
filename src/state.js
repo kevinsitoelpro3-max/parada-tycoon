@@ -105,7 +105,7 @@ export function newGame(modeKey) {
 export function prep() {
   game.S.tiles.forEach((t, i) => {
     if (i % game.W === 0) { for (const k of Object.keys(t)) delete t[k]; t.t = 'hwy'; return; }
-    if (t.t === 'bld') { t.slots = Array(capOf(t)).fill(null); t.earned = t.earned || 0; delete t.off; }
+    if (t.t === 'bld') { t.slots = Array(capOf(t)).fill(null); t.queue = []; t.earned = t.earned || 0; delete t.off; }
   });
 }
 export function save() {

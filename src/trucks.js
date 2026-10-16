@@ -1,7 +1,7 @@
-import { CABS, TRAILERS, KINDS, EXTRA_SHARE, PARK_SHARE, COMBO_CHANCE, COMBO_NEAR, COMBO_TIP } from './config.js';
+import { CABS, TRAILERS, KINDS, EXTRA_SHARE, PARK_SHARE, QUEUE_WAIT, COMBO_CHANCE, COMBO_NEAR, COMBO_TIP } from './config.js';
 import { clamp, pick } from './utils.js';
 import { game, T, mode, inRush, isNight, countK, payNow, priceOf } from './state.js';
-import { findService, parkSpot } from './routes.js';
+import { findService, findQueue, parkSpot } from './routes.js';
 import { sfx } from './audio/sfx.js';
 import { contractServed } from './contracts.js';
 
@@ -46,7 +46,15 @@ export function spawn() {
   }
   if (tr.need) {
     const plan = findService(tr.need);
-    if (plan) {
+    const line = plan ? null : findQueue(tr.need);
+    if (line) {
+      // Todo lleno: se forma en la calle de enfrente y espera un lugar
+      (line.tile.queue || (line.tile.queue = [])).push(tr);
+      Object.assign(tr, { state: 'wait', bx: line.bx, by: line.by, slot: -1, route: line.p, patience: QUEUE_WAIT });
+      const entry = line.p[line.p.length - 1];
+      tr.path = [[0.5, entry[1] + 0.5], ...line.p.slice().reverse().map(([x, y]) => [x + 0.5, y + 0.5])];
+      tr.tiles = new Set(line.p.map(([x, y]) => x + ',' + y));
+    } else if (plan) {
       plan.tile.slots[plan.slot] = tr;
       Object.assign(tr, { state: 'arrive', bx: plan.bx, by: plan.by, slot: plan.slot, route: plan.p });
       const entry = plan.p[plan.p.length - 1];
@@ -123,4 +131,30 @@ export function finishService(tr) {
   tr.tip = false;
   tr.state = 'leave'; tr.need = null; tr.happy = 1.6;
   tr.path = [...out, [0.5, game.H + 2.6]];
+}
+
+// Tráiler formado en la fila: entra cuando se libera un lugar (en orden) o se va enojado
+export function waitInLine(tr, dt) {
+  const S = game.S, b = T(tr.bx, tr.by);
+  const q = b && b.t === 'bld' ? (b.queue || []) : [];
+  if (b && b.t === 'bld' && !(b.off > 0) && q[0] === tr) {
+    const slot = b.slots.indexOf(null);
+    if (slot >= 0) {
+      q.shift();
+      b.slots[slot] = tr;
+      Object.assign(tr, { state: 'arrive', slot });
+      tr.path = [parkSpot(tr, b)];
+      return;
+    }
+  }
+  tr.patience -= dt;
+  if (tr.patience > 0 && b && b.t === 'bld') return;
+  const i = q.indexOf(tr);
+  if (i >= 0) q.splice(i, 1);
+  tr.angry = true; tr.need = null; tr.state = 'leave';
+  sfx.angry();
+  S.lost++; S.dayLost++;
+  S.rep = Math.max(1, S.rep - mode().repLoss);
+  const r = tr.route, exit = r[r.length - 1];
+  tr.path = [...r.map(([x, y]) => [x + 0.5, y + 0.5]), [0.5, exit[1] + 0.5], [0.5, game.H + 2.6]];
 }

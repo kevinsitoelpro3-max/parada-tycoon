@@ -2,7 +2,7 @@ import { KINDS, DAY_LEN, RUSH, NIGHT_FROM } from './config.js';
 import { pick, fmt } from './utils.js';
 import { game, T, inRush, isNight, totalUpkeep, save, clockAt } from './state.js';
 import { GOALS } from './goals.js';
-import { spawn, spawnInterval, moveAlong, finishService } from './trucks.js';
+import { spawn, spawnInterval, moveAlong, finishService, waitInLine } from './trucks.js';
 import { closeDay } from './days.js';
 import { toast } from './ui/toast.js';
 import { renderGoal } from './ui/hud.js';
@@ -61,7 +61,8 @@ export function update(dt, rdt) {
       if (!(b && b.off > 0)) tr.t += dt;
       if (!b || b.t !== 'bld' || tr.t >= KINDS[b.k].time) finishService(tr);
     } else if (moveAlong(tr, dt)) {
-      if (tr.state === 'arrive') {
+      if (tr.state === 'wait') waitInLine(tr, dt);
+      else if (tr.state === 'arrive') {
         tr.state = 'service'; tr.t = 0;
         tr.dir = [tr.bx - tr.route[0][0], tr.by - tr.route[0][1]];
       } else tr.dead = true;

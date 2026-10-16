@@ -33,6 +33,9 @@ export const KINDS = {
 export const EXTRA_SHARE = 0.3;
 // De noche, de los tráileres sin pedido, esta parte busca dónde pasar la noche si tienes pensión
 export const PARK_SHARE = 0.5;
+// Filas: si el negocio está lleno, hasta QUEUE_MAX tráileres esperan en la calle de enfrente
+// hasta QUEUE_WAIT segundos de juego antes de irse enojados
+export const QUEUE_MAX = 2, QUEUE_WAIT = 10;
 // Tráileres con dos pedidos: de los que ya encontraron un negocio básico, COMBO_CHANCE también
 // quiere otro tipo básico que tengas. Si los dos negocios están a COMBO_NEAR casillas o menos
 // (sumando filas y columnas), el segundo cobro lleva COMBO_TIP de propina.
