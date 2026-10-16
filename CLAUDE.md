@@ -26,6 +26,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Tráileres con dos pedidos:** de los tráileres que ya encontraron un negocio básico (⛽, 🍗 o 💤), el 25 % (`COMBO_CHANCE`) también quiere otro tipo básico que tengas; sin un segundo tipo básico no hay sorteo y el azar sigue igual. Al terminar el primer servicio busca ese segundo negocio en la misma fila de la carretera o más abajo (es de un sentido; `findService(need, minRow)`); si no hay lugar, se va contento. Si los dos negocios están a 3 casillas o menos (`COMBO_NEAR`, filas + columnas), el segundo cobro lleva 30 % de propina (`COMBO_TIP`). Cada servicio cuenta como un cliente atendido.
 - **Decoración y vecinos:** 💺 banca ($60, gasto $2), 🌷 jardín ($90, $3) y 💡 letrero luminoso ($180, $6) van en el pasto (`DECOS`, casillas `t: 'deco'` con `d`; se guardan como `{ t: 'deco', d }`). Suben el cobro de los negocios de las 8 casillas de alrededor: +5 %, +8 % y +12 %. Parejas que se ayudan (`PAIRS`): comedor y hotel, gasolinera y tiendita, lavado y taller; con su pareja al lado cobran +10 %. Tope +30 % por negocio (`bonusAt`, `payNow(t, x, y)`). La ficha del negocio muestra cuánto suma.
 - **Precio por negocio:** en la ficha se elige Barato, Normal o Caro (`PRICES`, `t.price` 0/1/2, se guarda como `p` solo si no es normal). Barato cobra ×0.8, da +0.045 de reputación por cliente y los tráileres lo prefieren; Caro cobra ×1.3, da +0.01 y lo dejan al último (`avoid` en `findService`). Normal es como antes (+0.03).
+- **Contratos de flotillas** (`src/contracts.js`): desde el día 2, al empezar cada día una empresa inventada encarga N tráileres en un tipo de negocio que ya tienes antes de las 20:00; N = 5 + 3 × negocios de ese tipo + día / 2 (máximo 30) y el premio es N × el cobro base (como si pagaran doble). Sin castigo si no llegas. Se ve en una línea del marcador y se guarda como `ct`.
 - **Negocios:** nivel 1 a 3. Cada nivel suma un lugar y +50 % de cobro. Mejorar cuesta el precio base por el nivel actual.
 - **Días:** cada día dura 180 segundos de juego (`DAY_LEN`), con un reloj de 06:00 a 24:00 en el marcador. Al cierre ("corte de caja") se pagan gastos de negocios y calles, con inflación de 6 % por día.
 - **Escala del día:** el balance se hizo con días de 75 s. `DAY_SCALE = DAY_LEN / 75` multiplica los gastos diarios y la hora de los eventos, así que cambiar `DAY_LEN` no cambia lo que se gana o paga por minuto. Las metas que dependen del largo del día usan $5,000 en un día, `PERFECT_DAY_MIN` (25) clientes sin enojados y llegar al día 10.
@@ -53,6 +54,7 @@ src/state.js            estado compartido (game), fórmulas de cobro y gastos, p
 src/routes.js           rutas con BFS y lugar de estacionamiento
 src/trucks.js           aparición, movimiento y cobro de los tráileres
 src/days.js             cierre del día, eventos, quiebra y ampliar terreno
+src/contracts.js        contratos de flotillas: encargo del día, avance y premio
 src/tools.js            qué se puede construir dónde y aplicar la herramienta
 src/sim.js              update: avanza la simulación un paso
 src/camera.js           cámara, zoom y conversión de pantalla a casilla
@@ -106,7 +108,7 @@ Kevin pidió hacerla en partes chicas para cuidar los créditos: programar direc
 3. ~~Tráileres con dos pedidos (propina si los negocios están cerca)~~
 4. ~~Decoración y vecinos (bancas, jardín, letrero luminoso; comedor junto a hotel cobra más)~~
 5. ~~Precio por negocio (barato o caro)~~
-6. Contratos de flotillas (encargos diarios, empresas inventadas)
+6. ~~Contratos de flotillas (encargos diarios, empresas inventadas)~~
 7. Pensión de tráileres (pasan la noche y pagan al amanecer)
 8. Filas (esperan en la calle antes de enojarse)
 9. Eventos donde decides (inspección, feria, paro de transportistas)

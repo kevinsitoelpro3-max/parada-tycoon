@@ -3,6 +3,7 @@ import { clamp, pick } from './utils.js';
 import { game, T, mode, inRush, isNight, countK, payNow, priceOf } from './state.js';
 import { findService, parkSpot } from './routes.js';
 import { sfx } from './audio/sfx.js';
+import { contractServed } from './contracts.js';
 
 /* ---------- Tráileres ---------- */
 // Tipos de negocio extra que ya tienes (tiendita, lavado, taller)
@@ -94,6 +95,7 @@ export function finishService(tr) {
     S.money += pay; S.served++; S.dayServed++; S.dayEarn += pay;
     S.rep = Math.min(5, S.rep + priceOf(b).rep);
     b.earned = (b.earned || 0) + pay;
+    contractServed(b.k);
     sfx.cash();
     if (b.slots[tr.slot] === tr) b.slots[tr.slot] = null;
     game.floats.push({ x: tr.bx + 0.5, y: tr.by + 0.5, z: 1.1, text: '+$' + pay + (tip ? ' propina' : ''), t: 0, neg: false });

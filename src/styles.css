@@ -191,6 +191,9 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 /* Raya amarilla de carretera antes de cada sección */
 .sheet h3::before,.start h3::before{content:"";flex:none;width:14px;height:4px;border-radius:2px;background:var(--warn)}
 .sheet .lvl{color:var(--muted);font-size:13px;font-weight:600;margin:3px 0 12px}
+.contract{font-size:12.5px;font-weight:700;padding:5px 12px;border-top:1px solid var(--line);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.contract.ok{color:var(--muted)}
+.contract[hidden]{display:none}
 .modes.price{margin:-4px 0 10px}
 .modes.price .btn{padding:8px 4px;font-size:14px}
 .facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:12px}

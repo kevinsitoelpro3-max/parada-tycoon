@@ -114,7 +114,7 @@ export function save() {
     const data = {
       v: 3, mode: S.mode, money: S.money, served: S.served, lost: S.lost, goal: S.goal,
       day: S.day, dayT: S.dayT, rep: S.rep, red: S.red, perfectDays: S.perfectDays, bestDay: S.bestDay,
-      dayEarn: S.dayEarn, dayServed: S.dayServed, dayLost: S.dayLost, w: game.W, h: game.H, land: S.land || 0, over: S.over,
+      dayEarn: S.dayEarn, dayServed: S.dayServed, dayLost: S.dayLost, w: game.W, h: game.H, land: S.land || 0, over: S.over, ct: S.contract || null,
       tiles: S.tiles.map(t => t.t === 'bld' ? { t: 'bld', k: t.k, l: t.lvl, e: t.earned || 0, ...(t.price !== undefined && t.price !== 1 ? { p: t.price } : {}) } : t.t === 'deco' ? { t: 'deco', d: t.d } : { t: t.t })
     };
     localStorage.setItem(KEY, JSON.stringify(data));
@@ -152,7 +152,9 @@ export function load() {
       rep: clamp(Number.isFinite(+d.rep) && d.rep !== undefined ? +d.rep : 3, 1, 5),
       red: +d.red || 0, perfectDays: +d.perfectDays || 0, bestDay: +d.bestDay || 0,
       dayEarn: +d.dayEarn || 0, dayServed: +d.dayServed || 0, dayLost: +d.dayLost || 0,
-      w: game.W, h: game.H, land, over: !!d.over, tiles
+      w: game.W, h: game.H, land, over: !!d.over, tiles,
+      // contrato de flotilla del día (si el guardado trae uno válido)
+      contract: (d.ct && KINDS[d.ct.k] && d.ct.n > 0) ? { co: String(d.ct.co || ''), k: d.ct.k, n: d.ct.n | 0, got: d.ct.got | 0, prize: d.ct.prize | 0, done: !!d.ct.done, failed: !!d.ct.failed } : null
     };
     game.grewFromOld = game.W > w || game.H > h;
     game.upgradedFromV1 = d.v === 1;

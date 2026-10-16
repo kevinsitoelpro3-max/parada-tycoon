@@ -7,6 +7,7 @@ import { toast } from './ui/toast.js';
 import { closeSheet } from './ui/sheet.js';
 import { menuEl, overEl, renderMenu } from './ui/menu.js';
 import { sfx } from './audio/sfx.js';
+import { newContract } from './contracts.js';
 
 /* ---------- Días, gastos y eventos ---------- */
 export function rollEvent() {
@@ -39,6 +40,8 @@ export function closeDay() {
   const em = rollEvent();
   toast(msg, 4200, true);
   toast(`Día ${S.day}` + (em ? `. ${em}.` : '.'), 3000, true);
+  const cm = newContract();
+  if (cm) toast(cm, 4200, true);
   save();
 }
 export function gameOver() {

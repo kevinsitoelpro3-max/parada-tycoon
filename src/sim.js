@@ -7,6 +7,7 @@ import { closeDay } from './days.js';
 import { toast } from './ui/toast.js';
 import { renderGoal } from './ui/hud.js';
 import { sfx } from './audio/sfx.js';
+import { contractTick } from './contracts.js';
 
 /* ---------- Simulación ---------- */
 // dt: tiempo de juego (con la velocidad ×1/×2/×3); rdt: tiempo real, para animaciones.
@@ -26,6 +27,7 @@ export function update(dt, rdt) {
     if (rush) sfx.rush();
     if (rush) toast(`🚨 Son las ${clockAt(RUSH[0])}: empieza la hora pico y llegan el doble de tráileres`, 2600, true);
   }
+  contractTick();
   const night = isNight();
   if (night !== game.ev.nightOn) {
     game.ev.nightOn = night;
