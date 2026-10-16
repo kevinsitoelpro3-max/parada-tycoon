@@ -43,6 +43,16 @@ export const MODES = {
 };
 export const NEED_EMOJI = { gas: '⛽', food: '🍗', sleep: '💤', shop: '🍫', wash: '💦', repair: '🔧' };  // emojis que existen desde Android 7
 export const COST = { road: 20, tree: 15, demo: 10 };
+// Decoración: va en el pasto (sin calle) y sube el cobro de los negocios de las 8 casillas de alrededor.
+// upkeep: gasto diario en días de 75 s, como KINDS. Emojis que existen desde Android 7.
+export const DECOS = {
+  bench:  { name: 'Banca',  emoji: '💺', cost: 60,  upkeep: 2, bonus: 0.05 },
+  garden: { name: 'Jardín', emoji: '🌷', cost: 90,  upkeep: 3, bonus: 0.08 },
+  neon:   { name: 'Letrero luminoso', short: 'Letrero', emoji: '💡', cost: 180, upkeep: 6, bonus: 0.12 },
+};
+// Vecinos que se ayudan: si un negocio tiene pegado a su pareja, los dos cobran NEIGHBOR_BONUS más
+export const PAIRS = { food: 'sleep', sleep: 'food', gas: 'shop', shop: 'gas', wash: 'repair', repair: 'wash' };
+export const NEIGHBOR_BONUS = 0.1, BONUS_MAX = 0.3;
 export const CABS = ['#D7263D', '#1B998B', '#F46036', '#3F88C5', '#E2B33C', '#6A4C93', '#33363F', '#2A9D5C'];
 export const TRAILERS = ['#F1F1F1', '#C7CDD6', '#E6DFCF', '#9DB6C8', '#D9534F', '#5C7F67'];
 export const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];

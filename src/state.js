@@ -1,3 +1,4 @@
+import { DECOS, PAIRS, NEIGHBOR_BONUS, BONUS_MAX } from './config.js';
 import { W0, H0, WMAX, HMAX, LAND_BASE, KEY, DAY_LEN, DAY_SCALE, RUSH, KINDS, MODES, OPEN_HOUR, CLOSE_HOUR, DUSK, DAWN, NIGHT_FROM } from './config.js';
 import { clamp, mulberry32 } from './utils.js';
 import { GOALS } from './goals.js';
@@ -30,7 +31,20 @@ export const mode = () => MODES[game.S.mode] || MODES.normal;
 export const capOf = t => t.lvl + 1;
 export const payOf = (t, lvl = t.lvl) => Math.round(KINDS[t.k].pay * (1 + 0.5 * (lvl - 1)));
 export const repMult = () => 1 + 0.08 * (game.S.rep - 3);
-export const payNow = t => Math.round(payOf(t) * repMult());
+// Bono de cobro por la decoración y los vecinos de las 8 casillas alrededor de (x, y), con tope
+export function bonusAt(x, y) {
+  const t = T(x, y);
+  if (!t || t.t !== 'bld') return 0;
+  let b = 0, pair = false;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    const n = (dx || dy) && T(x + dx, y + dy);
+    if (!n) continue;
+    if (n.t === 'deco' && DECOS[n.d]) b += DECOS[n.d].bonus;
+    else if (n.t === 'bld' && PAIRS[t.k] === n.k) pair = true;
+  }
+  return Math.min(BONUS_MAX, b + (pair ? NEIGHBOR_BONUS : 0));
+}
+export const payNow = (t, x, y) => Math.round(payOf(t) * repMult() * (1 + (x === undefined ? 0 : bonusAt(x, y))));
 export const inflation = () => 1 + 0.06 * (game.S.day - 1);
 export const upkeepOf = (t, lvl = t.lvl) => Math.round(KINDS[t.k].upkeep * lvl * mode().upkeep * inflation() * DAY_SCALE);
 export const upCost = t => KINDS[t.k].cost * t.lvl;
@@ -60,6 +74,7 @@ export function totalUpkeep() {
   for (const t of game.S.tiles) {
     if (t.t === 'bld') c += KINDS[t.k].upkeep * t.lvl;
     else if (t.t === 'road') c += 1;
+    else if (t.t === 'deco' && DECOS[t.d]) c += DECOS[t.d].upkeep;
   }
   return Math.round(c * mode().upkeep * inflation() * DAY_SCALE);
 }
@@ -99,7 +114,7 @@ export function save() {
       v: 3, mode: S.mode, money: S.money, served: S.served, lost: S.lost, goal: S.goal,
       day: S.day, dayT: S.dayT, rep: S.rep, red: S.red, perfectDays: S.perfectDays, bestDay: S.bestDay,
       dayEarn: S.dayEarn, dayServed: S.dayServed, dayLost: S.dayLost, w: game.W, h: game.H, land: S.land || 0, over: S.over,
-      tiles: S.tiles.map(t => t.t === 'bld' ? { t: 'bld', k: t.k, l: t.lvl, e: t.earned || 0 } : { t: t.t })
+      tiles: S.tiles.map(t => t.t === 'bld' ? { t: 'bld', k: t.k, l: t.lvl, e: t.earned || 0 } : t.t === 'deco' ? { t: 'deco', d: t.d } : { t: t.t })
     };
     localStorage.setItem(KEY, JSON.stringify(data));
   } catch (e) { /* sin almacenamiento: el juego sigue */ }
@@ -118,6 +133,7 @@ export function load() {
     const valid = ['grass', 'road', 'tree', 'water', 'hwy'];
     const old = d.tiles.map(o => (o && o.t === 'bld' && KINDS[o.k])
       ? { t: 'bld', k: o.k, lvl: clamp(o.l | 0, 1, 3), earned: o.e | 0 }
+      : (o && o.t === 'deco' && DECOS[o.d]) ? { t: 'deco', d: o.d }
       : { t: (o && valid.includes(o.t)) ? o.t : 'grass' });
     // Las partidas de antes crecen gratis al tamaño inicial nuevo (columnas a la derecha y filas
     // abajo, con pasto). Lo construido queda en las mismas casillas.

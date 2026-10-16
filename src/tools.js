@@ -1,4 +1,4 @@
-import { KINDS, COST, DIRS } from './config.js';
+import { KINDS, COST, DIRS, DECOS } from './config.js';
 import { fmt, money } from './utils.js';
 import { game, T, isRoad, upkeepOf } from './state.js';
 import { inUse } from './routes.js';
@@ -11,6 +11,7 @@ export function toolCost(k) {
   if (k === 'road') return COST.road;
   if (k === 'demo') return COST.demo;
   if (KINDS[k]) return KINDS[k].cost;
+  if (DECOS[k]) return DECOS[k].cost;
   return 0;
 }
 export function check(k, x, y) {
@@ -30,7 +31,13 @@ export function check(k, x, y) {
     if (!roadNear) return { ok: false, msg: 'Ponlo pegado a una calle para que lleguen los tráileres' };
     return { ok: true, cost: KINDS[k].cost };
   }
+  if (DECOS[k]) {
+    if (t.t === 'tree') return { ok: false, msg: 'Quita el árbol con 🔨 Demoler primero' };
+    if (t.t !== 'grass') return { ok: false, msg: 'La decoración va en el pasto' };
+    return { ok: true, cost: DECOS[k].cost };
+  }
   if (k === 'demo') {
+    if (t.t === 'deco') return { ok: true, cost: COST.demo, refund: Math.round(DECOS[t.d].cost * 0.5) };
     if (t.t === 'tree') return { ok: true, cost: COST.tree };
     if (t.t === 'water') return { ok: false, msg: 'El estanque no se puede quitar' };
     if (t.t === 'road') {
@@ -64,6 +71,10 @@ export function applyTool(x, y, drag) {
     Object.assign(t, { t: 'bld', k: tool, lvl: 1, earned: 0, slots: [null, null] });
     sfx.build();
     toast(`Nuevo negocio: ${KINDS[tool].name}. Gasto diario $${fmt(upkeepOf(t))}`);
+  } else if (DECOS[tool]) {
+    Object.assign(t, { t: 'deco', d: tool });
+    sfx.build();
+    toast(`${DECOS[tool].emoji} ${DECOS[tool].name}: +${Math.round(DECOS[tool].bonus * 100)} % de cobro a los negocios de alrededor`);
   } else if (tool === 'demo') {
     for (const k of Object.keys(t)) delete t[k];
     t.t = 'grass';

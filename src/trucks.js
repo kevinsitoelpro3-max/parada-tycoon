@@ -88,7 +88,7 @@ export function finishService(tr) {
   const S = game.S;
   const b = T(tr.bx, tr.by);
   if (b && b.t === 'bld') {
-    let pay = payNow(b);
+    let pay = payNow(b, tr.bx, tr.by);
     const tip = tr.tip ? Math.round(pay * COMBO_TIP) : 0;
     pay += tip;
     S.money += pay; S.served++; S.dayServed++; S.dayEarn += pay;

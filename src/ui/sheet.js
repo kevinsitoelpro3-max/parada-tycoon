@@ -1,6 +1,6 @@
 import { KINDS } from '../config.js';
 import { $, fmt, money } from '../utils.js';
-import { game, T, payOf, payNow, repMult, upkeepOf, upCost } from '../state.js';
+import { game, T, payOf, payNow, repMult, upkeepOf, upCost, bonusAt } from '../state.js';
 import { toast } from './toast.js';
 import { hudCache } from './hud.js';
 import { menuEl } from './menu.js';
@@ -20,12 +20,13 @@ export function renderSheet() {
   $('#shTitle').textContent = k.emoji + ' ' + k.name;
   $('#shLvl').textContent = 'Nivel ' + t.lvl + ' de 3' + (t.off > 0 ? '. Sin luz por ahora.' : '');
   $('#shCap').textContent = t.slots.length;
-  $('#shPay').textContent = '$' + fmt(payNow(t));
+  $('#shPay').textContent = '$' + fmt(payNow(t, sel.x, sel.y));
+  const bonus = bonusAt(sel.x, sel.y);
   $('#shUpk').textContent = '$' + fmt(upkeepOf(t));
   $('#shEarn').textContent = '$' + fmt(t.earned || 0);
   const up = $('#shUp');
   if (t.lvl < 3) {
-    $('#shNext').textContent = `Al mejorarlo atiende a ${t.slots.length + 1} a la vez, cobra $${fmt(Math.round(payOf(t, t.lvl + 1) * repMult()))} y su gasto diario sube a $${fmt(upkeepOf(t, t.lvl + 1))}.`;
+    $('#shNext').textContent = `Al mejorarlo atiende a ${t.slots.length + 1} a la vez, cobra $${fmt(Math.round(payOf(t, t.lvl + 1) * repMult() * (1 + bonus)))} y su gasto diario sube a $${fmt(upkeepOf(t, t.lvl + 1))}.`;
     up.textContent = 'Mejorar por $' + fmt(upCost(t));
     up.disabled = game.S.money < upCost(t) || game.S.over;
   } else {
@@ -33,6 +34,10 @@ export function renderSheet() {
     up.textContent = 'Nivel máximo';
     up.disabled = true;
   }
+  // Decoración y vecinos: cuánto suman y cómo subirlo
+  $('#shNext').textContent += bonus > 0
+    ? ` La decoración y los vecinos le suman ${Math.round(bonus * 100)} % al cobro.`
+    : ' Pon decoración o su negocio pareja al lado para que cobre más.';
 }
 export function setupSheet() {
   $('#shUp').addEventListener('click', () => {

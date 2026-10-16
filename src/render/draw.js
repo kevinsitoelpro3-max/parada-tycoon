@@ -2,6 +2,7 @@ import { canvas, ctx, clamp } from '../utils.js';
 import { game, T } from '../state.js';
 import { drawGround, drawHighlights, drawTree, drawTruck, drawRain, outerTrees, truckAlpha } from './scene.js';
 import { worldXform } from './iso.js';
+import { drawDeco } from './decor.js';
 import { bldFrame, drawBldCached } from './bldcache.js';
 import { drawNight, skyColor } from './night.js';
 import { drawOverlays, drawTutoMark } from './overlays.js';
@@ -23,6 +24,7 @@ export function draw() {
   for (let y = 0; y < H; y++) for (let x = 1; x < W; x++) {
     const t = T(x, y);
     if (t.t === 'tree') objs.push({ d: x + y + 1, a: 1, f: () => drawTree(x, y, 1) });
+    else if (t.t === 'deco') objs.push({ d: x + y + 1, a: 1, f: () => drawDeco(x, y, t) });
     else if (t.t === 'bld') objs.push({ d: x + y + 1, a: 1, f: () => drawBldCached(x, y, t) });
   }
   for (const [x, y, s] of outerTrees) {
