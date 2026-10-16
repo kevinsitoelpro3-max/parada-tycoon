@@ -39,7 +39,8 @@ function routeFrom(x, y) {
   if (p === undefined) { p = pathToHighway(x, y); memo.set(k, p); }
   return p;
 }
-export function findService(need) {
+// minRow: solo negocios cuya salida a la carretera está en esa fila o más abajo
+export function findService(need, minRow = 0) {
   const key = roadsKey();
   if (key !== memoRoads) { memo.clear(); memoRoads = key; }
   let best = null;
@@ -50,7 +51,7 @@ export function findService(need) {
     if (slot < 0) continue;
     for (const [dx, dy] of DIRS) {
       const p = routeFrom(x + dx, y + dy);
-      if (!p) continue;
+      if (!p || p[p.length - 1][1] < minRow) continue;
       const score = p.length + p[p.length - 1][1] * 0.1;
       if (!best || score < best.score) best = { score, bx: x, by: y, slot, p, tile: t };
     }

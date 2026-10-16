@@ -1,4 +1,4 @@
-import { CABS, TRAILERS, KINDS, EXTRA_SHARE } from './config.js';
+import { CABS, TRAILERS, KINDS, EXTRA_SHARE, COMBO_CHANCE, COMBO_NEAR, COMBO_TIP } from './config.js';
 import { clamp, pick } from './utils.js';
 import { game, T, mode, inRush, isNight, countK, payNow } from './state.js';
 import { findService, parkSpot } from './routes.js';
@@ -7,6 +7,7 @@ import { sfx } from './audio/sfx.js';
 /* ---------- Tráileres ---------- */
 // Tipos de negocio extra que ya tienes (tiendita, lavado, taller)
 const ownedExtras = () => Object.keys(KINDS).filter(k => KINDS[k].extra && countK(k) > 0);
+const BASIC = ['gas', 'food', 'sleep'];
 
 export function spawnInterval() {
   const S = game.S;
@@ -49,6 +50,14 @@ export function spawn() {
       const inward = plan.p.slice().reverse().map(([x, y]) => [x + 0.5, y + 0.5]);
       tr.path = [[0.5, entry[1] + 0.5], ...inward, parkSpot(tr, plan.tile)];
       tr.tiles = new Set(plan.p.map(([x, y]) => x + ',' + y));
+      // Segundo pedido: solo si tienes otro tipo básico (si no, no hay sorteo y el azar sigue igual)
+      if (BASIC.includes(tr.need)) {
+        const others = BASIC.filter(k => k !== tr.need && countK(k) > 0);
+        if (others.length) {
+          const r = Math.random();
+          if (r < COMBO_CHANCE) tr.need2 = others[Math.floor(r / COMBO_CHANCE * others.length)];
+        }
+      }
     } else {
       tr.angry = true;
       sfx.angry();
@@ -79,15 +88,35 @@ export function finishService(tr) {
   const S = game.S;
   const b = T(tr.bx, tr.by);
   if (b && b.t === 'bld') {
-    const pay = payNow(b);
+    let pay = payNow(b);
+    const tip = tr.tip ? Math.round(pay * COMBO_TIP) : 0;
+    pay += tip;
     S.money += pay; S.served++; S.dayServed++; S.dayEarn += pay;
     S.rep = Math.min(5, S.rep + 0.03);
     b.earned = (b.earned || 0) + pay;
     sfx.cash();
     if (b.slots[tr.slot] === tr) b.slots[tr.slot] = null;
-    game.floats.push({ x: tr.bx + 0.5, y: tr.by + 0.5, z: 1.1, text: '+$' + pay, t: 0, neg: false });
+    game.floats.push({ x: tr.bx + 0.5, y: tr.by + 0.5, z: 1.1, text: '+$' + pay + (tip ? ' propina' : ''), t: 0, neg: false });
   }
-  tr.state = 'leave'; tr.need = null; tr.happy = 1.6;
   const r = tr.route, exit = r[r.length - 1];
-  tr.path = [...r.map(([x, y]) => [x + 0.5, y + 0.5]), [0.5, exit[1] + 0.5], [0.5, game.H + 2.6]];
+  const out = [...r.map(([x, y]) => [x + 0.5, y + 0.5]), [0.5, exit[1] + 0.5]];
+  // Segundo pedido: busca otro negocio más abajo en la carretera; si no hay lugar, se va contento
+  if (tr.need2) {
+    const need = tr.need2, plan = findService(need, exit[1]);
+    tr.need2 = null; tr.tip = false;
+    if (plan) {
+      const ax = tr.bx, ay = tr.by;
+      plan.tile.slots[plan.slot] = tr;
+      Object.assign(tr, { state: 'arrive', need, t: 0, bx: plan.bx, by: plan.by, slot: plan.slot, route: plan.p });
+      tr.tip = Math.abs(plan.bx - ax) + Math.abs(plan.by - ay) <= COMBO_NEAR;
+      const entry = plan.p[plan.p.length - 1];
+      const inward = plan.p.slice().reverse().map(([x, y]) => [x + 0.5, y + 0.5]);
+      tr.path = [...out, [0.5, entry[1] + 0.5], ...inward, parkSpot(tr, plan.tile)];
+      tr.tiles = new Set([...r, ...plan.p].map(([x, y]) => x + ',' + y));
+      return;
+    }
+  }
+  tr.tip = false;
+  tr.state = 'leave'; tr.need = null; tr.happy = 1.6;
+  tr.path = [...out, [0.5, game.H + 2.6]];
 }
