@@ -1,6 +1,6 @@
 import { KINDS, DAY_LEN, RUSH, NIGHT_FROM, HWY2_RATE } from './config.js';
 import { pick, fmt } from './utils.js';
-import { game, T, inRush, isNight, totalUpkeep, save, clockAt } from './state.js';
+import { game, T, inRush, isNight, totalUpkeep, save, clockAt, serviceTime } from './state.js';
 import { GOALS } from './goals.js';
 import { spawn, spawnInterval, moveAlong, finishService, waitInLine } from './trucks.js';
 import { closeDay } from './days.js';
@@ -8,6 +8,7 @@ import { toast } from './ui/toast.js';
 import { renderGoal } from './ui/hud.js';
 import { sfx } from './audio/sfx.js';
 import { contractTick } from './contracts.js';
+import { ensureToday } from './daily.js';
 
 /* ---------- Simulación ---------- */
 // dt: tiempo de juego (con la velocidad ×1/×2/×3); rdt: tiempo real, para animaciones.
@@ -48,7 +49,11 @@ export function update(dt, rdt) {
     sfx.caravan();
     toast('🚛 ¡Ahí viene la caravana!', 2400, true);
   }
-  for (const t of S.tiles) if (t.off > 0) { t.off -= dt; if (t.off <= 0) delete t.off; }
+  for (const t of S.tiles) {
+    if (t.off > 0) { t.off -= dt; if (t.off <= 0) delete t.off; }
+    // la propina 💰 se va si no la cobras a tiempo (en segundos reales, para que dé tiempo a ×3)
+    if (t.cash) { t.cash.ttl -= rdt; if (t.cash.ttl <= 0) delete t.cash; }
+  }
 
   game.spawnT -= dt;
   if (game.spawnT <= 0) game.spawnT = spawn() ? spawnInterval() : 0.3;
@@ -63,7 +68,7 @@ export function update(dt, rdt) {
     if (tr.state === 'service') {
       const b = T(tr.bx, tr.by);
       if (!(b && b.off > 0)) tr.t += dt;
-      if (!b || b.t !== 'bld' || tr.t >= KINDS[b.k].time) finishService(tr);
+      if (!b || b.t !== 'bld' || tr.t >= serviceTime(b.k)) finishService(tr);
     } else if (moveAlong(tr, dt)) {
       if (tr.state === 'wait') waitInLine(tr, dt);
       else if (tr.state === 'arrive') {
@@ -85,6 +90,7 @@ export function update(dt, rdt) {
   if (game.goalT > 0.4) {
     game.goalT = 0;
     game.billCache = totalUpkeep();
+    ensureToday();
     const g = GOALS[S.goal];
     if (g && g.ok()) {
       S.money += g.prize; S.goal++;

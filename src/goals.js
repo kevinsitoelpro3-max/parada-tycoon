@@ -1,5 +1,5 @@
 import { PERFECT_DAY_MIN, KINDS } from './config.js';
-import { game, countK } from './state.js';
+import { game, countK, levelInfo } from './state.js';
 
 /* ---------- Metas ---------- */
 export const GOALS = [
@@ -26,5 +26,15 @@ export const GOALS = [
   { text: 'Abre un lavado de tráileres',               prize: 200,  ok: () => countK('wash') >= 1 },
   { text: 'Abre un taller',                            prize: 400,  ok: () => countK('repair') >= 1 },
   { text: 'Ten los 6 tipos de negocio a la vez',       prize: 1500, ok: () => Object.keys(KINDS).filter(k => !KINDS[k].night).every(k => countK(k) >= 1) },
-  { text: 'Atiende 1,000 tráileres',                   prize: 3000, ok: () => game.S.served >= 1000 }
+  { text: 'Atiende 1,000 tráileres',                   prize: 3000, ok: () => game.S.served >= 1000 },
+  // Temporada 4: nivel de dueño, retos y propinas
+  { text: 'Cobra 5 propinas 💰 tocando tus negocios',   prize: 500,  ok: () => (game.S.cash || 0) >= 5 },
+  { text: 'Llega al nivel 5 de dueño',                 prize: 1000, ok: () => levelInfo().lvl >= 5 },
+  { text: 'Compra 3 mejoras en ☰ → Mejoras',           prize: 1500, ok: () => Object.values(game.S.perks || {}).reduce((a, b) => a + b, 0) >= 3 },
+  { text: 'Cumple 5 retos del día (☰ → Retos)',        prize: 2500, ok: () => (game.S.retos || 0) >= 5 },
+  { text: 'Atiende 2,500 tráileres',                   prize: 5000, ok: () => game.S.served >= 2500 },
+  { text: 'Llega al día 20 sin quebrar',               prize: 6000, ok: () => game.S.day >= 20 },
+  { text: 'Llega al nivel 15 de dueño',                prize: 8000, ok: () => levelInfo().lvl >= 15 },
+  { text: 'Junta $100,000 en caja',                    prize: 15000, ok: () => game.S.money >= 100000 },
+  { text: 'Atiende 5,000 tráileres',                   prize: 20000, ok: () => game.S.served >= 5000 }
 ];

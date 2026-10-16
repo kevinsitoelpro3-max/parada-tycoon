@@ -1,20 +1,26 @@
-import { CABS, TRAILERS, KINDS, EXTRA_SHARE, PARK_SHARE, QUEUE_WAIT, COMBO_CHANCE, COMBO_NEAR, COMBO_TIP } from './config.js';
-import { clamp, pick } from './utils.js';
-import { game, T, mode, inRush, isNight, countK, payNow, priceOf } from './state.js';
+import { CABS, TRAILERS, KINDS, EXTRA_SHARE, PARK_SHARE, QUEUE_WAIT, COMBO_CHANCE, COMBO_NEAR, COMBO_TIP, CASH_CHANCE, CASH_TTL } from './config.js';
+import { clamp, pick, mulberry32 } from './utils.js';
+import { game, T, mode, inRush, isNight, countK, payNow, priceOf, perkVal } from './state.js';
 import { findService, findQueue, parkSpot } from './routes.js';
 import { sfx } from './audio/sfx.js';
 import { contractServed } from './contracts.js';
+import { addXp } from './progress.js';
+import { track } from './daily.js';
 
 /* ---------- Tráileres ---------- */
 // Tipos de negocio extra que ya tienes (tiendita, lavado, taller)
 const ownedExtras = () => Object.keys(KINDS).filter(k => KINDS[k].extra && countK(k) > 0);
 const BASIC = ['gas', 'food', 'sleep'];
+// Sorteo de las propinas 💰 aparte, para no cambiar el azar de los tráileres
+const cashRng = mulberry32(20261016);
+// Con la mejora Buena fama la reputación baja menos
+const repLoss = () => mode().repLoss * (1 - perkVal('fama'));
 
 export function spawnInterval() {
   const S = game.S;
   if (game.ev.burst > 0) return 0.5;
   let base = clamp(2.6 - S.served * 0.004 - (S.day - 1) * 0.07, 0.75, 2.6);
-  base /= mode().traffic * (0.7 + 0.1 * S.rep) * (game.ev.traffic || 1);
+  base /= mode().traffic * (0.7 + 0.1 * S.rep) * (game.ev.traffic || 1) * (1 + perkVal('trafico'));
   if (inRush()) base *= 0.5;
   return base * (0.8 + Math.random() * 0.4);
 }
@@ -52,7 +58,7 @@ export function spawn(top = false) {
     if (line) {
       // Todo lleno: se forma en la calle de enfrente y espera un lugar
       (line.tile.queue || (line.tile.queue = [])).push(tr);
-      Object.assign(tr, { state: 'wait', bx: line.bx, by: line.by, slot: -1, route: line.p, patience: QUEUE_WAIT });
+      Object.assign(tr, { state: 'wait', bx: line.bx, by: line.by, slot: -1, route: line.p, patience: QUEUE_WAIT + perkVal('paciencia') });
       const entry = line.p[line.p.length - 1];
       tr.path = [[0.5, entry[1] + 0.5], ...line.p.slice().reverse().map(([x, y]) => [x + 0.5, y + 0.5])];
       tr.tiles = new Set(line.p.map(([x, y]) => x + ',' + y));
@@ -77,7 +83,7 @@ export function spawn(top = false) {
       S.lost++; S.dayLost++;
       // Duele más si tenías ese negocio pero estaba lleno o sin luz
       const had = countK(tr.need) > 0;
-      S.rep = Math.max(1, S.rep - mode().repLoss * (had ? 1 : 0.25));
+      S.rep = Math.max(1, S.rep - repLoss() * (had ? 1 : 0.25));
     }
   }
   if (tr.state === 'pass') tr.path = top ? [[0.5, 0.5], [0.5, game.H + 2.6]] : [[0.5, game.H + 2.6]];
@@ -105,9 +111,16 @@ export function finishService(tr) {
     const tip = tr.tip ? Math.round(pay * COMBO_TIP) : 0;
     pay += tip;
     S.money += pay; S.served++; S.dayServed++; S.dayEarn += pay;
+    S.total = (S.total || 0) + pay;
     S.rep = Math.min(5, S.rep + priceOf(b).rep);
     b.earned = (b.earned || 0) + pay;
     contractServed(b.k);
+    addXp(1);
+    track('serve'); track('earn', pay); track('kind', 1, b.k);
+    if (isNight()) track('night');
+    if (tip) track('combo');
+    // A veces el cliente deja una propina 💰 en el negocio: se cobra tocándolo (ver collectCash)
+    if (!b.cash && cashRng() < CASH_CHANCE) b.cash = { v: payNow(b, tr.bx, tr.by), ttl: CASH_TTL };
     sfx.cash();
     if (b.slots[tr.slot] === tr) b.slots[tr.slot] = null;
     game.floats.push({ x: tr.bx + 0.5, y: tr.by + 0.5, z: 1.1, text: '+$' + pay + (tip ? ' propina' : ''), t: 0, neg: false });
@@ -156,7 +169,22 @@ export function waitInLine(tr, dt) {
   tr.angry = true; tr.need = null; tr.state = 'leave';
   sfx.angry();
   S.lost++; S.dayLost++;
-  S.rep = Math.max(1, S.rep - mode().repLoss);
+  S.rep = Math.max(1, S.rep - repLoss());
   const r = tr.route, exit = r[r.length - 1];
   tr.path = [...r.map(([x, y]) => [x + 0.5, y + 0.5]), [0.5, exit[1] + 0.5], [0.5, game.H + 2.6]];
+}
+
+// Toca un negocio con propina 💰: la cobras (vale un cobro más y da experiencia)
+export function collectCash(x, y) {
+  const S = game.S, b = T(x, y);
+  if (!b || !b.cash || S.over) return false;
+  const v = b.cash.v;
+  delete b.cash;
+  S.money += v; S.total = (S.total || 0) + v; S.cash = (S.cash || 0) + 1;
+  b.earned = (b.earned || 0) + v;
+  addXp(3);
+  track('cash');
+  sfx.cash();
+  game.floats.push({ x: x + 0.5, y: y + 0.5, z: 1.4, text: '💰 +$' + v, t: 0, neg: false });
+  return true;
 }

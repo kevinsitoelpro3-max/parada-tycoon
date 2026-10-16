@@ -1,6 +1,6 @@
 import { DAY_LEN } from '../config.js';
 import { $, stage, clamp, fmt, money } from '../utils.js';
-import { game, inRush, clockNow } from '../state.js';
+import { game, inRush, clockNow, levelInfo } from '../state.js';
 import { GOALS } from '../goals.js';
 import { contractLabel } from '../contracts.js';
 import { cam, fit, zoomAt } from '../camera.js';
@@ -8,11 +8,12 @@ import { toolCost } from '../tools.js';
 import { tools } from './dock.js';
 import { sheetEl, renderSheet } from './sheet.js';
 import { menuEl, renderMenu } from './menu.js';
+import { dailyReady } from '../daily.js';
 
 /* ---------- Marcador (HUD), meta actual y botones de velocidad y zoom ---------- */
 const moneyEl = $('#money'), moneySign = $('#moneySign'), moneyLabel = $('#moneyLabel');
 const servedEl = $('#served'), lostEl = $('#lost'), repStars = $('#repStars'), repNum = $('#repNum');
-const contractEl = $('#contract');
+const contractEl = $('#contract'), menuDot = $('#menuDot');
 const goalEl = $('#goal'), goalTag = $('#goalTag'), goalTxt = $('#goalTxt'), goalPrize = $('#goalPrize');
 const dayNum = $('#dayNum'), dayClock = $('#dayClock'), dayDone = $('#dayDone'), dayMark = $('#dayMark'), dayChip = $('#dayChip'), dayBill = $('#dayBill');
 // Últimos valores mostrados, para tocar el DOM solo cuando algo cambia
@@ -66,6 +67,14 @@ export function hud() {
     dayChip.textContent = chip;
     dayChip.hidden = !chip;
     dayChip.classList.toggle('rush', rush);
+  }
+  // Marca roja en ☰ cuando hay premio, reto por cobrar o puntos de mejora (se revisa 2 veces por segundo)
+  const now = performance.now();
+  if (!(hudCache.dt > now)) {
+    hudCache.dt = now + 500;
+    const dot = !S.over && (dailyReady() || levelInfo().pts > 0);
+    if (hudCache.dot !== dot) { hudCache.dot = dot; menuDot.hidden = !dot; }
+    if (!menuEl.hidden) renderMenu();
   }
   if (hudCache.b !== game.billCache) { hudCache.b = game.billCache; dayBill.textContent = 'Gastos $' + fmt(game.billCache); }
 }

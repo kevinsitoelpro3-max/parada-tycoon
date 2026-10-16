@@ -14,7 +14,7 @@
     <div>🚚 <b id="served">0</b>&nbsp; 😠 <b id="lost">0</b></div>
   </div>
   <button class="sign sq" id="speed" aria-label="Velocidad del juego">×1</button>
-  <button class="sign sq" id="menuBtn" aria-label="Menú">☰</button>
+  <button class="sign sq" id="menuBtn" aria-label="Menú">☰<i class="dot" id="menuDot" hidden></i></button>
 </header>
 <div class="info">
   <div class="goal" id="goal"><span class="tag" id="goalTag">Meta</span><span class="txt" id="goalTxt"></span><span class="prize" id="goalPrize"></span></div>
@@ -62,40 +62,89 @@
     </div>
   </div>
 
-  <div class="sheet" id="menu" hidden>
-    <h2>Menú</h2>
-    <h3>Terreno</h3>
-    <p class="small" id="landTxt"></p>
-    <div class="row land"><button class="btn primary" id="landDown"></button><button class="btn primary" id="landRight"></button></div>
-    <p class="small" id="topTxt" hidden></p>
-    <button class="btn primary" id="openTop" hidden></button>
-    <h3>Cómo se juega</h3>
-    <ul class="how">
-      <li>Traza calles desde la carretera y pon negocios pegados a ellas.</li>
-      <li>Cada tráiler pide ⛽ diésel, 🍗 comida o 💤 descanso. Si hay lugar, entra y paga. Si no, se va 😠 y baja tu reputación.</li>
-      <li>Negocios extra: 🛒 tiendita, 🚿 lavado y 🔧 taller. Cada uno abre un mercado nuevo: tráileres que antes pasaban de largo se paran a pedir 🍫, 💦 o 🔧, sin quitarles clientes a los demás. Están al final de la barra de herramientas.</li>
-      <li>Más estrellas traen más tráileres y mejores propinas. Pocas estrellas, lo contrario.</li>
-      <li>La parada abre a las 06:00 y cierra a las 24:00 (3 minutos de juego). En el corte de caja pagas los gastos de tus negocios y calles, y suben un poco cada día.</li>
-      <li>Si cierras el día en rojo varias veces seguidas, quiebras.</li>
-      <li>En la hora pico, de 13:10 a 17:40 (la franja naranja de la barra), llegan el doble de tráileres. También hay lluvia, apagones y caravanas.</li>
-      <li>Toca un negocio con ✋ Ver para mejorarlo. Con ✋ Ver arrastras para moverte y pellizcas para acercar.</li>
-    </ul>
-    <button class="btn" id="tutoBtn">👷 Repasar la guía</button>
-    <h3>Partida nueva</h3>
-    <p class="small" id="modeTxt"></p>
-    <div class="modes" id="menuModes">
-      <button class="btn" data-mode="facil">Fácil</button>
-      <button class="btn" data-mode="normal">Normal</button>
-      <button class="btn" data-mode="dificil">Difícil</button>
+  <div class="sheet menu" id="menu" hidden role="dialog" aria-labelledby="mnTitle">
+    <div class="mn-head">
+      <div class="mn-badge" aria-hidden="true">⭐<b id="mnLvl">1</b></div>
+      <div class="mn-who">
+        <h2 id="mnTitle">Tu parada</h2>
+        <div class="xpbar" aria-hidden="true"><div id="mnXpFill"></div></div>
+        <span class="small" id="mnXp"></span>
+      </div>
+      <button class="mn-x" id="closeMenuX" aria-label="Cerrar menú">✕</button>
     </div>
-    <h3>Sonido</h3>
-    <div class="row toggles">
-      <button class="btn" data-audio="music" aria-pressed="true">🎵 Música: sí</button>
-      <button class="btn" data-audio="sfx" aria-pressed="true">🔊 Efectos: sí</button>
+    <div class="tabs" role="tablist" aria-label="Secciones del menú">
+      <button role="tab" data-tab="parada" aria-selected="true"><span>🏪</span>Parada</button>
+      <button role="tab" data-tab="retos" aria-selected="false"><span>🎯</span>Retos<i class="dot" id="dotRetos" hidden></i></button>
+      <button role="tab" data-tab="mejoras" aria-selected="false"><span>⭐</span>Mejoras<i class="dot" id="dotPerks" hidden></i></button>
+      <button role="tab" data-tab="terreno" aria-selected="false"><span>🗺️</span>Terreno</button>
+      <button role="tab" data-tab="mas" aria-selected="false"><span>⚙️</span>Más</button>
     </div>
-    <div class="row menu-end">
+
+    <section class="pane" data-pane="parada">
+      <div class="facts stats6" id="mnStats"></div>
+      <h3>Meta actual</h3>
+      <p class="next" id="mnGoal"></p>
+    </section>
+
+    <section class="pane" data-pane="retos" hidden>
+      <div class="gift" id="gift">
+        <div class="gift-top"><b>🎁 Premio diario</b><span class="small" id="giftStreak"></span></div>
+        <div class="gift-days" id="giftDays"></div>
+        <button class="btn primary" id="giftBtn"></button>
+      </div>
+      <h3>Retos de hoy</h3>
+      <div id="retoList"></div>
+      <p class="small" id="retoLeft"></p>
+    </section>
+
+    <section class="pane" data-pane="mejoras" hidden>
+      <p class="small" id="perkTxt"></p>
+      <div id="perkList"></div>
+    </section>
+
+    <section class="pane" data-pane="terreno" hidden>
+      <p class="small" id="landTxt"></p>
+      <div class="row land"><button class="btn primary" id="landDown"></button><button class="btn primary" id="landRight"></button></div>
+      <p class="small" id="topTxt" hidden></p>
+      <button class="btn primary" id="openTop" hidden></button>
+    </section>
+
+    <section class="pane" data-pane="mas" hidden>
+      <h3>Sonido</h3>
+      <div class="row toggles">
+        <button class="btn" data-audio="music" aria-pressed="true">🎵 Música: sí</button>
+        <button class="btn" data-audio="sfx" aria-pressed="true">🔊 Efectos: sí</button>
+      </div>
+      <h3>Cómo se juega</h3>
+      <button class="btn" id="tutoBtn">👷 Repasar la guía</button>
+      <details class="how-box">
+        <summary>Ver las reglas</summary>
+        <ul class="how">
+          <li>Traza calles desde la carretera y pon negocios pegados a ellas.</li>
+          <li>Cada tráiler pide ⛽ diésel, 🍗 comida o 💤 descanso. Si hay lugar, entra y paga. Si no, se va 😠 y baja tu reputación.</li>
+          <li>Negocios extra: 🛒 tiendita, 🚿 lavado y 🔧 taller. Cada uno abre un mercado nuevo: tráileres que antes pasaban de largo se paran a pedir 🍫, 💦 o 🔧, sin quitarles clientes a los demás.</li>
+          <li>Más estrellas traen más tráileres y mejores propinas. Pocas estrellas, lo contrario.</li>
+          <li>A veces un negocio deja una propina 💰 encima: tócala para cobrarla antes de que se vaya.</li>
+          <li>Cada cliente te da experiencia. Al subir de nivel de dueño ganas un punto para las mejoras de ⭐ Mejoras.</li>
+          <li>Cada día del calendario hay un premio 🎁 y retos 🎯 nuevos. Si vuelves diario, la racha da más premio.</li>
+          <li>La parada abre a las 06:00 y cierra a las 24:00 (3 minutos de juego). En el corte de caja pagas los gastos de tus negocios y calles, y suben un poco cada día.</li>
+          <li>Si cierras el día en rojo varias veces seguidas, quiebras.</li>
+          <li>En la hora pico, de 13:10 a 17:40 (la franja naranja de la barra), llegan el doble de tráileres. También hay lluvia, apagones y caravanas.</li>
+          <li>Toca un negocio con ✋ Ver para mejorarlo. Con ✋ Ver arrastras para moverte y pellizcas para acercar.</li>
+        </ul>
+      </details>
+      <h3>Partida nueva</h3>
+      <p class="small" id="modeTxt"></p>
+      <div class="modes" id="menuModes">
+        <button class="btn" data-mode="facil">Fácil</button>
+        <button class="btn" data-mode="normal">Normal</button>
+        <button class="btn" data-mode="dificil">Difícil</button>
+      </div>
       <button class="btn" id="toStart">Volver al inicio</button>
-      <button class="btn primary" id="closeMenu">Seguir jugando</button>
+    </section>
+
+    <div class="row menu-end">
+      <button class="btn primary" id="closeMenu">▶ Seguir jugando</button>
     </div>
   </div>
 

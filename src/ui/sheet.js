@@ -1,10 +1,11 @@
 import { KINDS, PRICES } from '../config.js';
 import { $, fmt, money } from '../utils.js';
-import { game, T, payOf, payNow, repMult, upkeepOf, upCost, bonusAt, priceOf } from '../state.js';
+import { game, T, payOf, payNow, repMult, upkeepOf, upCost, bonusAt, priceOf, perkVal } from '../state.js';
 import { toast } from './toast.js';
 import { hudCache } from './hud.js';
 import { menuEl } from './menu.js';
 import { sfx } from '../audio/sfx.js';
+import { track } from '../daily.js';
 
 /* ---------- Ficha del negocio (ver y mejorar) ---------- */
 export const sheetEl = $('#sheet');
@@ -30,7 +31,7 @@ export function renderSheet() {
   $('#shEarn').textContent = '$' + fmt(t.earned || 0);
   const up = $('#shUp');
   if (t.lvl < 3) {
-    $('#shNext').textContent = `Al mejorarlo atiende a ${t.slots.length + 1} a la vez, cobra $${fmt(Math.round(payOf(t, t.lvl + 1) * repMult() * priceOf(t).mult * (1 + bonus)))} y su gasto diario sube a $${fmt(upkeepOf(t, t.lvl + 1))}.`;
+    $('#shNext').textContent = `Al mejorarlo atiende a ${t.slots.length + 1} a la vez, cobra $${fmt(Math.round(payOf(t, t.lvl + 1) * repMult() * priceOf(t).mult * (1 + bonus) * (1 + perkVal('cobro'))))} y su gasto diario sube a $${fmt(upkeepOf(t, t.lvl + 1))}.`;
     up.textContent = 'Mejorar por $' + fmt(upCost(t));
     up.disabled = game.S.money < upCost(t) || game.S.over;
   } else {
@@ -59,6 +60,7 @@ export function setupSheet() {
     game.floats.push({ x: sel.x + 0.5, y: sel.y + 0.5, z: 1.1, text: '−$' + fmt(c), t: 0, neg: true });
     game.puffs.push({ x: sel.x, y: sel.y, t: 0 });
     toast(KINDS[t.k].name + ' subió a nivel ' + t.lvl);
+    track('up');
     hudCache.m = null;
     renderSheet();
   });

@@ -3,6 +3,8 @@ import { canvas, clamp } from './utils.js';
 import { game } from './state.js';
 import { cam, clampCam, zoomAt, screenToTile } from './camera.js';
 import { applyTool } from './tools.js';
+import { collectCash } from './trucks.js';
+import { cashAt } from './render/overlays.js';
 
 /* ---------- Entrada táctil y mouse ---------- */
 const pts = new Map();
@@ -22,8 +24,12 @@ function endPointer(e) {
   const p = pts.get(e.pointerId);
   pts.delete(e.pointerId);
   if (g && g.type === 'tap' && e.type === 'pointerup') {
-    const [x, y] = screenToTile(p.x, p.y);
-    applyTool(x, y, false);
+    // Primero las bolsas de propina 💰, que flotan encima del negocio
+    const c = cashAt(p.x, p.y);
+    if (!(c && collectCash(c.x, c.y))) {
+      const [x, y] = screenToTile(p.x, p.y);
+      applyTool(x, y, false);
+    }
   }
   if (pts.size === 1 && g && g.type === 'pinch') {
     const q = [...pts.values()][0];
