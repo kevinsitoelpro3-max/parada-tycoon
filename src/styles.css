@@ -234,6 +234,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 }
 /* Pantallas bajas (celular en horizontal): el pie fijo y la franja del aviso no dejaban ver el menú */
 @media (max-height:520px){#menu,#over{max-height:calc(100% - 16px)}.menu-end{position:static}}
+#openTop{width:100%;margin-top:4px}
 .row.land .btn{font-size:14px;padding:11px 6px 9px}
 
 /* ---------- Pantalla de inicio ---------- */

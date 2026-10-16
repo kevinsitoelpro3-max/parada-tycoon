@@ -18,11 +18,12 @@ export function check(k, x, y) {
   const t = T(x, y);
   if (!t) return { ok: false, msg: '' };
   if (t.t === 'hwy') return { ok: false, msg: 'Esa es la carretera principal' };
+  if (t.t === 'hwy2') return { ok: false, msg: 'Esa es la carretera de arriba' };
   const roadNear = DIRS.some(([dx, dy]) => isRoad(x + dx, y + dy));
   if (k === 'road') {
     if (t.t === 'tree') return { ok: false, msg: 'Quita el árbol con 🔨 Demoler primero' };
     if (t.t !== 'grass') return { ok: false, msg: 'Ahí no se puede hacer calle' };
-    if (!(x === 1 || roadNear)) return { ok: false, msg: 'La calle tiene que salir de la carretera o de otra calle' };
+    if (!(x === 1 || roadNear || (game.S.hwy2 && y === 1))) return { ok: false, msg: 'La calle tiene que salir de la carretera o de otra calle' };
     return { ok: true, cost: COST.road };
   }
   if (KINDS[k]) {

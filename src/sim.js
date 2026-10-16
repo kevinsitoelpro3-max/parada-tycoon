@@ -1,4 +1,4 @@
-import { KINDS, DAY_LEN, RUSH, NIGHT_FROM } from './config.js';
+import { KINDS, DAY_LEN, RUSH, NIGHT_FROM, HWY2_RATE } from './config.js';
 import { pick, fmt } from './utils.js';
 import { game, T, inRush, isNight, totalUpkeep, save, clockAt } from './state.js';
 import { GOALS } from './goals.js';
@@ -52,10 +52,14 @@ export function update(dt, rdt) {
 
   game.spawnT -= dt;
   if (game.spawnT <= 0) game.spawnT = spawn() ? spawnInterval() : 0.3;
+  if (S.hwy2) {
+    game.spawnT2 = (game.spawnT2 ?? 2) - dt;
+    if (game.spawnT2 <= 0) game.spawnT2 = spawn(true) ? spawnInterval() / HWY2_RATE : 0.3;
+  }
 
   const slow = game.ev.rain ? 0.7 : 1;
   for (const tr of game.trucks) {
-    tr.speed = (tr.x < 1 ? 2.6 : 1.5) * slow;
+    tr.speed = (tr.x < 1 || (S.hwy2 && tr.y < 1) ? 2.6 : 1.5) * slow;
     if (tr.state === 'service') {
       const b = T(tr.bx, tr.by);
       if (!(b && b.off > 0)) tr.t += dt;

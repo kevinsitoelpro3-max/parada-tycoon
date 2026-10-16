@@ -1,4 +1,4 @@
-import { WMAX, HMAX, LAND_STEP, DAY_SCALE, PERFECT_DAY_MIN, CLOSE_HOUR } from './config.js';
+import { WMAX, HMAX, LAND_STEP, DAY_SCALE, PERFECT_DAY_MIN, CLOSE_HOUR, HWY2_W, HWY2_COST } from './config.js';
 import { $, pick, fmt, money } from './utils.js';
 import { game, mode, totalUpkeep, landCost, emptyEvent, save } from './state.js';
 import { fit, clampCam } from './camera.js';
@@ -86,7 +86,7 @@ export function expandLand(dir) {
     const W = game.W, tiles = [];
     for (let y = 0; y < game.H; y++) {
       for (let x = 0; x < W; x++) tiles.push(S.tiles[y * W + x]);
-      for (let x = W; x < W + LAND_STEP; x++) tiles.push(newTile(x));
+      for (let x = W; x < W + LAND_STEP; x++) tiles.push(S.hwy2 && y === 0 ? { t: 'hwy2' } : newTile(x));
     }
     S.tiles = tiles;
     game.W += LAND_STEP; S.w = game.W;
@@ -94,6 +94,27 @@ export function expandLand(dir) {
   buildOuterTrees();
   if (!game.userCam) fit(); else clampCam();
   toast(dir === 'down' ? 'Compraste 2 filas más de terreno hacia abajo' : 'Compraste 2 columnas más de terreno hacia la derecha');
+  renderMenu();
+  save();
+}
+
+// Carretera de arriba: la fila y = 0 (sin contar la principal) se vuelve carretera. Las calles que ya
+// estaban ahí pasan a ser parte de ella; si hay un negocio o agua, primero hay que quitarlo.
+export const canOpenTop = () => !game.S.hwy2 && game.W >= HWY2_W;
+export function openTopRoad() {
+  const S = game.S;
+  if (!canOpenTop() || S.over) return;
+  if (S.money < HWY2_COST) { sfx.nope(); toast('Te faltan ' + money(HWY2_COST - S.money)); return; }
+  for (let x = 1; x < game.W; x++) {
+    const t = S.tiles[x];
+    if (t.t === 'bld' || t.t === 'water') { sfx.nope(); toast('Primero quita lo que hay en la fila de hasta arriba (negocios o agua)'); return; }
+  }
+  if (game.trucks.some(tr => tr.tiles && [...tr.tiles].some(k => k.endsWith(',0')))) { sfx.nope(); toast('Hay tráileres usando calles de la fila de arriba, espera tantito'); return; }
+  S.money -= HWY2_COST;
+  for (let x = 1; x < game.W; x++) { const t = S.tiles[x]; for (const k of Object.keys(t)) delete t[k]; t.t = 'hwy2'; }
+  S.hwy2 = true;
+  sfx.build();
+  toast('🛣️ ¡Abriste la carretera de arriba! Traza calles que lleguen a ella: por ahí llegan más tráileres', 4200, true);
   renderMenu();
   save();
 }

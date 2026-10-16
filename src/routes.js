@@ -2,14 +2,15 @@ import { DIRS, QUEUE_MAX } from './config.js';
 import { game, T, isRoad, priceOf } from './state.js';
 
 /* ---------- Rutas ---------- */
-export function pathToHighway(sx, sy) {
+// top = true: la salida es la carretera de arriba (calle en la fila 1) en vez de la principal
+export function pathToHighway(sx, sy, top = false) {
   if (!isRoad(sx, sy)) return null;
   const key = (x, y) => x + ',' + y;
   const prev = new Map([[key(sx, sy), null]]);
   const q = [[sx, sy]];
   for (let i = 0; i < q.length; i++) {
     const [x, y] = q[i];
-    if (x === 1) {
+    if (top ? y === 1 : x === 1) {
       const out = [];
       let cur = [x, y];
       while (cur) { out.push(cur); cur = prev.get(key(cur[0], cur[1])); }
@@ -32,15 +33,15 @@ function roadsKey() {
   for (const t of game.S.tiles) s += t.t === 'road' ? '1' : '0';
   return s;
 }
-function routeFrom(x, y) {
+function routeFrom(x, y, top = false) {
   if (!isRoad(x, y)) return null;
-  const k = y * game.W + x;
+  const k = (y * game.W + x) * 2 + (top ? 1 : 0);
   let p = memo.get(k);
-  if (p === undefined) { p = pathToHighway(x, y); memo.set(k, p); }
+  if (p === undefined) { p = pathToHighway(x, y, top); memo.set(k, p); }
   return p;
 }
 // minRow: solo negocios cuya salida a la carretera está en esa fila o más abajo
-export function findService(need, minRow = 0) {
+export function findService(need, minRow = 0, top = false) {
   const key = roadsKey();
   if (key !== memoRoads) { memo.clear(); memoRoads = key; }
   let best = null;
@@ -50,7 +51,7 @@ export function findService(need, minRow = 0) {
     const slot = t.slots.indexOf(null);
     if (slot < 0) continue;
     for (const [dx, dy] of DIRS) {
-      const p = routeFrom(x + dx, y + dy);
+      const p = routeFrom(x + dx, y + dy, top);
       if (!p || p[p.length - 1][1] < minRow) continue;
       const score = p.length + p[p.length - 1][1] * 0.1 + priceOf(t).avoid;
       if (!best || score < best.score) best = { score, bx: x, by: y, slot, p, tile: t };

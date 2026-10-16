@@ -1,8 +1,8 @@
-import { WMAX, HMAX, LAND_STEP, KEY, MODES } from '../config.js';
+import { WMAX, HMAX, LAND_STEP, KEY, MODES, HWY2_W, HWY2_COST } from '../config.js';
 import { $, fmt } from '../utils.js';
 import { game, mode, landCost, newGame, emptyEvent, totalUpkeep, save } from '../state.js';
 import { fit } from '../camera.js';
-import { expandLand } from '../days.js';
+import { expandLand, openTopRoad } from '../days.js';
 import { buildOuterTrees } from '../render/scene.js';
 import { toast, toastQueue } from './toast.js';
 import { hudCache, renderGoal } from './hud.js';
@@ -23,6 +23,18 @@ export function renderMenu() {
   right.textContent = canRight ? `➡ ${LAND_STEP} columnas a la derecha` : 'Derecha: al máximo';
   down.disabled = !canDown || game.S.money < c || game.S.over;
   right.disabled = !canRight || game.S.money < c || game.S.over;
+  // Carretera de arriba: se ofrece con el terreno ancho y desaparece al abrirla
+  const topTxt = $('#topTxt'), openTop = $('#openTop'), showTop = !game.S.hwy2;
+  topTxt.hidden = openTop.hidden = !showTop;
+  if (showTop) {
+    const ready = W >= HWY2_W;
+    topTxt.textContent = ready
+      ? `Abre la carretera de arriba: la fila de hasta arriba se vuelve carretera y por ella llegan más tráileres (como la mitad más).`
+      : `Cuando tu terreno tenga ${HWY2_W - 1} columnas o más (amplía a la derecha) podrás abrir una carretera arriba con más tráileres.`;
+    openTop.textContent = `🛣️ Abrir carretera de arriba ($${fmt(HWY2_COST)})`;
+    openTop.hidden = !ready;
+    openTop.disabled = game.S.money < HWY2_COST || game.S.over;
+  }
   $('#modeTxt').textContent = `Estás jugando en ${mode().name}. ${MODES.dificil.desc} Empezar de nuevo borra tu partida actual.`;
   for (const b of document.querySelectorAll('#menuModes .btn')) b.classList.toggle('primary', b.dataset.mode === game.S.mode && !b.classList.contains('armed'));
 }
@@ -44,6 +56,7 @@ export function startNew(modeKey) {
 export function setupMenu() {
   $('#landDown').addEventListener('click', () => expandLand('down'));
   $('#landRight').addEventListener('click', () => expandLand('right'));
+  $('#openTop').addEventListener('click', openTopRoad);
   $('#menuBtn').addEventListener('click', () => {
     if (game.S.over) return;
     closeSheet();

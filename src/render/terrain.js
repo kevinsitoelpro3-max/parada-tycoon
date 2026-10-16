@@ -113,7 +113,7 @@ const ASPH = '#4B4F57', WALK = '#D9D3C3', CURB = '#A1998A', SW = 0.13;
 const roadish = (nx, ny) => nx === 0 || isRoad(nx, ny);
 const NOOP = { push() {} };
 function road(x, y, detail) {
-  const e = isRoad(x + 1, y), w = isRoad(x - 1, y) || x === 1, s = isRoad(x, y + 1), n = isRoad(x, y - 1);
+  const e = isRoad(x + 1, y), w = isRoad(x - 1, y) || x === 1, s = isRoad(x, y + 1), n = isRoad(x, y - 1) || (y === 1 && !!game.S.hwy2);
   base(F(1, ASPH), x, y, w, n, e, s);
   const x0 = x, x1 = x + 1, y0 = y, y1 = y + 1;
   // Banquetas en los lados sin salida. El bordillo (la cara de la banqueta que da a la calle) solo se ve
@@ -146,6 +146,22 @@ function road(x, y, detail) {
 
 /* Carretera principal (x = 0): acotamientos, rayas blancas en la orilla, raya central amarilla y valla */
 const HS = 0.15;
+// Carretera de arriba: va a lo largo de x en la fila 0; abajo se junta con las calles de la fila 1
+function highwayTop(x, detail) {
+  const jn = x >= 1 && x < game.W && isRoad(x, 1), x1 = x + 1;
+  quad(F(1, '#3A3D43'), x, 0, x1, 1);
+  quad(F(2, '#4E5259'), x, 0, x1, HS);
+  quad(F(2, jn ? ASPH : '#4E5259'), x, 1 - HS, x1, 1);
+  const edge = L(6, 'rgba(255,255,255,.85)', 1.4);
+  seg(edge, x, HS, x1, HS);
+  if (!jn) seg(edge, x, 1 - HS, x1, 1 - HS);
+  seg(L(6, '#F2C230', 1.9), x + 0.14, 0.5, x + 0.62, 0.5);
+  if (game.dark) {
+    const r = E(8, '#FFE9A0');
+    r.push(sx(x + 0.5, HS), sy(x + 0.5, HS), 1.7, 1.7);
+    if (!jn) r.push(sx(x + 0.5, 1 - HS), sy(x + 0.5, 1 - HS), 1.7, 1.7);
+  }
+}
 function highway(y, detail) {
   const jn = isRoad(1, y), y1 = y + 1;
   base(F(1, '#3A3D43'), 0, y, 0, 1, 0, 1);
@@ -223,6 +239,7 @@ export function drawGround() {
     if (px + m.a * (HX + 2) < 0 || px - m.a * (HX + 2) > cw || py + m.d * (TH + 6) < 0 || py - m.d * 8 > ch) continue;
     lvl = d;
     if (x === 0) highway(y, detail);
+    else if (game.S.hwy2 && y === 0 && x >= 1) highwayTop(x, detail);
     else if (!inLot) grass(x, y, false, detail && d < 3);
     else {
       const t = T(x, y);

@@ -36,6 +36,9 @@ export const PARK_SHARE = 0.5;
 // Filas: si el negocio está lleno, hasta QUEUE_MAX tráileres esperan en la calle de enfrente
 // hasta QUEUE_WAIT segundos de juego antes de irse enojados
 export const QUEUE_MAX = 2, QUEUE_WAIT = 10;
+// Carretera de arriba: se abre desde ☰ con el terreno de HWY2_W columnas o más; la fila y = 0 se
+// vuelve carretera (casillas 'hwy2') y por ella llega otra fila de tráileres, la mitad de seguido.
+export const HWY2_W = 14, HWY2_COST = 8000, HWY2_RATE = 0.5;
 // Tráileres con dos pedidos: de los que ya encontraron un negocio básico, COMBO_CHANCE también
 // quiere otro tipo básico que tengas. Si los dos negocios están a COMBO_NEAR casillas o menos
 // (sumando filas y columnas), el segundo cobro lleva COMBO_TIP de propina.
