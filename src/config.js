@@ -53,6 +53,13 @@ export const DECOS = {
 // Vecinos que se ayudan: si un negocio tiene pegado a su pareja, los dos cobran NEIGHBOR_BONUS más
 export const PAIRS = { food: 'sleep', sleep: 'food', gas: 'shop', shop: 'gas', wash: 'repair', repair: 'wash' };
 export const NEIGHBOR_BONUS = 0.1, BONUS_MAX = 0.3;
+// Precio de cada negocio (t.price: 0 barato, 1 normal, 2 caro): cuánto cobra, cuánta reputación
+// da cada cliente y cuánto lo evitan los tráileres al elegir entre dos negocios del mismo tipo.
+export const PRICES = [
+  { name: 'Barato', mult: 0.8, rep: 0.045, avoid: -1.5 },
+  { name: 'Normal', mult: 1,   rep: 0.03,  avoid: 0 },
+  { name: 'Caro',   mult: 1.3, rep: 0.01,  avoid: 1.5 },
+];
 export const CABS = ['#D7263D', '#1B998B', '#F46036', '#3F88C5', '#E2B33C', '#6A4C93', '#33363F', '#2A9D5C'];
 export const TRAILERS = ['#F1F1F1', '#C7CDD6', '#E6DFCF', '#9DB6C8', '#D9534F', '#5C7F67'];
 export const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];

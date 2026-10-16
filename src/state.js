@@ -1,4 +1,4 @@
-import { DECOS, PAIRS, NEIGHBOR_BONUS, BONUS_MAX } from './config.js';
+import { DECOS, PAIRS, NEIGHBOR_BONUS, BONUS_MAX, PRICES } from './config.js';
 import { W0, H0, WMAX, HMAX, LAND_BASE, KEY, DAY_LEN, DAY_SCALE, RUSH, KINDS, MODES, OPEN_HOUR, CLOSE_HOUR, DUSK, DAWN, NIGHT_FROM } from './config.js';
 import { clamp, mulberry32 } from './utils.js';
 import { GOALS } from './goals.js';
@@ -44,7 +44,8 @@ export function bonusAt(x, y) {
   }
   return Math.min(BONUS_MAX, b + (pair ? NEIGHBOR_BONUS : 0));
 }
-export const payNow = (t, x, y) => Math.round(payOf(t) * repMult() * (1 + (x === undefined ? 0 : bonusAt(x, y))));
+export const priceOf = t => PRICES[t.price ?? 1] || PRICES[1];
+export const payNow = (t, x, y) => Math.round(payOf(t) * repMult() * priceOf(t).mult * (1 + (x === undefined ? 0 : bonusAt(x, y))));
 export const inflation = () => 1 + 0.06 * (game.S.day - 1);
 export const upkeepOf = (t, lvl = t.lvl) => Math.round(KINDS[t.k].upkeep * lvl * mode().upkeep * inflation() * DAY_SCALE);
 export const upCost = t => KINDS[t.k].cost * t.lvl;
@@ -114,7 +115,7 @@ export function save() {
       v: 3, mode: S.mode, money: S.money, served: S.served, lost: S.lost, goal: S.goal,
       day: S.day, dayT: S.dayT, rep: S.rep, red: S.red, perfectDays: S.perfectDays, bestDay: S.bestDay,
       dayEarn: S.dayEarn, dayServed: S.dayServed, dayLost: S.dayLost, w: game.W, h: game.H, land: S.land || 0, over: S.over,
-      tiles: S.tiles.map(t => t.t === 'bld' ? { t: 'bld', k: t.k, l: t.lvl, e: t.earned || 0 } : t.t === 'deco' ? { t: 'deco', d: t.d } : { t: t.t })
+      tiles: S.tiles.map(t => t.t === 'bld' ? { t: 'bld', k: t.k, l: t.lvl, e: t.earned || 0, ...(t.price !== undefined && t.price !== 1 ? { p: t.price } : {}) } : t.t === 'deco' ? { t: 'deco', d: t.d } : { t: t.t })
     };
     localStorage.setItem(KEY, JSON.stringify(data));
   } catch (e) { /* sin almacenamiento: el juego sigue */ }
@@ -132,7 +133,7 @@ export function load() {
     const land = d.v === 3 ? Math.max(0, d.land | 0) : Math.max(0, (h - 10) / 2 | 0);
     const valid = ['grass', 'road', 'tree', 'water', 'hwy'];
     const old = d.tiles.map(o => (o && o.t === 'bld' && KINDS[o.k])
-      ? { t: 'bld', k: o.k, lvl: clamp(o.l | 0, 1, 3), earned: o.e | 0 }
+      ? { t: 'bld', k: o.k, lvl: clamp(o.l | 0, 1, 3), earned: o.e | 0, ...(o.p === 0 || o.p === 2 ? { price: o.p } : {}) }
       : (o && o.t === 'deco' && DECOS[o.d]) ? { t: 'deco', d: o.d }
       : { t: (o && valid.includes(o.t)) ? o.t : 'grass' });
     // Las partidas de antes crecen gratis al tamaño inicial nuevo (columnas a la derecha y filas

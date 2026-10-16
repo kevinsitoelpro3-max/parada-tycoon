@@ -1,5 +1,5 @@
 import { DIRS } from './config.js';
-import { game, T, isRoad } from './state.js';
+import { game, T, isRoad, priceOf } from './state.js';
 
 /* ---------- Rutas ---------- */
 export function pathToHighway(sx, sy) {
@@ -52,7 +52,7 @@ export function findService(need, minRow = 0) {
     for (const [dx, dy] of DIRS) {
       const p = routeFrom(x + dx, y + dy);
       if (!p || p[p.length - 1][1] < minRow) continue;
-      const score = p.length + p[p.length - 1][1] * 0.1;
+      const score = p.length + p[p.length - 1][1] * 0.1 + priceOf(t).avoid;
       if (!best || score < best.score) best = { score, bx: x, by: y, slot, p, tile: t };
     }
   }

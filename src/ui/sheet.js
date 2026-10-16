@@ -1,6 +1,6 @@
-import { KINDS } from '../config.js';
+import { KINDS, PRICES } from '../config.js';
 import { $, fmt, money } from '../utils.js';
-import { game, T, payOf, payNow, repMult, upkeepOf, upCost, bonusAt } from '../state.js';
+import { game, T, payOf, payNow, repMult, upkeepOf, upCost, bonusAt, priceOf } from '../state.js';
 import { toast } from './toast.js';
 import { hudCache } from './hud.js';
 import { menuEl } from './menu.js';
@@ -21,12 +21,16 @@ export function renderSheet() {
   $('#shLvl').textContent = 'Nivel ' + t.lvl + ' de 3' + (t.off > 0 ? '. Sin luz por ahora.' : '');
   $('#shCap').textContent = t.slots.length;
   $('#shPay').textContent = '$' + fmt(payNow(t, sel.x, sel.y));
-  const bonus = bonusAt(sel.x, sel.y);
+  const bonus = bonusAt(sel.x, sel.y), pr = t.price ?? 1;
+  for (const b of document.querySelectorAll('#shPrice [data-price]')) {
+    const on = +b.dataset.price === pr;
+    b.classList.toggle('primary', on); b.setAttribute('aria-pressed', String(on));
+  }
   $('#shUpk').textContent = '$' + fmt(upkeepOf(t));
   $('#shEarn').textContent = '$' + fmt(t.earned || 0);
   const up = $('#shUp');
   if (t.lvl < 3) {
-    $('#shNext').textContent = `Al mejorarlo atiende a ${t.slots.length + 1} a la vez, cobra $${fmt(Math.round(payOf(t, t.lvl + 1) * repMult() * (1 + bonus)))} y su gasto diario sube a $${fmt(upkeepOf(t, t.lvl + 1))}.`;
+    $('#shNext').textContent = `Al mejorarlo atiende a ${t.slots.length + 1} a la vez, cobra $${fmt(Math.round(payOf(t, t.lvl + 1) * repMult() * priceOf(t).mult * (1 + bonus)))} y su gasto diario sube a $${fmt(upkeepOf(t, t.lvl + 1))}.`;
     up.textContent = 'Mejorar por $' + fmt(upCost(t));
     up.disabled = game.S.money < upCost(t) || game.S.over;
   } else {
@@ -34,6 +38,9 @@ export function renderSheet() {
     up.textContent = 'Nivel máximo';
     up.disabled = true;
   }
+  if (pr !== 1) $('#shNext').textContent += pr === 0
+    ? ' Precio barato: cobra 20 % menos, los tráileres lo prefieren y cada cliente sube más tu reputación.'
+    : ' Precio caro: cobra 30 % más, pero los tráileres prefieren otro igual y la reputación sube poco.';
   // Decoración y vecinos: cuánto suman y cómo subirlo
   $('#shNext').textContent += bonus > 0
     ? ` La decoración y los vecinos le suman ${Math.round(bonus * 100)} % al cobro.`
@@ -56,4 +63,12 @@ export function setupSheet() {
     renderSheet();
   });
   $('#shClose').addEventListener('click', closeSheet);
+  for (const b of document.querySelectorAll('#shPrice [data-price]')) b.addEventListener('click', () => {
+    const sel = game.sel, t = sel && T(sel.x, sel.y);
+    if (!t || t.t !== 'bld' || game.S.over) return;
+    const p = +b.dataset.price;
+    if (p === 1) delete t.price; else t.price = p;
+    toast(`${KINDS[t.k].name}: precio ${PRICES[p].name.toLowerCase()}`);
+    renderSheet();
+  });
 }

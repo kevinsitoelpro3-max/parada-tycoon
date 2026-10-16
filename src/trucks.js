@@ -1,6 +1,6 @@
 import { CABS, TRAILERS, KINDS, EXTRA_SHARE, COMBO_CHANCE, COMBO_NEAR, COMBO_TIP } from './config.js';
 import { clamp, pick } from './utils.js';
-import { game, T, mode, inRush, isNight, countK, payNow } from './state.js';
+import { game, T, mode, inRush, isNight, countK, payNow, priceOf } from './state.js';
 import { findService, parkSpot } from './routes.js';
 import { sfx } from './audio/sfx.js';
 
@@ -92,7 +92,7 @@ export function finishService(tr) {
     const tip = tr.tip ? Math.round(pay * COMBO_TIP) : 0;
     pay += tip;
     S.money += pay; S.served++; S.dayServed++; S.dayEarn += pay;
-    S.rep = Math.min(5, S.rep + 0.03);
+    S.rep = Math.min(5, S.rep + priceOf(b).rep);
     b.earned = (b.earned || 0) + pay;
     sfx.cash();
     if (b.slots[tr.slot] === tr) b.slots[tr.slot] = null;
