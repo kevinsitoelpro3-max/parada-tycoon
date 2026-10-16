@@ -25,8 +25,8 @@ function endPointer(e) {
   pts.delete(e.pointerId);
   if (g && g.type === 'tap' && e.type === 'pointerup') {
     // Primero las bolsas de propina 💰, que flotan encima del negocio
-    const c = cashAt(p.x, p.y);
-    if (!(c && collectCash(c.x, c.y))) {
+    const c = cashAt(p.x, p.y), r = canvas.getBoundingClientRect();
+    if (!(c && collectCash(c.x, c.y, r.left + c.sx, r.top + c.sy))) {
       const [x, y] = screenToTile(p.x, p.y);
       applyTool(x, y, false);
     }

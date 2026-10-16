@@ -9,6 +9,7 @@ import { renderGoal } from './ui/hud.js';
 import { sfx } from './audio/sfx.js';
 import { contractTick } from './contracts.js';
 import { ensureToday } from './daily.js';
+import { tickFx, confetti, coinsFrom } from './fx.js';
 
 /* ---------- Simulación ---------- */
 // dt: tiempo de juego (con la velocidad ×1/×2/×3); rdt: tiempo real, para animaciones.
@@ -19,6 +20,7 @@ export function update(dt, rdt) {
   game.floats = game.floats.filter(f => f.t < 1.6);
   for (const p of game.puffs) p.t += rdt;
   game.puffs = game.puffs.filter(p => p.t < 0.5);
+  tickFx(rdt);
   if (S.over) return;
 
   S.dayT += dt;
@@ -94,7 +96,9 @@ export function update(dt, rdt) {
     const g = GOALS[S.goal];
     if (g && g.ok()) {
       S.money += g.prize; S.goal++;
-      sfx.goal();
+      sfx.goal(); confetti();
+      const r = document.getElementById('goal').getBoundingClientRect();
+      coinsFrom(r.left + r.width / 2, r.top + r.height / 2, 8);
       toast('Meta cumplida: +$' + fmt(g.prize), 2600, true);
       renderGoal(true);
     }

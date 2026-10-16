@@ -1,4 +1,4 @@
-import { CABS, TRAILERS, KINDS, EXTRA_SHARE, PARK_SHARE, QUEUE_WAIT, COMBO_CHANCE, COMBO_NEAR, COMBO_TIP, CASH_CHANCE, CASH_TTL } from './config.js';
+import { CABS, TRAILERS, KINDS, EXTRA_SHARE, PARK_SHARE, QUEUE_WAIT, COMBO_CHANCE, COMBO_NEAR, COMBO_TIP, CASH_CHANCE, CASH_TTL, CARGO_SHARE, STOCK_REACH, STOCK_GIVE, STOCK_MAX } from './config.js';
 import { clamp, pick, mulberry32 } from './utils.js';
 import { game, T, mode, inRush, isNight, countK, payNow, priceOf, perkVal } from './state.js';
 import { findService, findQueue, parkSpot } from './routes.js';
@@ -6,6 +6,7 @@ import { sfx } from './audio/sfx.js';
 import { contractServed } from './contracts.js';
 import { addXp } from './progress.js';
 import { track } from './daily.js';
+import { coinsFrom, buzz } from './fx.js';
 
 /* ---------- Tráileres ---------- */
 // Tipos de negocio extra que ya tienes (tiendita, lavado, taller)
@@ -13,6 +14,8 @@ const ownedExtras = () => Object.keys(KINDS).filter(k => KINDS[k].extra && count
 const BASIC = ['gas', 'food', 'sleep'];
 // Sorteo de las propinas 💰 aparte, para no cambiar el azar de los tráileres
 const cashRng = mulberry32(20261016);
+// Sorteo de los tráileres de carga, también aparte
+const cargoRng = mulberry32(1250);
 // Con la mejora Buena fama la reputación baja menos
 const repLoss = () => mode().repLoss * (1 - perkVal('fama'));
 
@@ -51,10 +54,12 @@ export function spawn(top = false) {
       const r = Math.random();
       if (r < EXTRA_SHARE * extras.length) tr.need = extras[Math.min(extras.length - 1, Math.floor(r / EXTRA_SHARE))];
     }
+    // Los que todavía no piden nada pueden traer carga para tu zona de descarga
+    if (!tr.need && countK('dock') > 0 && cargoRng() < CARGO_SHARE) { tr.need = 'dock'; tr.cargo = true; }
   }
   if (tr.need) {
     const plan = findService(tr.need, 0, top);
-    const line = plan || top ? null : findQueue(tr.need);
+    const line = plan || top || tr.cargo ? null : findQueue(tr.need);
     if (line) {
       // Todo lleno: se forma en la calle de enfrente y espera un lugar
       (line.tile.queue || (line.tile.queue = [])).push(tr);
@@ -77,6 +82,9 @@ export function spawn(top = false) {
           if (r < COMBO_CHANCE) tr.need2 = others[Math.floor(r / COMBO_CHANCE * others.length)];
         }
       }
+    } else if (tr.cargo) {
+      // Carga sin lugar para descargar: sigue su camino sin enojarse (no es tu cliente)
+      tr.need = null; tr.cargo = false;
     } else {
       tr.angry = true;
       sfx.angry();
@@ -115,6 +123,8 @@ export function finishService(tr) {
     S.rep = Math.min(5, S.rep + priceOf(b).rep);
     b.earned = (b.earned || 0) + pay;
     contractServed(b.k);
+    if (b.k === 'dock') supply(tr.bx, tr.by);
+    else if (b.stock > 0) b.stock--;
     addXp(1);
     track('serve'); track('earn', pay); track('kind', 1, b.k);
     if (isNight()) track('night');
@@ -174,8 +184,16 @@ export function waitInLine(tr, dt) {
   tr.path = [...r.map(([x, y]) => [x + 0.5, y + 0.5]), [0.5, exit[1] + 0.5], [0.5, game.H + 2.6]];
 }
 
-// Toca un negocio con propina 💰: la cobras (vale un cobro más y da experiencia)
-export function collectCash(x, y) {
+// Descarga: surte a los negocios de alrededor de la zona (x, y)
+function supply(x, y) {
+  for (let dy = -STOCK_REACH; dy <= STOCK_REACH; dy++) for (let dx = -STOCK_REACH; dx <= STOCK_REACH; dx++) {
+    const t = T(x + dx, y + dy);
+    if (t && t.t === 'bld' && !KINDS[t.k].side) t.stock = Math.min(STOCK_MAX, (t.stock || 0) + STOCK_GIVE);
+  }
+}
+// Toca un negocio con propina 💰: la cobras (vale un cobro más y da experiencia).
+// (px, py): dónde tocaste en la pantalla, para que de ahí salgan las monedas
+export function collectCash(x, y, px, py) {
   const S = game.S, b = T(x, y);
   if (!b || !b.cash || S.over) return false;
   const v = b.cash.v;
@@ -184,7 +202,8 @@ export function collectCash(x, y) {
   b.earned = (b.earned || 0) + v;
   addXp(3);
   track('cash');
-  sfx.cash();
+  sfx.cash(); buzz('light');
+  if (px !== undefined) coinsFrom(px, py, 6);
   game.floats.push({ x: x + 0.5, y: y + 0.5, z: 1.4, text: '💰 +$' + v, t: 0, neg: false });
   return true;
 }

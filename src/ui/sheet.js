@@ -1,4 +1,4 @@
-import { KINDS, PRICES } from '../config.js';
+import { KINDS, PRICES, STOCK_BONUS, STOCK_REACH } from '../config.js';
 import { $, fmt, money } from '../utils.js';
 import { game, T, payOf, payNow, repMult, upkeepOf, upCost, bonusAt, priceOf, perkVal } from '../state.js';
 import { toast } from './toast.js';
@@ -6,6 +6,7 @@ import { hudCache } from './hud.js';
 import { menuEl } from './menu.js';
 import { sfx } from '../audio/sfx.js';
 import { track } from '../daily.js';
+import { pop, dust } from '../fx.js';
 
 /* ---------- Ficha del negocio (ver y mejorar) ---------- */
 export const sheetEl = $('#sheet');
@@ -43,9 +44,17 @@ export function renderSheet() {
     ? ' Precio barato: cobra 20 % menos, los tráileres lo prefieren y cada cliente sube más tu reputación.'
     : ' Precio caro: cobra 30 % más, pero los tráileres prefieren otro igual y la reputación sube poco.';
   // Decoración y vecinos: cuánto suman y cómo subirlo
+  if (t.k === 'dock') {
+    $('#shNext').textContent += ` Aquí descargan los tráileres de carga: pagan la cuota y surten a los negocios a ${STOCK_REACH} casillas o menos, que cobran ${Math.round(STOCK_BONUS * 100)} % más mientras les dure.`;
+    return;
+  }
   $('#shNext').textContent += bonus > 0
     ? ` La decoración y los vecinos le suman ${Math.round(bonus * 100)} % al cobro.`
     : ' Pon decoración o su negocio pareja al lado para que cobre más.';
+  if (KINDS[t.k].side) return;
+  $('#shNext').textContent += t.stock > 0
+    ? ` 📦 Surtido para ${t.stock} ${t.stock > 1 ? 'clientes' : 'cliente'} más (+${Math.round(STOCK_BONUS * 100)} %).`
+    : ` Sin surtido: una 📦 zona de descarga cerca le sube ${Math.round(STOCK_BONUS * 100)} % el cobro.`;
 }
 export function setupSheet() {
   $('#shUp').addEventListener('click', () => {
@@ -56,7 +65,7 @@ export function setupSheet() {
     const c = upCost(t);
     if (S.money < c) { sfx.nope(); toast('Te faltan ' + money(c - S.money)); return; }
     S.money -= c; t.lvl++; t.slots.push(null);
-    sfx.upgrade();
+    sfx.upgrade(); pop(t, 0.75); dust(sel.x, sel.y, 10);
     game.floats.push({ x: sel.x + 0.5, y: sel.y + 0.5, z: 1.1, text: '−$' + fmt(c), t: 0, neg: true });
     game.puffs.push({ x: sel.x, y: sel.y, t: 0 });
     toast(KINDS[t.k].name + ' subió a nivel ' + t.lvl);

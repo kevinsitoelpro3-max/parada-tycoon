@@ -1,4 +1,4 @@
-import { DECOS, PAIRS, NEIGHBOR_BONUS, BONUS_MAX, PRICES, PERKS, PERK_MAX, XP_BASE, XP_STEP } from './config.js';
+import { DECOS, PAIRS, NEIGHBOR_BONUS, BONUS_MAX, PRICES, PERKS, PERK_MAX, XP_BASE, XP_STEP, STOCK_BONUS, STOCK_MAX } from './config.js';
 import { W0, H0, WMAX, HMAX, LAND_BASE, KEY, DAY_LEN, DAY_SCALE, RUSH, KINDS, MODES, OPEN_HOUR, CLOSE_HOUR, DUSK, DAWN, NIGHT_FROM } from './config.js';
 import { clamp, mulberry32 } from './utils.js';
 import { GOALS } from './goals.js';
@@ -56,7 +56,7 @@ export function levelInfo(xp = game.S.xp || 0) {
   return { lvl, cur: xp, need, pts: Math.max(0, lvl - 1 - spent) };
 }
 export const priceOf = t => PRICES[t.price ?? 1] || PRICES[1];
-export const payNow = (t, x, y) => Math.round(payOf(t) * repMult() * priceOf(t).mult * (1 + (x === undefined ? 0 : bonusAt(x, y))) * (1 + perkVal('cobro')));
+export const payNow = (t, x, y) => Math.round(payOf(t) * repMult() * priceOf(t).mult * (1 + (x === undefined ? 0 : bonusAt(x, y))) * (1 + perkVal('cobro')) * (t.stock > 0 ? 1 + STOCK_BONUS : 1));
 export const inflation = () => 1 + 0.06 * (game.S.day - 1);
 export const upkeepOf = (t, lvl = t.lvl) => Math.round(KINDS[t.k].upkeep * lvl * mode().upkeep * inflation() * DAY_SCALE * (1 - perkVal('ahorro')));
 export const upCost = t => KINDS[t.k].cost * t.lvl;
@@ -128,7 +128,7 @@ export function save() {
       day: S.day, dayT: S.dayT, rep: S.rep, red: S.red, perfectDays: S.perfectDays, bestDay: S.bestDay,
       dayEarn: S.dayEarn, dayServed: S.dayServed, dayLost: S.dayLost, w: game.W, h: game.H, land: S.land || 0, over: S.over, ct: S.contract || null, h2: !!S.hwy2,
       xp: S.xp || 0, pk: S.perks || {}, te: S.total || 0, rt: S.retos || 0, cs: S.cash || 0, ...(S.river !== undefined ? { rv: S.river } : {}),
-      tiles: S.tiles.map(t => t.t === 'bld' ? { t: 'bld', k: t.k, l: t.lvl, e: t.earned || 0, ...(t.price !== undefined && t.price !== 1 ? { p: t.price } : {}) } : t.t === 'deco' ? { t: 'deco', d: t.d } : t.br ? { t: 'road', b: 1 } : t.sand ? { t: t.t, s: 1 } : { t: t.t })
+      tiles: S.tiles.map(t => t.t === 'bld' ? { t: 'bld', k: t.k, l: t.lvl, e: t.earned || 0, ...(t.price !== undefined && t.price !== 1 ? { p: t.price } : {}), ...(t.stock > 0 ? { st: t.stock } : {}) } : t.t === 'deco' ? { t: 'deco', d: t.d } : t.br ? { t: 'road', b: 1 } : t.sand ? { t: t.t, s: 1 } : { t: t.t })
     };
     localStorage.setItem(KEY, JSON.stringify(data));
   } catch (e) { /* sin almacenamiento: el juego sigue */ }
@@ -146,7 +146,7 @@ export function load() {
     const land = d.v === 3 ? Math.max(0, d.land | 0) : Math.max(0, (h - 10) / 2 | 0);
     const valid = ['grass', 'road', 'tree', 'water', 'hwy', 'hwy2', 'rock'];
     const old = d.tiles.map(o => (o && o.t === 'bld' && KINDS[o.k])
-      ? { t: 'bld', k: o.k, lvl: clamp(o.l | 0, 1, 3), earned: o.e | 0, ...(o.p === 0 || o.p === 2 ? { price: o.p } : {}) }
+      ? { t: 'bld', k: o.k, lvl: clamp(o.l | 0, 1, 3), earned: o.e | 0, ...(o.p === 0 || o.p === 2 ? { price: o.p } : {}), ...(o.st > 0 ? { stock: clamp(o.st | 0, 0, STOCK_MAX) } : {}) }
       : (o && o.t === 'deco' && DECOS[o.d]) ? { t: 'deco', d: o.d }
       : (o && o.t === 'road' && o.b) ? { t: 'road', br: true }
       : (o && o.s && (o.t === 'grass' || o.t === 'tree' || o.t === 'rock')) ? { t: o.t, sand: true }

@@ -3,6 +3,7 @@ import { $, fmt } from '../utils.js';
 import { game, mode, landCost, newGame, emptyEvent, totalUpkeep, save, levelInfo, perk, perkVal } from '../state.js';
 import { GOALS } from '../goals.js';
 import { buyPerk } from '../progress.js';
+import { coinsFrom, confetti } from '../fx.js';
 import { dailyInfo, claimDaily, retosInfo, retoText, retoDone, claimReto, dailyReady, RETOS_DAY } from '../daily.js';
 import { fit } from '../camera.js';
 import { expandLand, openTopRoad } from '../days.js';
@@ -39,7 +40,7 @@ function renderHead() {
   const L = levelInfo();
   $('#mnLvl').textContent = L.lvl;
   $('#mnXpFill').style.transform = `scaleX(${(L.cur / L.need).toFixed(3)})`;
-  $('#mnXp').textContent = `Nivel ${L.lvl} de dueño · ${fmt(L.cur)} / ${fmt(L.need)} XP` + (L.pts ? ` · ${L.pts} ${L.pts > 1 ? 'puntos' : 'punto'} para mejoras` : '');
+  $('#mnXp').textContent = `Nivel ${L.lvl} de dueño: ${fmt(L.cur)} de ${fmt(L.need)} XP` + (L.pts ? `. ${L.pts} ${L.pts > 1 ? 'puntos' : 'punto'} para mejoras` : '');
   $('#dotRetos').hidden = !dailyReady();
   $('#dotPerks').hidden = !(L.pts > 0 && !game.S.over);
 }
@@ -163,8 +164,10 @@ export function setupMenu() {
   $('#closeMenu').addEventListener('click', () => { menuEl.hidden = true; });
   $('#closeMenuX').addEventListener('click', () => { menuEl.hidden = true; });
   for (const b of tabs) b.addEventListener('click', () => setTab(b.dataset.tab));
-  $('#giftBtn').addEventListener('click', () => { claimDaily(); renderMenu(); });
-  $('#retoList').addEventListener('click', e => { const b = e.target.closest('[data-claim]'); if (b) { claimReto(+b.dataset.claim); renderMenu(); } });
+  // Al cobrar, las monedas salen del botón hacia la caja
+  const fromBtn = (b, n) => { const r = b.getBoundingClientRect(); coinsFrom(r.left + r.width / 2, r.top + r.height / 2, n); };
+  $('#giftBtn').addEventListener('click', e => { if (!dailyInfo().can || game.S.over) return; fromBtn(e.currentTarget, 8); confetti(30); claimDaily(); renderMenu(); });
+  $('#retoList').addEventListener('click', e => { const b = e.target.closest('[data-claim]'); if (b) { fromBtn(b, 6); claimReto(+b.dataset.claim); renderMenu(); } });
   $('#perkList').addEventListener('click', e => { const b = e.target.closest('[data-perk]'); if (b && buyPerk(b.dataset.perk)) renderMenu(); });
 
   // En el menú hay que tocar dos veces el modo para no borrar la partida por accidente

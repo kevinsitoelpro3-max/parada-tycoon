@@ -29,10 +29,15 @@ function fitMoney(s) {
 
 export function hud() {
   const S = game.S;
+  // La caja cuenta hacia el monto nuevo en vez de brincar (un cuarto del camino por cuadro)
+  const sh = hudCache.sh === undefined || Math.abs(S.money - hudCache.sh) < 1 ? S.money : hudCache.sh + (S.money - hudCache.sh) * 0.25;
+  if (hudCache.sh !== sh) {
+    hudCache.sh = sh;
+    moneyEl.textContent = money(Math.round(sh));
+    fitMoney(moneyEl.textContent);
+  }
   if (hudCache.m !== S.money) {
     hudCache.m = S.money;
-    moneyEl.textContent = money(S.money);
-    fitMoney(moneyEl.textContent);
     const red = S.money < 0;
     moneySign.classList.toggle('red', red);
     moneyLabel.textContent = red ? 'En rojo' : 'Caja';

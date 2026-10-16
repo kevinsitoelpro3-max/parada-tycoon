@@ -1,8 +1,11 @@
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { Haptics } from '@capacitor/haptics';
 import { game, save } from './state.js';
-import { pauseAudio, resumeAudio } from './audio/sound.js';
+import { pauseAudio, resumeAudio, prefs } from './audio/sound.js';
+import { sfx } from './audio/sfx.js';
+import { setHaptic, buzz } from './fx.js';
 import { setTool } from './ui/dock.js';
 import { sheetEl, closeSheet } from './ui/sheet.js';
 import { menuEl, openMenu } from './ui/menu.js';
@@ -31,6 +34,19 @@ export function setupNative() {
   // Al pasar a segundo plano se guarda la partida y se pausa el sonido
   App.addListener('pause', () => { save(); pauseAudio(); });
   App.addListener('resume', () => resumeAudio());
+  // Vibración corta al construir, mejorar, cumplir metas y en los errores (se apaga con los efectos)
+  setHaptic(kind => {
+    if (!prefs.sfx) return;
+    const p = kind === 'success' ? Haptics.notification({ type: 'SUCCESS' })
+      : kind === 'error' ? Haptics.notification({ type: 'WARNING' })
+      : Haptics.impact({ style: kind === 'medium' ? 'MEDIUM' : kind === 'heavy' ? 'HEAVY' : 'LIGHT' });
+    p.catch(() => {});
+  });
+  const HAPTIC = { build: 'medium', road: 'light', upgrade: 'heavy', demolish: 'medium', goal: 'success', nope: 'error' };
+  for (const [k, kind] of Object.entries(HAPTIC)) {
+    const f = sfx[k];
+    if (typeof f === 'function') sfx[k] = (...a) => { f(...a); buzz(kind); };
+  }
 }
 
 // Quita la pantalla de carga cuando el juego ya dibujó su primer cuadro
