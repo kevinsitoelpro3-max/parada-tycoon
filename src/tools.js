@@ -7,6 +7,7 @@ import { openSheet, closeSheet } from './ui/sheet.js';
 import { sfx } from './audio/sfx.js';
 import { collectCash } from './trucks.js';
 import { track } from './daily.js';
+import { pop, dust } from './fx.js';
 
 /* ---------- Herramientas ---------- */
 export function toolCost(k) {
@@ -78,11 +79,11 @@ export function applyTool(x, y, drag) {
     sfx.road();
   } else if (KINDS[tool]) {
     Object.assign(t, { t: 'bld', k: tool, lvl: 1, earned: 0, slots: [null, null] });
-    sfx.build();
+    sfx.build(); pop(t); dust(x, y, 14);
     toast(`Nuevo negocio: ${KINDS[tool].name}. Gasto diario $${fmt(upkeepOf(t))}`);
   } else if (DECOS[tool]) {
     Object.assign(t, { t: 'deco', d: tool });
-    sfx.build();
+    sfx.build(); pop(t); dust(x, y, 8);
     track('deco');
     toast(`${DECOS[tool].emoji} ${DECOS[tool].name}: +${Math.round(DECOS[tool].bonus * 100)} % de cobro a los negocios de alrededor`);
   } else if (tool === 'demo') {
@@ -90,7 +91,7 @@ export function applyTool(x, y, drag) {
     for (const k of Object.keys(t)) delete t[k];
     t.t = wasBridge ? 'water' : 'grass';
     if (sand && !wasBridge) t.sand = true;
-    sfx.demolish();
+    sfx.demolish(); dust(x, y, 16, '#B9AE98');
     if (r.refund) {
       S.money += r.refund;
       game.floats.push({ x: x + 0.5, y: y + 0.5, z: 1.1, text: '+$' + r.refund, t: 0, neg: false });

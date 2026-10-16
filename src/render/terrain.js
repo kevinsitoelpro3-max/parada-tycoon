@@ -134,6 +134,13 @@ function road(x, y, detail) {
     if (!e) seg(rail, x1 - 0.06, y0, x1 - 0.06, y1, z);
     return;
   }
+  // Curva: la calle sigue por dos lados que forman esquina (y no sale a una carretera). En vez de una
+  // esquina en escuadra, el asfalto dobla en un cuarto de círculo con su banqueta curva y pasto afuera.
+  const re = isRoad(x + 1, y), rw = isRoad(x - 1, y), rs = isRoad(x, y + 1), rn = isRoad(x, y - 1);
+  if (e + w + s + n === 2 && (n || s) && (e || w) && re === e && rw === w && rs === s && rn === n) {
+    curve(x, y, e ? x1 : x0, n ? y0 : y1, e ? -1 : 1, n ? 1 : -1, detail);
+    return;
+  }
   // Banquetas en los lados sin salida. El bordillo (la cara de la banqueta que da a la calle) solo se ve
   // en las banquetas de atrás (lados -x y -y), que le dan la cara a la cámara; se arma solo si el mapa se ve de cerca.
   const walk = F(2, WALK), curb = detail ? L(6, CURB, 1.5) : NOOP;
@@ -160,6 +167,26 @@ function road(x, y, detail) {
     const u = x + 0.3 + hash(x, y, 6) * 0.4, v = y + 0.3 + hash(x, y, 7) * 0.4;
     E(3, 'rgba(30,32,38,.16)').push(sx(u, v), sy(u, v), 4.5, 2.2);
   }
+}
+
+// Curva con centro en la esquina (cx, cy) de la casilla; (ux, uy) apuntan hacia los lados sin salida
+function curve(x, y, cx, cy, ux, uy, detail) {
+  const N = 9, arc = (r, a = 0, b = Math.PI / 2) => {
+    const out = [];
+    for (let i = 0; i <= N; i++) { const q = a + (b - a) * i / N; out.push([cx + r * Math.cos(q) * ux, cy + r * Math.sin(q) * uy]); }
+    return out;
+  };
+  const ring = (pts, a) => { a.push(pts.length); for (const [u, v] of pts) a.push(sx(u, v), sy(u, v)); };
+  // pasto en la esquina de afuera, banqueta curva y bordillo
+  const t = T(x, y), pal = t.sand ? SAND : GRASS;
+  ring([...arc(1), [cx + ux, cy + uy]], F(2, pal[(x + y) & 1][(hash(x, y) * 3) | 0]));
+  ring([...arc(1), ...arc(1 - SW).reverse()], F(2, WALK));
+  if (detail) { const c = arc(1 - SW), a = L(6, CURB, 1.5); for (let i = 0; i < N; i++) seg(a, c[i][0], c[i][1], c[i + 1][0], c[i + 1][1]); }
+  // banqueta chica en la esquina de adentro, si la diagonal no es calle
+  if (!isRoad(cx === x ? x - 1 : x + 1, cy === y ? y - 1 : y + 1)) ring([[cx, cy], ...arc(SW)], F(2, WALK));
+  // raya central curva, discontinua
+  const lane = L(6, 'rgba(255,255,255,.75)', 1.6), m = arc(0.5, 0.12, Math.PI / 2 - 0.12);
+  for (let i = 0; i < N; i += 2) seg(lane, m[i][0], m[i][1], m[i + 1][0], m[i + 1][1]);
 }
 
 /* Carretera principal (x = 0): acotamientos, rayas blancas en la orilla, raya central amarilla y valla */
@@ -307,10 +334,12 @@ export function drawTree(x, y, s) {
   s *= 0.92 + hash(x, y, 41) * 0.16;
   const low = x >= 0 && x < game.W && y >= 0 && y < game.H ? 1 : 0;
   const cx = x + 0.5, cy = y + 0.5, g = P(cx, cy);
+  // la copa se mece despacio con el viento (con el reloj de la pantalla, cada árbol a su ritmo)
+  const sw = Math.sin(performance.now() / 950 + v * 40) * 1.3 * s;
   if (v < 0.5) {                  // frondoso: copa redonda con sombra abajo a la derecha y brillo arriba
     blob(g[0] + 3, g[1] + 1, 13 * s, 6.5 * s, 'rgba(0,0,0,.16)');
     cbox(cx - 0.035, cy - 0.035, cx + 0.035, cy + 0.035, 0, 0.32 * s, '#7A5230');
-    const p = P(cx, cy, 0.62 * s);
+    const p = P(cx, cy, 0.62 * s); p[0] += sw;
     circle(p[0] + 1.5 * s, p[1] + 1.5 * s, 12 * s, '#2E7438');
     circle(p[0] - 0.8 * s, p[1] - 0.6 * s, 11 * s, '#3E8F46');
     circle(p[0] + 4.5 * s, p[1] - 6 * s, 6 * s, '#3E8F46');
@@ -321,6 +350,7 @@ export function drawTree(x, y, s) {
     cbox(cx - 0.03, cy - 0.03, cx + 0.03, cy + 0.03, 0, m.trunk * s, '#6B4628');
     for (let i = 0; i < 3; i++) {
       const z = m.z0 + i * m.dz, b = P(cx, cy, z * s), t = P(cx, cy, (z + m.h) * s), w = (m.w - i * m.dw) * s, f = w * 0.42;
+      b[0] += sw * i / 3; t[0] += sw * (i + 1) / 3;
       poly([[b[0] - w, b[1]], [b[0], b[1] + f], t], '#3B8A50');
       poly([[b[0], b[1] + f], [b[0] + w, b[1]], t], '#26663A');
     }
@@ -328,7 +358,7 @@ export function drawTree(x, y, s) {
     const m = POPLAR[low];
     blob(g[0] + 3, g[1] + 1, (m.rx + 1) * s, (m.rx + 1) * 0.5 * s, 'rgba(0,0,0,.16)');
     cbox(cx - 0.03, cy - 0.03, cx + 0.03, cy + 0.03, 0, m.trunk * s, '#7A5230');
-    const p = P(cx, cy, m.z * s);
+    const p = P(cx, cy, m.z * s); p[0] += sw;
     blob(p[0] + 1.2 * s, p[1] + 1 * s, m.rx * s, m.ry * s, '#4D8C33');
     blob(p[0] - 0.6 * s, p[1] - 0.4 * s, m.rx2 * s, m.ry2 * s, '#6AA845');
     blob(p[0] - 2.6 * s, p[1] - m.hdy * s, m.hx * s, m.hy * s, '#86C05A');

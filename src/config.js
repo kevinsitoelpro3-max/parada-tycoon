@@ -26,8 +26,16 @@ export const KINDS = {
   wash:  { name: 'Lavado',        emoji: '🚿', cost: 350, pay: 45, time: 3.5, upkeep: 45, color: '#1B8FC4', extra: true },
   repair:{ name: 'Taller',        emoji: '🔧', cost: 700, pay: 110, time: 7, upkeep: 90, color: '#6B7280', extra: true },
   // Pensión: solo de noche (desde NIGHT_FROM); los tráileres se quedan y pagan al cierre del día
-  park:  { name: 'Pensión',       emoji: '🅿️', cost: 500, pay: 120, time: Infinity, upkeep: 40, color: '#3B5BA5', night: true }
+  park:  { name: 'Pensión',       emoji: '🅿️', cost: 500, pay: 120, time: Infinity, upkeep: 40, color: '#3B5BA5', night: true, side: true },
+  // Zona de descarga: llegan tráileres de carga, pagan la cuota y surten a los negocios de alrededor
+  dock:  { name: 'Zona de descarga', short: 'Descarga', emoji: '📦', cost: 300, pay: 40, time: 4, upkeep: 15, color: '#B07A3B', side: true }
 };
+// side: true = no cuenta para la meta de los 6 tipos, los contratos ni los retos de un tipo de negocio.
+// Carga: de los tráileres que se iban sin pedir nada, CARGO_SHARE trae mercancía si tienes zona de
+// descarga (con su propio sorteo: sin zona el azar es idéntico). Al descargar, cada negocio a
+// STOCK_REACH casillas o menos (contando diagonales) recibe STOCK_GIVE de surtido, hasta STOCK_MAX.
+// Cada cliente de un negocio surtido gasta 1 y paga STOCK_BONUS más.
+export const CARGO_SHARE = 0.35, STOCK_REACH = 2, STOCK_GIVE = 6, STOCK_MAX = 30, STOCK_BONUS = 0.15;
 // De los tráileres que pasan de largo sin pedir nada (18 %), cada tipo de negocio extra que ya
 // tengas se queda con esta parte: con uno, el 30 % de ellos; con los tres, el 90 %.
 export const EXTRA_SHARE = 0.3;
@@ -51,7 +59,7 @@ export const MODES = {
   dificil: { name: 'Difícil', money: 400, upkeep: 1.5, traffic: 1.15, repLoss: 0.18, redDays: 1, eventsFrom: 2,
              desc: 'Difícil: gastos altos, más tráfico, la reputación cae rápido y quiebras al primer cierre en rojo.' }
 };
-export const NEED_EMOJI = { gas: '⛽', food: '🍗', sleep: '💤', shop: '🍫', wash: '💦', repair: '🔧', park: '🅿️' };  // emojis que existen desde Android 7
+export const NEED_EMOJI = { gas: '⛽', food: '🍗', sleep: '💤', shop: '🍫', wash: '💦', repair: '🔧', park: '🅿️', dock: '📦' };  // emojis que existen desde Android 7
 export const COST = { road: 20, tree: 15, demo: 10, bridge: 120, rock: 150 };
 // Terrenos nuevos (solo en el terreno que compras): rocas del cerro, desierto desde DESERT_Y filas o
 // DESERT_X columnas, y un río la primera vez que amplías hacia abajo con RIVER_FROM filas o más.

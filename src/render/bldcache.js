@@ -3,6 +3,7 @@ import { game } from '../state.js';
 import { cam } from '../camera.js';
 import { P, worldXform } from './iso.js';
 import { drawBld } from './buildings/index.js';
+import { popScale } from '../fx.js';
 
 /* ---------- Caché de negocios ---------- */
 // Cada negocio lleva unas 60 figuras y un mapa lleno tiene cientos, así que se dibuja una vez
@@ -68,6 +69,11 @@ export function drawBldCached(x, y, t) {
   e.used = frame;
   t.top = e.top;                              // demoler borra t.top y al reconstruir igual se reusa el dibujo
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.drawImage(e.cv, dx, dy);
+  const ps = popScale(t);
+  if (ps) {
+    // rebote: escala desde el centro del piso de la casilla
+    const [px, py] = P(x + 0.5, y + 0.5), ax = D * px + game.dpr * cam.x, ay = D * py + game.dpr * cam.y;
+    ctx.drawImage(e.cv, ax + (dx - ax) * ps[0], ay + (dy - ay) * ps[1], w * ps[0], h * ps[1]);
+  } else ctx.drawImage(e.cv, dx, dy);
   worldXform();
 }

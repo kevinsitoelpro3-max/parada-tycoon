@@ -22,7 +22,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 ## Cómo funciona
 
 - **Mapa:** empieza en 10 columnas por 12 filas (`W0`, `H0`); el tamaño actual está en `game.W` y `game.H`. La columna `x = 0` es la carretera principal, de un solo sentido hacia abajo. Desde ☰ se compran 2 filas hacia abajo o 2 columnas hacia la derecha, hasta 20 × 30 (`WMAX`, `HMAX`); la compra número n cuesta $2,500 × n (`LAND_BASE`), contando las compras por el tamaño del terreno (`landCost`); `S.land` solo las cuenta para la meta de ampliar.
-- **Construcción:** calle $20, gasolinera $250, comedor $400, hotel de paso $600, tiendita $200, lavado $350, taller $700, demoler $10 (quitar árbol $15; demoler un negocio devuelve la mitad). Las calles deben salir de la carretera o de otra calle; los negocios deben quedar pegados a una calle.
+- **Construcción:** calle $20, gasolinera $250, comedor $400, hotel de paso $600, tiendita $200, lavado $350, taller $700, pensión $500, zona de descarga $300, demoler $10 (quitar árbol $15; demoler un negocio devuelve la mitad). Las calles deben salir de la carretera o de otra calle; los negocios deben quedar pegados a una calle.
 - **Tráileres:** aparecen arriba de la carretera. El 82 % pide algo (⛽ diésel, 🍗 comida o 💤 descanso). Al aparecer buscan con BFS un negocio de ese tipo con espacio libre y conectado; si lo hay, apartan un lugar, entran, esperan el servicio y pagan. Si no, pasan de largo enojados.
 - **Negocios extra** (`extra: true` en `KINDS`): 🛒 tiendita (cobra $20, 1.5 s, gasto $25), 🚿 lavado ($45, 3.5 s, $45) y 🔧 taller ($110, 7 s, $90); gastos en base a días de 75 s, antes de `DAY_SCALE`. Cada uno abre un mercado nuevo **sin quitarles clientes a los básicos**: atienden a tráileres que antes pasaban de largo (el 18 % sin pedido). Cada tipo extra que ya tengas se queda con `EXTRA_SHARE` (0.3) de esos tráileres; con los tres, el 90 %. El reparto de gasolina, comida y descanso no cambia. Sin negocios extra no hay sorteo extra: el azar es idéntico a antes y nadie pide algo que no tienes. Pedidos: 🍫, 💦 y 🔧 (usar emojis que existen desde Android 7: la app soporta minSdk 24).
 - **Tráileres con dos pedidos:** de los tráileres que ya encontraron un negocio básico (⛽, 🍗 o 💤), el 25 % (`COMBO_CHANCE`) también quiere otro tipo básico que tengas; sin un segundo tipo básico no hay sorteo y el azar sigue igual. Al terminar el primer servicio busca ese segundo negocio en la misma fila de la carretera o más abajo (es de un sentido; `findService(need, minRow)`); si no hay lugar, se va contento. Si los dos negocios están a 3 casillas o menos (`COMBO_NEAR`, filas + columnas), el segundo cobro lleva 30 % de propina (`COMBO_TIP`). Cada servicio cuenta como un cliente atendido.
@@ -46,6 +46,9 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Propinas 💰:** al terminar un servicio, el 12 % de las veces (`CASH_CHANCE`) el negocio deja una bolsa dorada encima (`t.cash`, no se guarda) que dura 8 segundos reales (`CASH_TTL`). Tocarla con cualquier herramienta cobra otro cobro del negocio y 3 XP (`collectCash` en trucks.js; la bolsa se toca por su lugar en pantalla, `cashAt` en overlays.js). El sorteo usa su propio `mulberry32`, así que no cambia el azar de los tráileres.
 - **Premio diario y retos del día** (`src/daily.js`): van por fecha del celular. El premio sube con la racha de días seguidos (7 premios, luego vuelve a empezar; el monto crece con el día de la partida). Cada fecha salen 3 retos al azar (sorteo con la fecha como semilla, sin `Math.random`): atender tráileres, vender, atender en un tipo de negocio, mejorar, cerrar días en verde, decorar, propinas 💰, clientes de noche o propinas de dos pedidos. Al cobrar uno sale otro hasta 6 por día (`RETOS_DAY`). El juego los avanza con `track(tipo, n, k)`.
 - **Menú ☰** con pestañas: 🏪 Parada (estadísticas y meta), 🎯 Retos (premio diario y retos), ⭐ Mejoras, 🗺️ Terreno y ⚙️ Más (sonido, guía, reglas, partida nueva y volver al inicio). Al abrirlo va primero a lo que haya por cobrar; una marca roja en ☰ avisa. Se guardan también `te` (vendido en total), `rt` (retos cumplidos) y `cs` (propinas 💰 cobradas).
+- **Zona de descarga** (`dock` en `KINDS`, con `side: true`): 📦 $300, cobra $40 de cuota por tráiler, 4 s, gasto $15. Si tienes una, de los tráileres que se iban sin pedir nada el 35 % (`CARGO_SHARE`, con su propio `mulberry32`: sin zona el azar es idéntico) trae carga (`tr.cargo`); si no hay lugar siguen sin enojarse y no hacen fila. Al descargar, cada negocio a 2 casillas o menos (`STOCK_REACH`, contando diagonales) recibe 6 de surtido (`STOCK_GIVE`, tope `STOCK_MAX` = 30, se guarda como `st`). Cada cliente de un negocio surtido gasta 1 y paga 15 % más (`STOCK_BONUS`, dentro de `payNow`). El letrerito del negocio lleva una cajita café mientras tiene surtido. `side: true` = no cuenta para la meta de los 6 tipos, los contratos ni los retos de un tipo (también la pensión). Es la base de la ciudad de la 1.3.
+- **Sensación de juego** (`src/fx.js`, no toca la partida ni `Math.random`): los negocios y la decoración rebotan al construir y mejorar (`pop`, `popScale`), polvo al construir y demoler (`dust`, en `game.fx`), monedas que vuelan a la caja al cobrar propinas, metas, premios y retos (`coinsFrom`, en una capa fija `.fx-layer`), confeti al cumplir metas, subir de nivel y cobrar el premio diario (`confetti`), la caja cuenta hacia el monto nuevo y late al llegar monedas, los números flotantes saltan al aparecer y los árboles se mecen. En la app, vibración corta (`@capacitor/haptics`, se apaga con los efectos) al construir, trazar calle, mejorar, demoler, cumplir metas y en los errores. Con "reducir movimiento" no hay monedas ni confeti.
+- **Calles curvas:** una calle que dobla (dos salidas en escuadra, sin salir a una carretera) se dibuja como cuarto de círculo con banqueta curva y pasto en la esquina (`curve` en terrain.js).
 - **Modos:** Fácil, Normal y Difícil (dinero inicial, gastos, tráfico, castigo de reputación y días en rojo permitidos).
 - **Metas:** 31 metas con premio, en cuatro temporadas (la tercera, de negocios extra; la cuarta, de nivel de dueño, retos, propinas y metas largas).
 - **Pantalla de inicio:** sale al abrir el juego y desde ☰ → Volver al inicio. Mientras está abierta el juego queda en pausa (`game.paused`). Tiene Continuar (si hay partida), los tres modos (tocar dos veces si hay partida que perder) e interruptores de Música y Efectos. El primer toque desbloquea el audio del celular.
@@ -67,6 +70,7 @@ src/trucks.js           aparición, movimiento y cobro de los tráileres
 src/days.js             cierre del día, eventos, quiebra y ampliar terreno
 src/contracts.js        contratos de flotillas: encargo del día, avance y premio
 src/progress.js         nivel de dueño (experiencia) y compra de mejoras
+src/fx.js               efectos: rebote, polvo, monedas a la caja, confeti y vibración
 src/daily.js            premio diario con racha y retos del día (guardados aparte)
 src/tools.js            qué se puede construir dónde y aplicar la herramienta
 src/sim.js              update: avanza la simulación un paso
@@ -76,7 +80,7 @@ src/theme.js            lee el tema claro u oscuro y calcula la luz del día (ga
 src/render/iso.js       primitivas isométricas (P, poly, box, shade...)
 src/render/scene.js     reúne y reexporta lo de abajo (draw.js lo importa de aquí)
 src/render/terrain.js   pasto, calles, carretera, agua, árboles, resaltados y orilla del terreno
-src/render/buildings/   un archivo por negocio (gas, food, sleep, shop, wash, repair, park) y index.js; cada uno exporta draw(x, y, t) y devuelve la altura del techo
+src/render/buildings/   un archivo por negocio (gas, food, sleep, shop, wash, repair, park, dock) y index.js; cada uno exporta draw(x, y, t) y devuelve la altura del techo
 src/render/bldcache.js  caché de negocios: cada uno se dibuja una vez en un lienzo chico y luego solo se pega (si un dibujo empieza a depender de algo nuevo, agrégalo a `sig`)
 src/render/vehicles.js  tráileres en las 4 direcciones (faros de noche)
 src/render/weather.js   lluvia
@@ -138,3 +142,16 @@ Kevin pidió cambiar el diseño del menú y que el juego enganche al menos una h
 3. ~~Premio diario con racha y retos del día~~
 4. ~~Propinas 💰 que se cobran tocando el negocio~~
 5. ~~Temporada 4 de metas (9 metas más)~~
+
+## Actualización 1.2.5
+
+Kevin pidió arreglos, diseño más vivo y "menos cuadrado", y zonas de descarga para el comercio:
+
+1. ~~Zona de descarga 📦 y surtido de los negocios~~
+2. ~~Sensación de juego: rebotes, polvo, monedas, confeti, vibración, caja que cuenta~~
+3. ~~Calles curvas, árboles que se mecen, interfaz más redonda~~
+4. ~~Arreglos: avisos debajo del menú abierto, texto del nivel de dueño~~
+
+## Actualización 1.3 (en planeación): la ciudad
+
+Idea de Kevin: el tráiler llega y descarga, el comercio produce y vende a los ciudadanos. La zona de descarga y el surtido de la 1.2.5 son la primera pieza.

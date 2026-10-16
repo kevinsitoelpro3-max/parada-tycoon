@@ -2,6 +2,7 @@ import { PERKS, PERK_MAX } from './config.js';
 import { game, levelInfo, perk, save, totalUpkeep } from './state.js';
 import { toast } from './ui/toast.js';
 import { sfx } from './audio/sfx.js';
+import { confetti } from './fx.js';
 
 /* ---------- Nivel de dueño y mejoras permanentes ---------- */
 // Suma experiencia; si sube de nivel avisa que hay un punto para gastar en ☰ → Mejoras.
@@ -12,7 +13,7 @@ export function addXp(n) {
   S.xp = (S.xp || 0) + n;
   const now = levelInfo().lvl;
   if (now > before) {
-    sfx.goal();
+    sfx.goal(); confetti(40);
     toast(`⭐ ¡Subiste a nivel ${now} de dueño! Tienes un punto de mejora en ☰ → Mejoras`, 3400, true);
   }
 }

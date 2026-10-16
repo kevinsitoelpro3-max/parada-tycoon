@@ -34,6 +34,13 @@ function drawBadge(x, y, t, kb) {
   ctx.lineWidth = 2.5 * kb; ctx.strokeStyle = col; ctx.stroke();
   ctx.font = `${14 * kb}px ${EMOJI_FONT}`;
   ctx.fillStyle = '#000'; ctx.fillText(off ? '🔌' : KINDS[t.k].emoji, sx, sy);
+  // Surtido de la zona de descarga: cajita café en la esquina del letrerito
+  if (t.stock > 0 && !off) {
+    const bx = sx + s / 2 - 1 * kb, by = sy - s / 2 + 1 * kb;
+    rrect(bx - 5.5 * kb, by - 5.5 * kb, 11 * kb, 11 * kb, 3 * kb); ctx.fillStyle = '#C9954F'; ctx.fill();
+    ctx.lineWidth = 1.5 * kb; ctx.strokeStyle = '#6B4A22'; ctx.stroke();
+    ctx.fillStyle = '#6B4A22'; ctx.fillRect(bx - 1 * kb, by - 5.5 * kb, 2 * kb, 11 * kb);
+  }
   // Propina 💰 por cobrar: bolsa dorada que rebota encima del letrerito (late más cuando se va a acabar)
   if (t.cash) {
     const now = performance.now() / 1000, fast = t.cash.ttl < 3 ? 9 : 4.5, kc = Math.max(kb, 0.95);
@@ -98,10 +105,20 @@ export function drawOverlays() {
     ctx.fillText(em, sx, sy + 1);
   }
   ctx.globalAlpha = 1;
+  // Polvo de construir y demoler
+  for (const p of game.fx) {
+    if (p.k !== 'dust') continue;
+    const [sx, sy] = scr(p.x, p.y, p.z), f = p.t / p.life;
+    ctx.globalAlpha = clamp(0.8 * (1 - f), 0, 1);
+    circle(sx, sy, p.r * (0.6 + f) * cam.z, p.c);
+  }
+  ctx.globalAlpha = 1;
   for (const f of game.floats) {
     const [sx, sy] = scr(f.x, f.y, f.z);
     ctx.globalAlpha = clamp(1 - f.t / 1.6, 0, 1);
-    ctx.font = `800 ${(f.neg ? 12 : 15) * k}px ${UI_FONT}`;
+    // salta al aparecer: crece de más y se acomoda (easeOutBack en 0.25 s)
+    const q = Math.min(1, f.t / 0.25), pop = 0.5 + 0.5 * (1 + 2.7 * Math.pow(q - 1, 3) + 1.7 * Math.pow(q - 1, 2));
+    ctx.font = `800 ${(f.neg ? 12 : 15) * k * pop}px ${UI_FONT}`;
     ctx.lineWidth = 3.5; ctx.strokeStyle = '#FFFFFF'; ctx.strokeText(f.text, sx, sy);
     ctx.fillStyle = f.neg ? '#B3261E' : '#16794A'; ctx.fillText(f.text, sx, sy);
   }

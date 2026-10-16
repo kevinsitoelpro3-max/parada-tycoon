@@ -54,7 +54,7 @@ function deal() {
   const t = pool[Math.floor(r() * pool.length)] || 'serve';
   const m = { t, n: RETOS[t].n(d), got: 0, prize: Math.round((400 + 200 * d) / 50) * 50 };
   if (t === 'kind') {
-    const own = Object.keys(KINDS).filter(k => !KINDS[k].night && countK(k) > 0);
+    const own = Object.keys(KINDS).filter(k => !KINDS[k].side && countK(k) > 0);
     m.k = own.length ? own[Math.floor(r() * own.length)] : 'gas';
   }
   D.dealt++;

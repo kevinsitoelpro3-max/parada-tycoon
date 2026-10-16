@@ -63,12 +63,12 @@ button:disabled{cursor:not-allowed}
    Las variantes (roja, amarilla) solo cambian --ring, --filet y --edge. */
 .sign{
   --ring:var(--sign);--filet:var(--sign-ink);--edge:var(--sign-edge);
-  background:var(--sign);color:var(--sign-ink);border:0;border-radius:10px;
+  background:var(--sign);color:var(--sign-ink);border:0;border-radius:14px;
   box-shadow:inset 0 0 0 3px var(--ring),inset 0 0 0 5px var(--filet),0 3px 0 var(--edge),var(--drop);
 }
 button.sign{transition:transform .08s ease-out,box-shadow .08s ease-out,filter .15s}
 button.sign:active{
-  transform:translateY(2px);
+  transform:translateY(2px) scale(.96);
   box-shadow:inset 0 0 0 3px var(--ring),inset 0 0 0 5px var(--filet),0 1px 0 var(--edge),0 1px 3px rgba(0,0,0,.2);
 }
 @media (hover:hover) and (pointer:fine){
@@ -98,7 +98,7 @@ button.sign:active{
 .sq{width:44px;flex:none;display:grid;place-items:center;font-size:17px;font-weight:800;padding:0;font-variant-numeric:tabular-nums}
 
 /* ---------- Meta y barra del día ---------- */
-.info{margin:8px 8px 0;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:var(--drop)}
+.info{margin:8px 8px 0;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--drop)}
 .goal{padding:7px 10px 6px;display:flex;align-items:center;gap:8px;font-size:13.5px;line-height:1.3}
 .goal .tag{
   background:var(--warn);color:var(--warn-ink);font-weight:800;border-radius:5px;padding:3px 7px 1px;font-size:11.5px;flex:none;
@@ -141,7 +141,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 @media (min-width:600px){
   .dock{grid-auto-flow:row;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-columns:auto;overflow-x:visible}
 }
-@media (min-width:1000px){.dock{grid-template-columns:repeat(13,minmax(0,1fr))}}
+@media (min-width:1000px){.dock{grid-template-columns:repeat(14,minmax(0,1fr))}}
 .tool{display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 2px 7px;min-height:62px}
 .tool .ic{font-size:21px;line-height:1.1;transition:opacity .2s}
 .tool .nm{font-size:11.5px;font-weight:600;line-height:1.2;margin-top:2px;white-space:nowrap}
@@ -164,7 +164,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .toast{
   position:absolute;top:10px;left:50%;transform:translate(-50%,-6px);z-index:9;
   background:var(--warn);color:var(--warn-ink);font-weight:800;font-size:13.5px;line-height:1.35;
-  padding:9px 15px 8px;border-radius:10px;width:max-content;max-width:calc(100% - 24px);text-align:center;
+  padding:9px 15px 8px;border-radius:16px;width:max-content;max-width:calc(100% - 24px);text-align:center;
   opacity:0;transition:opacity .2s,transform .2s ease-out;pointer-events:none;
   box-shadow:inset 0 0 0 2px var(--warn),inset 0 0 0 3.5px rgba(22,20,12,.8),0 3px 0 var(--warn-edge),var(--drop);
 }
@@ -179,7 +179,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   position:absolute;left:8px;right:8px;bottom:8px;max-width:440px;max-height:calc(100% - 16px);overflow:auto;
   margin:0 auto;z-index:3;overscroll-behavior:contain;
   background:var(--panel);color:var(--ink);border:1px solid var(--line);border-top:6px solid var(--sign);
-  border-radius:14px;padding:14px 16px 16px;box-shadow:var(--drop-big);
+  border-radius:20px;padding:14px 16px 16px;box-shadow:var(--drop-big);
 }
 .sheet.bad{border-top-color:var(--red)}
 .sheet.bad h2{color:var(--danger)}
@@ -197,7 +197,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .modes.price{margin:-4px 0 10px}
 .modes.price .btn{padding:8px 4px;font-size:14px}
 .facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:12px}
-.fact{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px 6px}
+.fact{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:8px 10px 6px}
 .fact b{display:block;font-size:19px;font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums}
 .fact span{font-size:11.5px;color:var(--muted);font-weight:600}
 .next,.small{font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.45}
@@ -205,11 +205,11 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 
 /* Botones de las fichas: con canto abajo que se hunde al tocarlos */
 .btn{
-  flex:1;border-radius:10px;padding:12px 10px 10px;font-weight:800;font-size:15px;line-height:1.2;
+  flex:1;border-radius:14px;padding:12px 10px 10px;font-weight:800;font-size:15px;line-height:1.2;
   border:1px solid var(--line);background:var(--panel);color:var(--ink);
   box-shadow:0 2px 0 var(--line);transition:transform .08s ease-out,box-shadow .08s ease-out,filter .15s;
 }
-.btn:not(:disabled):active{transform:translateY(2px);box-shadow:0 0 0 var(--line)}
+.btn:not(:disabled):active{transform:translateY(2px) scale(.97);box-shadow:0 0 0 var(--line)}
 .btn.primary{background:var(--sign);color:#fff;border-color:var(--sign);box-shadow:0 3px 0 var(--sign-edge)}
 .btn.primary:not(:disabled):active{box-shadow:0 1px 0 var(--sign-edge)}
 .btn:disabled{opacity:.45;box-shadow:none}
@@ -264,7 +264,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;position:sticky;top:-12px;z-index:2;background:var(--panel);margin:0 -16px;padding:4px 12px 10px;border-bottom:1px solid var(--line)}
 .tabs button{
   position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:52px;padding:6px 2px 4px;
-  border:1px solid var(--line);border-radius:10px;background:var(--panel-2);color:var(--muted);font-size:11.5px;font-weight:800;
+  border:1px solid var(--line);border-radius:14px;background:var(--panel-2);color:var(--muted);font-size:11.5px;font-weight:800;
 }
 .tabs button span{font-size:19px;line-height:1.1}
 .tabs button[aria-selected="true"]{background:var(--warn);color:var(--warn-ink);border-color:var(--warn);box-shadow:0 2px 0 var(--warn-edge)}
@@ -275,7 +275,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .stats6{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (min-width:420px){.stats6 .fact b{font-size:20px}}
 /* Premio diario: 7 cajitas, la de hoy brilla */
-.gift{background:var(--soft);border:1px solid var(--soft-line);border-radius:12px;padding:10px 10px 12px}
+.gift{background:var(--soft);border:1px solid var(--soft-line);border-radius:16px;padding:10px 10px 12px}
 .gift-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px;font-size:15px}
 .gift-top .small{margin:0}
 .gift-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:10px}
@@ -287,7 +287,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 @keyframes giftPulse{to{transform:translateY(-2px) scale(1.05)}}
 #giftBtn{width:100%}
 /* Retos */
-.reto{border:1px solid var(--line);border-radius:12px;padding:10px 10px 8px;margin-bottom:8px;background:var(--panel-2)}
+.reto{border:1px solid var(--line);border-radius:16px;padding:10px 10px 8px;margin-bottom:8px;background:var(--panel-2)}
 .reto.done{border-color:var(--soft-line);background:var(--soft)}
 .rt-top{display:flex;gap:8px;align-items:baseline;font-size:14px;line-height:1.3}
 .rt-txt{flex:1;font-weight:700}
@@ -297,7 +297,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .rt-bot .btn{flex:none;padding:8px 18px 6px;font-size:14px}
 #retoLeft{margin-top:4px}
 /* Mejoras */
-.perk{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:8px;background:var(--panel-2)}
+.perk{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:16px;padding:8px 10px;margin-bottom:8px;background:var(--panel-2)}
 .pk-ic{font-size:26px;flex:none;width:36px;text-align:center}
 .pk-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
 .pk-mid b{font-size:14.5px}
@@ -418,6 +418,18 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 /* Solo para el lector de pantalla */
 .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
+/* ---------- Efectos: monedas que vuelan a la caja, confeti y latido de la caja ---------- */
+ /* Con el menú abierto los avisos salen abajo, para no tapar las pestañas */
+body:has(#menu:not([hidden])) .toast{top:auto;bottom:96px}
+.fx-layer{position:fixed;inset:0;pointer-events:none;z-index:9;overflow:hidden}
+.fx-layer .coin{
+  position:absolute;left:-10px;top:-10px;width:20px;height:20px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#FFF3B0 0 18%,#F2C230 40%,#C99A12 100%);
+  box-shadow:0 0 0 2px #8C6B0A,0 2px 4px rgba(0,0,0,.3);will-change:transform
+}
+.fx-layer .conf{position:absolute;left:0;top:0;border-radius:2px;will-change:transform}
+.money.bump{animation:bump .3s ease-out}
+@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.07);filter:brightness(1.25)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition:none !important;animation:none !important}
 }
