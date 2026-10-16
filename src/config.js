@@ -73,6 +73,23 @@ export const PRICES = [
   { name: 'Normal', mult: 1,   rep: 0.03,  avoid: 0 },
   { name: 'Caro',   mult: 1.3, rep: 0.01,  avoid: 1.5 },
 ];
+// Mejoras permanentes del dueño (☰ → Mejoras): cada nivel de dueño da un punto; cada mejora tiene
+// hasta PERK_MAX rangos y cada rango suma `step` (ver cómo se usa cada una en state.js y trucks.js).
+export const PERK_MAX = 5;
+export const PERKS = {
+  cobro:    { emoji: '💵', name: 'Buen servicio', step: 0.04, txt: v => `+${v} % de cobro en todos tus negocios` },
+  rapido:   { emoji: '⚡', name: 'Servicio rápido', step: 0.06, txt: v => `Atienden ${v} % más rápido` },
+  ahorro:   { emoji: '🧾', name: 'Ahorro', step: 0.05, txt: v => `${v} % menos gastos al cierre del día` },
+  paciencia:{ emoji: '⏳', name: 'Sala de espera', step: 3, unit: 's', txt: v => `En la fila esperan ${v} s más` },
+  trafico:  { emoji: '📣', name: 'Publicidad', step: 0.04, txt: v => `${v} % más tráileres` },
+  fama:     { emoji: '🤝', name: 'Buena fama', step: 0.08, txt: v => `La reputación baja ${v} % menos` },
+};
+// Nivel de dueño: del nivel L al L + 1 hacen falta XP_BASE + XP_STEP × (L − 1) puntos de experiencia.
+// Cada cliente atendido da 1; los retos, el premio diario y las propinas 💰 dan más.
+export const XP_BASE = 30, XP_STEP = 20;
+// Propina 💰: al terminar un servicio, CASH_CHANCE de las veces el negocio deja una bolsa que se cobra
+// tocándolo (vale un cobro más). Dura CASH_TTL segundos reales.
+export const CASH_CHANCE = 0.12, CASH_TTL = 8;
 export const CABS = ['#D7263D', '#1B998B', '#F46036', '#3F88C5', '#E2B33C', '#6A4C93', '#33363F', '#2A9D5C'];
 export const TRAILERS = ['#F1F1F1', '#C7CDD6', '#E6DFCF', '#9DB6C8', '#D9534F', '#5C7F67'];
 export const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];

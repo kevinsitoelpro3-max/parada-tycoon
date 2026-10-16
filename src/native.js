@@ -5,7 +5,7 @@ import { game, save } from './state.js';
 import { pauseAudio, resumeAudio } from './audio/sound.js';
 import { setTool } from './ui/dock.js';
 import { sheetEl, closeSheet } from './ui/sheet.js';
-import { menuEl, renderMenu } from './ui/menu.js';
+import { menuEl, openMenu } from './ui/menu.js';
 import { isStartOpen } from './ui/start.js';
 import { isChoiceOpen, pickChoice } from './ui/choice.js';
 
@@ -21,7 +21,7 @@ export function handleBack() {
   else if (!menuEl.hidden) menuEl.hidden = true;
   else if (isStartOpen() || game.S.over) return 'exit';
   else if (game.tool !== 'none') setTool('none');
-  else { menuEl.hidden = false; renderMenu(); }
+  else openMenu();
   return 'handled';
 }
 

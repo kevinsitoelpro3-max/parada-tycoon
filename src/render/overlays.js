@@ -1,6 +1,6 @@
 import { KINDS, NEED_EMOJI, EMOJI_FONT, UI_FONT } from '../config.js';
 import { ctx, clamp } from '../utils.js';
-import { game, T } from '../state.js';
+import { game, T, serviceTime } from '../state.js';
 import { cam } from '../camera.js';
 import { scr, circle, rrect } from './iso.js';
 import { truckAlpha } from './scene.js';
@@ -34,6 +34,16 @@ function drawBadge(x, y, t, kb) {
   ctx.lineWidth = 2.5 * kb; ctx.strokeStyle = col; ctx.stroke();
   ctx.font = `${14 * kb}px ${EMOJI_FONT}`;
   ctx.fillStyle = '#000'; ctx.fillText(off ? '🔌' : KINDS[t.k].emoji, sx, sy);
+  // Propina 💰 por cobrar: bolsa dorada que rebota encima del letrerito (late más cuando se va a acabar)
+  if (t.cash) {
+    const now = performance.now() / 1000, fast = t.cash.ttl < 3 ? 9 : 4.5, kc = Math.max(kb, 0.95);
+    const cr = 14 * kc, cy = sy - s / 2 - cr - 6 * kc - Math.abs(Math.sin(now * fast)) * 5 * kc;
+    circle(sx, cy, cr, '#F2C230');
+    ctx.lineWidth = 2.5 * kc; ctx.strokeStyle = '#8C6B0A'; ctx.stroke();
+    ctx.font = `${17 * kc}px ${EMOJI_FONT}`; ctx.fillStyle = '#000';
+    ctx.fillText('💰', sx, cy + 1);
+    cashSpots.push({ x, y, sx, sy: cy, r: Math.max(26, cr * 1.7) });
+  }
   if (cam.z < 0.4) return;            // muy lejos: solo el ícono
   const r = (3.6 + 0.6 * n) * kb, gap = r * 1.9;
   ctx.lineWidth = 1.6 * kb; ctx.strokeStyle = '#3B2F00'; ctx.fillStyle = '#F2C230';
@@ -43,7 +53,16 @@ function drawBadge(x, y, t, kb) {
   }
 }
 
+// Dónde quedó cada bolsa 💰 en la pantalla en el último cuadro, para cobrarla al tocarla (input.js)
+export const cashSpots = [];
+export function cashAt(px, py) {
+  let best = null, bd = Infinity;
+  for (const c of cashSpots) { const d = Math.hypot(px - c.sx, py - c.sy); if (d < c.r && d < bd) { bd = d; best = c; } }
+  return best;
+}
+
 export function drawOverlays() {
+  cashSpots.length = 0;
   const k = clamp(cam.z, 0.85, 1.35);
   const kb = clamp(cam.z * 1.1, 0.55, 1.2), kt = clamp(cam.z * 1.15, 0.7, 1.3);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -71,7 +90,7 @@ export function drawOverlays() {
     ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.stroke();
     if (tr.state === 'service') {
       const b = T(tr.bx, tr.by);
-      const f = b && b.t === 'bld' ? clamp(tr.t / KINDS[b.k].time, 0, 1) : 1;
+      const f = b && b.t === 'bld' ? clamp(tr.t / serviceTime(b.k), 0, 1) : 1;
       ctx.beginPath(); ctx.arc(sx, sy, r + 3 * kt, -Math.PI / 2, -Math.PI / 2 + f * Math.PI * 2);
       ctx.lineWidth = 3.5 * kt; ctx.strokeStyle = b && b.off > 0 ? '#8A929B' : '#1B998B'; ctx.stroke();
     }

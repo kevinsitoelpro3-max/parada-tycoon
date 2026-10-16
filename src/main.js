@@ -23,6 +23,7 @@ import { setupSound } from './audio/sound.js';
 import { sfx, setRain } from './audio/sfx.js';
 import { setMusicMode } from './audio/music.js';
 import { setupNative, nativeReady } from './native.js';
+import { dailyInfo } from './daily.js';
 
 /* ---------- Controles ---------- */
 setupInput();
@@ -56,6 +57,7 @@ setupTuto();
 const welcome = [];
 if (game.upgradedFromV1) welcome.push(['Temporada 2: ahora hay días con gastos, reputación, hora pico y eventos. Toca ☰ para ver cómo funciona.', 6000]);
 if (game.grewFromOld) welcome.push([`Tu terreno creció gratis a ${game.W - 1} × ${game.H} casillas. Desde ☰ puedes ampliarlo hacia abajo o a la derecha.`, 5000]);
+if (!game.S.over && dailyInfo().can) welcome.push(['🎁 Tu premio del día te espera en ☰ → Retos', 3600]);
 openStart(welcome.length ? () => setTimeout(() => welcome.forEach(([m, ms]) => toast(m, ms, true)), 400) : null);
 
 // Música y lluvia siguen lo que pasa en la partida

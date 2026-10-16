@@ -9,6 +9,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - La partida se guarda en `localStorage` con la clave `parada-tycoon-v1` (formato interno versión 3, con ancho `w`, alto `h` y compras de terreno `land`; carga partidas v1 y v2, que tenían 8 columnas fijas, y las agranda gratis al tamaño inicial nuevo sin mover lo construido).
 - No hay fuentes externas: la tipografía Overpass viene del paquete `@fontsource/overpass` (licencia OFL) y los sonidos y la música se generan con Web Audio. El juego funciona sin internet.
 - Las preferencias de sonido se guardan aparte, con la clave `parada-tycoon-audio` (`{ music, sfx }`).
+- El premio diario y los retos del día se guardan aparte, con la clave `parada-tycoon-diario` (`{ v: 1, date, last, streak, dealt, all, ms }`), para que la racha siga aunque empieces otra partida. Lo que cobras va a la partida actual.
 - La guía de primera partida se guarda aparte, con la clave `parada-tycoon-tuto` (`{ v: 1, st }`, con `st` = `on`, `done`, `skip` o `vet`). No toca la partida guardada.
 - **App de Android con Capacitor 8** (`capacitor.config.json`, carpeta `android/`). Identificador `com.kevinsito.paradatycoon` (no cambiarlo nunca: es el de Play Store). Solo vertical.
   - `npm run android` arma el juego y lo copia a `android/`; `npm run android:open` abre Android Studio.
@@ -41,8 +42,12 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Eventos donde decides** (`src/ui/choice.js`): desde el día 3, el 35 % de las mañanas sale una decisión y el juego se pausa (`#choice`). 🔎 Inspección sanitaria (solo con comedor): arreglar ($250 por comedor, +0.2 de reputación) o arriesgarte (50 %: multa $600 y −0.3). 🎡 Feria: patrocinar ($500, hoy 30 % más tráileres) o no. ✊ Paro: apoyar ($250, +0.2) o ignorar (hoy 40 % menos tráileres). El efecto de tráfico vive en `game.ev.traffic` y dura el día. El botón atrás de Android elige la segunda opción.
 - **Carretera de arriba:** con el terreno de 14 columnas o más (`HWY2_W`), ☰ ofrece abrirla por $8,000 (`openTopRoad` en days.js): la fila y = 0 se vuelve carretera (casillas `hwy2`, se guarda `h2`); las calles que había ahí pasan a ser parte de ella y no se puede si hay negocios o agua. Por ella llegan tráileres de derecha a izquierda (`spawn(true)`, `tr.top`), con la mitad de frecuencia que la principal (`HWY2_RATE`), entran por calles de la fila 1 (`findService(need, 0, true)`) y salen bajando por la principal; no hacen fila ni segundo pedido. Al ampliar a la derecha, la fila de arriba sigue siendo carretera.
 - **Terrenos nuevos** (solo en el terreno que compras; la partida nueva no cambia): rocas del cerro (`rock`, no se construye encima; demolerlas cuesta $150), desierto desde la fila 16 o la columna 14 (`DESERT_Y`, `DESERT_X`: pasto con `sand`, se construye igual; más rocas que árboles) y un río (`S.river`, la fila donde está) la primera vez que amplías hacia abajo con 14 filas o más (`RIVER_FROM`); al ampliar a la derecha el río sigue. Los puentes se hacen con 🛣️ Calle sobre el agua ($120, calle con `br`; al demolerlos vuelve el agua). Se guardan como `{ t: 'road', b: 1 }`, `s: 1` y `rv`.
+- **Nivel de dueño y mejoras** (`src/progress.js`, `PERKS` en config.js): cada cliente da 1 XP, cada propina 💰 3, cada reto 100 (150 de bono por los 6 del día) y el premio diario 30 a 200. Del nivel L al L + 1 hacen falta 30 + 20 × (L − 1) XP (`XP_BASE`, `XP_STEP`). Cada nivel da un punto para ☰ → Mejoras: 💵 Buen servicio (+4 % de cobro por rango), ⚡ Servicio rápido (−6 % de tiempo), 🧾 Ahorro (−5 % de gastos), ⏳ Sala de espera (+3 s en la fila), 📣 Publicidad (+4 % de tráileres) y 🤝 Buena fama (la reputación baja 8 % menos), hasta 5 rangos cada una (`PERK_MAX`). Sin mejoras todo da × 1 y la partida es idéntica a antes. Se guarda `xp` y `pk`; `levelInfo()`, `perk(k)`, `perkVal(k)` y `serviceTime(k)` en state.js.
+- **Propinas 💰:** al terminar un servicio, el 12 % de las veces (`CASH_CHANCE`) el negocio deja una bolsa dorada encima (`t.cash`, no se guarda) que dura 8 segundos reales (`CASH_TTL`). Tocarla con cualquier herramienta cobra otro cobro del negocio y 3 XP (`collectCash` en trucks.js; la bolsa se toca por su lugar en pantalla, `cashAt` en overlays.js). El sorteo usa su propio `mulberry32`, así que no cambia el azar de los tráileres.
+- **Premio diario y retos del día** (`src/daily.js`): van por fecha del celular. El premio sube con la racha de días seguidos (7 premios, luego vuelve a empezar; el monto crece con el día de la partida). Cada fecha salen 3 retos al azar (sorteo con la fecha como semilla, sin `Math.random`): atender tráileres, vender, atender en un tipo de negocio, mejorar, cerrar días en verde, decorar, propinas 💰, clientes de noche o propinas de dos pedidos. Al cobrar uno sale otro hasta 6 por día (`RETOS_DAY`). El juego los avanza con `track(tipo, n, k)`.
+- **Menú ☰** con pestañas: 🏪 Parada (estadísticas y meta), 🎯 Retos (premio diario y retos), ⭐ Mejoras, 🗺️ Terreno y ⚙️ Más (sonido, guía, reglas, partida nueva y volver al inicio). Al abrirlo va primero a lo que haya por cobrar; una marca roja en ☰ avisa. Se guardan también `te` (vendido en total), `rt` (retos cumplidos) y `cs` (propinas 💰 cobradas).
 - **Modos:** Fácil, Normal y Difícil (dinero inicial, gastos, tráfico, castigo de reputación y días en rojo permitidos).
-- **Metas:** 22 metas con premio, en tres temporadas (la tercera, de negocios extra).
+- **Metas:** 31 metas con premio, en cuatro temporadas (la tercera, de negocios extra; la cuarta, de nivel de dueño, retos, propinas y metas largas).
 - **Pantalla de inicio:** sale al abrir el juego y desde ☰ → Volver al inicio. Mientras está abierta el juego queda en pausa (`game.paused`). Tiene Continuar (si hay partida), los tres modos (tocar dos veces si hay partida que perder) e interruptores de Música y Efectos. El primer toque desbloquea el audio del celular.
 - **Android:** el botón atrás cierra la ficha, luego el menú, luego quita la herramienta; en pleno juego abre el menú; en la pantalla de inicio o en la quiebra sale de la app. Al pasar a segundo plano guarda la partida y pausa el sonido. Los márgenes de las barras del sistema llegan como `--safe-area-inset-*`.
 - **Guía de Lupe (tutorial):** Lupe 👷, la encargada, explica las primeras 6 metas con un letrero abajo del mapa, un aro amarillo en el botón que toca usar y una marca ▼ en la casilla sugerida. El paso sale de `S.goal` y de la herramienta elegida (no se guarda), así que se retoma solo al recargar. Solo lee la partida: no cambia herramienta, dinero, pausa ni velocidad, no usa `Math.random` y deja pasar los toques (solo sus botones los reciben); el arnés determinista da la misma partida con o sin guía. Sale sola en una partida sin avance; quien ya tenía partida (aunque esté en quiebra) queda como `vet` y no la ve. Si falta una calle o la gasolinera (por ejemplo, porque la demoliste), vuelve a pedirla; si no tienes negocios ni dinero para la gasolinera, sugiere empezar otra partida. Se salta con ✕ y se vuelve a ver desde ☰ → Repasar la guía (con la meta 7 o más, 4 tarjetas de repaso; en una partida nueva el repaso cambia a la guía paso a paso). Se oculta con la pantalla de inicio, el menú, la quiebra o una ficha abierta (salvo en el paso de Mejorar, donde sube arriba). Su estado vive en `game.tuto`, fuera de `game.S`.
@@ -55,12 +60,14 @@ index.html              HUD, mapa, ficha, menú, quiebra y barra de herramientas
 src/styles.css          estilos (tema claro y oscuro)
 src/main.js             conecta los controles, arranca la partida y corre el ciclo de cuadros
 src/config.js           tamaño del mapa, negocios (KINDS), modos (MODES), precios y colores
-src/goals.js            las 22 metas (tres temporadas)
+src/goals.js            las 31 metas (cuatro temporadas)
 src/state.js            estado compartido (game), fórmulas de cobro y gastos, partida nueva, guardar y cargar
 src/routes.js           rutas con BFS y lugar de estacionamiento
 src/trucks.js           aparición, movimiento y cobro de los tráileres
 src/days.js             cierre del día, eventos, quiebra y ampliar terreno
 src/contracts.js        contratos de flotillas: encargo del día, avance y premio
+src/progress.js         nivel de dueño (experiencia) y compra de mejoras
+src/daily.js            premio diario con racha y retos del día (guardados aparte)
 src/tools.js            qué se puede construir dónde y aplicar la herramienta
 src/sim.js              update: avanza la simulación un paso
 src/camera.js           cámara, zoom y conversión de pantalla a casilla
@@ -77,7 +84,7 @@ src/render/decor.js     decoración: banca, jardín y letrero luminoso
 src/render/night.js     cielo, velo y resplandor de los negocios de noche
 src/render/overlays.js  íconos de negocios (letrerito con punta y estrellas encima del techo), burbujas, números flotantes y la marca de la guía
 src/render/draw.js      dibuja un cuadro completo en orden de profundidad
-src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negocio), menu, start (pantalla de inicio), tuto (guía de Lupe) y choice (eventos donde decides)
+src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negocio), menu (con pestañas), start (pantalla de inicio), tuto (guía de Lupe) y choice (eventos donde decides)
 src/audio/sound.js      contexto de audio, volúmenes, desbloqueo y preferencias
 src/audio/sfx.js        efectos de sonido y lluvia
 src/audio/music.js      música en bucle
@@ -121,3 +128,13 @@ Kevin pidió hacerla en partes chicas para cuidar los créditos: programar direc
 10. ~~Segunda carretera (se abre al ampliar el terreno)~~
 11. ~~Terrenos nuevos (río con puente, cerro, desierto)~~
 12. ~~Play Store: llave de firma, AAB, política de privacidad, ficha de la tienda, prueba cerrada; subir a versión 1.0.0~~ (lo de la consola lo hace Kevin)
+
+## Actualización 1.1 (versión 1.1.0)
+
+Kevin pidió cambiar el diseño del menú y que el juego enganche al menos una hora al día. Se hizo en un PR:
+
+1. ~~Menú nuevo con pestañas~~
+2. ~~Nivel de dueño y mejoras permanentes~~
+3. ~~Premio diario con racha y retos del día~~
+4. ~~Propinas 💰 que se cobran tocando el negocio~~
+5. ~~Temporada 4 de metas (9 metas más)~~

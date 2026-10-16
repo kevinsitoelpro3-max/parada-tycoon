@@ -5,6 +5,8 @@ import { inUse } from './routes.js';
 import { toast } from './ui/toast.js';
 import { openSheet, closeSheet } from './ui/sheet.js';
 import { sfx } from './audio/sfx.js';
+import { collectCash } from './trucks.js';
+import { track } from './daily.js';
 
 /* ---------- Herramientas ---------- */
 export function toolCost(k) {
@@ -58,6 +60,8 @@ export function check(k, x, y) {
 export function applyTool(x, y, drag) {
   const S = game.S, tool = game.tool;
   if (S.over) return;
+  // Tocar un negocio con propina 💰 la cobra, con cualquier herramienta
+  if (!drag && collectCash(x, y)) return;
   if (tool === 'none') {
     const t = T(x, y);
     if (t && t.t === 'bld') openSheet(x, y); else closeSheet();
@@ -79,6 +83,7 @@ export function applyTool(x, y, drag) {
   } else if (DECOS[tool]) {
     Object.assign(t, { t: 'deco', d: tool });
     sfx.build();
+    track('deco');
     toast(`${DECOS[tool].emoji} ${DECOS[tool].name}: +${Math.round(DECOS[tool].bonus * 100)} % de cobro a los negocios de alrededor`);
   } else if (tool === 'demo') {
     const wasBridge = !!t.br, sand = !!t.sand;

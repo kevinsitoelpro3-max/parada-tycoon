@@ -10,6 +10,7 @@ import { sfx } from './audio/sfx.js';
 import { newContract } from './contracts.js';
 import { finishService } from './trucks.js';
 import { rollChoice } from './ui/choice.js';
+import { track } from './daily.js';
 
 /* ---------- Días, gastos y eventos ---------- */
 export function rollEvent() {
@@ -43,7 +44,7 @@ export function closeDay() {
     const left = mode().redDays - S.red;
     if (left <= 0) { gameOver(); return; }
     msg += left === 1 ? ' Estás en rojo: si vuelves a cerrar en rojo, quiebras.' : ` Estás en rojo: ${left} cierres más en rojo y quiebras.`;
-  } else S.red = 0;
+  } else { S.red = 0; track('green'); }
   sfx.dayEnd(S.money < 0);
   S.day++; S.dayT = 0; S.dayEarn = 0; S.dayServed = 0; S.dayLost = 0;
   const em = rollEvent();

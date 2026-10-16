@@ -71,7 +71,8 @@ Cuando te pregunte por la firma, deja **"Firma de apps de Google Play"** (Google
   >
   > Traza calles, abre gasolineras, comedores, hoteles de paso, tienditas, lavados, talleres y pensiones, y atiende a los tráileres que pasan día y noche. Cada cliente feliz sube tu reputación; cada uno que se va enojado te cuesta.
   >
-  > • Más de 20 metas con premio
+  > • Más de 30 metas con premio, retos diarios y premio por volver cada día
+  > • Sube de nivel y compra mejoras para tu parada
   > • Días con hora pico, noche y corte de caja
   > • Contratos de flotillas y eventos donde tú decides
   > • Decora tu parada y acomoda los negocios para que se ayuden
