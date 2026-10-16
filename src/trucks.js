@@ -14,7 +14,7 @@ export function spawnInterval() {
   const S = game.S;
   if (game.ev.burst > 0) return 0.5;
   let base = clamp(2.6 - S.served * 0.004 - (S.day - 1) * 0.07, 0.75, 2.6);
-  base /= mode().traffic * (0.7 + 0.1 * S.rep);
+  base /= mode().traffic * (0.7 + 0.1 * S.rep) * (game.ev.traffic || 1);
   if (inRush()) base *= 0.5;
   return base * (0.8 + Math.random() * 0.4);
 }

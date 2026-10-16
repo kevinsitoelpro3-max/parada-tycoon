@@ -37,6 +37,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Hora pico:** del 40 % al 65 % del día (13:10 a 17:40) llegan el doble de tráileres.
 - **Día y noche:** oscurece de 18:30 a 20:30 y amanece de 06:00 a 07:00 (`DUSK`, `DAWN` en config.js). `game.night` es la oscuridad (0 a 1) según el reloj y `game.dark` indica si van las luces encendidas (de noche o con el tema oscuro). Desde las 20:00 (`NIGHT_FROM`) cambia el reparto de pedidos: de cada 100 con pedido, ⛽ 45, 🍗 20 y 💤 35 (de día 45, 30 y 25), y sale un aviso.
 - **Eventos (desde cierto día):** lluvia (tráileres más lentos), apagón (un negocio sin luz 25 s), más diésel y caravana.
+- **Eventos donde decides** (`src/ui/choice.js`): desde el día 3, el 35 % de las mañanas sale una decisión y el juego se pausa (`#choice`). 🔎 Inspección sanitaria (solo con comedor): arreglar ($250 por comedor, +0.2 de reputación) o arriesgarte (50 %: multa $600 y −0.3). 🎡 Feria: patrocinar ($500, hoy 30 % más tráileres) o no. ✊ Paro: apoyar ($250, +0.2) o ignorar (hoy 40 % menos tráileres). El efecto de tráfico vive en `game.ev.traffic` y dura el día. El botón atrás de Android elige la segunda opción.
 - **Modos:** Fácil, Normal y Difícil (dinero inicial, gastos, tráfico, castigo de reputación y días en rojo permitidos).
 - **Metas:** 22 metas con premio, en tres temporadas (la tercera, de negocios extra).
 - **Pantalla de inicio:** sale al abrir el juego y desde ☰ → Volver al inicio. Mientras está abierta el juego queda en pausa (`game.paused`). Tiene Continuar (si hay partida), los tres modos (tocar dos veces si hay partida que perder) e interruptores de Música y Efectos. El primer toque desbloquea el audio del celular.
@@ -73,7 +74,7 @@ src/render/decor.js     decoración: banca, jardín y letrero luminoso
 src/render/night.js     cielo, velo y resplandor de los negocios de noche
 src/render/overlays.js  íconos de negocios (letrerito con punta y estrellas encima del techo), burbujas, números flotantes y la marca de la guía
 src/render/draw.js      dibuja un cuadro completo en orden de profundidad
-src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negocio), menu, start (pantalla de inicio) y tuto (guía de Lupe)
+src/ui/                 hud, toast, dock (herramientas), sheet (ficha del negocio), menu, start (pantalla de inicio), tuto (guía de Lupe) y choice (eventos donde decides)
 src/audio/sound.js      contexto de audio, volúmenes, desbloqueo y preferencias
 src/audio/sfx.js        efectos de sonido y lluvia
 src/audio/music.js      música en bucle
@@ -113,7 +114,7 @@ Kevin pidió hacerla en partes chicas para cuidar los créditos: programar direc
 6. ~~Contratos de flotillas (encargos diarios, empresas inventadas)~~
 7. ~~Pensión de tráileres (pasan la noche y pagan al amanecer)~~
 8. ~~Filas (esperan en la calle antes de enojarse)~~
-9. Eventos donde decides (inspección, feria, paro de transportistas)
+9. ~~Eventos donde decides (inspección, feria, paro de transportistas)~~
 10. Segunda carretera (se abre al ampliar el terreno)
 11. Terrenos nuevos (río con puente, cerro, desierto)
 12. Play Store: llave de firma, AAB, política de privacidad, ficha de la tienda, prueba cerrada; subir a versión 1.0.0

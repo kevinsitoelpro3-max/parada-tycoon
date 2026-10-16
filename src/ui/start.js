@@ -42,7 +42,7 @@ export const isStartOpen = () => !startEl.hidden;
 function closeStart() {
   disarm();
   startEl.hidden = true;
-  game.paused = false;
+  game.paused = !document.getElementById('choice').hidden;   // si hay una decisión pendiente, sigue en pausa
 }
 
 export function setupStart() {

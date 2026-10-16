@@ -9,6 +9,7 @@ import { menuEl, overEl, renderMenu } from './ui/menu.js';
 import { sfx } from './audio/sfx.js';
 import { newContract } from './contracts.js';
 import { finishService } from './trucks.js';
+import { rollChoice } from './ui/choice.js';
 
 /* ---------- Días, gastos y eventos ---------- */
 export function rollEvent() {
@@ -50,6 +51,7 @@ export function closeDay() {
   toast(`Día ${S.day}` + (em ? `. ${em}.` : '.'), 3000, true);
   const cm = newContract();
   if (cm) toast(cm, 4200, true);
+  rollChoice();
   save();
 }
 export function gameOver() {

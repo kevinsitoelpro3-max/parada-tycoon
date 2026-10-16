@@ -1,4 +1,5 @@
 // Tipografía Overpass incluida en el juego (licencia OFL), para que funcione sin internet
+import { setupChoice } from './ui/choice.js';
 import '@fontsource/overpass/latin-400.css';
 import '@fontsource/overpass/latin-600.css';
 import '@fontsource/overpass/latin-800.css';
@@ -27,6 +28,7 @@ import { setupNative, nativeReady } from './native.js';
 setupInput();
 setupDock();
 setupSheet();
+setupChoice();
 setupMenu();
 setupHud();
 setupTheme();
