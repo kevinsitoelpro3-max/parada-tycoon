@@ -39,6 +39,7 @@ Juego tipo tycoon de una parada de tráileres junto a una carretera. El jugador 
 - **Eventos (desde cierto día):** lluvia (tráileres más lentos), apagón (un negocio sin luz 25 s), más diésel y caravana.
 - **Eventos donde decides** (`src/ui/choice.js`): desde el día 3, el 35 % de las mañanas sale una decisión y el juego se pausa (`#choice`). 🔎 Inspección sanitaria (solo con comedor): arreglar ($250 por comedor, +0.2 de reputación) o arriesgarte (50 %: multa $600 y −0.3). 🎡 Feria: patrocinar ($500, hoy 30 % más tráileres) o no. ✊ Paro: apoyar ($250, +0.2) o ignorar (hoy 40 % menos tráileres). El efecto de tráfico vive en `game.ev.traffic` y dura el día. El botón atrás de Android elige la segunda opción.
 - **Carretera de arriba:** con el terreno de 14 columnas o más (`HWY2_W`), ☰ ofrece abrirla por $8,000 (`openTopRoad` en days.js): la fila y = 0 se vuelve carretera (casillas `hwy2`, se guarda `h2`); las calles que había ahí pasan a ser parte de ella y no se puede si hay negocios o agua. Por ella llegan tráileres de derecha a izquierda (`spawn(true)`, `tr.top`), con la mitad de frecuencia que la principal (`HWY2_RATE`), entran por calles de la fila 1 (`findService(need, 0, true)`) y salen bajando por la principal; no hacen fila ni segundo pedido. Al ampliar a la derecha, la fila de arriba sigue siendo carretera.
+- **Terrenos nuevos** (solo en el terreno que compras; la partida nueva no cambia): rocas del cerro (`rock`, no se construye encima; demolerlas cuesta $150), desierto desde la fila 16 o la columna 14 (`DESERT_Y`, `DESERT_X`: pasto con `sand`, se construye igual; más rocas que árboles) y un río (`S.river`, la fila donde está) la primera vez que amplías hacia abajo con 14 filas o más (`RIVER_FROM`); al ampliar a la derecha el río sigue. Los puentes se hacen con 🛣️ Calle sobre el agua ($120, calle con `br`; al demolerlos vuelve el agua). Se guardan como `{ t: 'road', b: 1 }`, `s: 1` y `rv`.
 - **Modos:** Fácil, Normal y Difícil (dinero inicial, gastos, tráfico, castigo de reputación y días en rojo permitidos).
 - **Metas:** 22 metas con premio, en tres temporadas (la tercera, de negocios extra).
 - **Pantalla de inicio:** sale al abrir el juego y desde ☰ → Volver al inicio. Mientras está abierta el juego queda en pausa (`game.paused`). Tiene Continuar (si hay partida), los tres modos (tocar dos veces si hay partida que perder) e interruptores de Música y Efectos. El primer toque desbloquea el audio del celular.
@@ -117,5 +118,5 @@ Kevin pidió hacerla en partes chicas para cuidar los créditos: programar direc
 8. ~~Filas (esperan en la calle antes de enojarse)~~
 9. ~~Eventos donde decides (inspección, feria, paro de transportistas)~~
 10. ~~Segunda carretera (se abre al ampliar el terreno)~~
-11. Terrenos nuevos (río con puente, cerro, desierto)
+11. ~~Terrenos nuevos (río con puente, cerro, desierto)~~
 12. Play Store: llave de firma, AAB, política de privacidad, ficha de la tienda, prueba cerrada; subir a versión 1.0.0

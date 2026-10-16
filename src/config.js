@@ -52,7 +52,10 @@ export const MODES = {
              desc: 'Difícil: gastos altos, más tráfico, la reputación cae rápido y quiebras al primer cierre en rojo.' }
 };
 export const NEED_EMOJI = { gas: '⛽', food: '🍗', sleep: '💤', shop: '🍫', wash: '💦', repair: '🔧', park: '🅿️' };  // emojis que existen desde Android 7
-export const COST = { road: 20, tree: 15, demo: 10 };
+export const COST = { road: 20, tree: 15, demo: 10, bridge: 120, rock: 150 };
+// Terrenos nuevos (solo en el terreno que compras): rocas del cerro, desierto desde DESERT_Y filas o
+// DESERT_X columnas, y un río la primera vez que amplías hacia abajo con RIVER_FROM filas o más.
+export const DESERT_Y = 16, DESERT_X = 14, RIVER_FROM = 14;
 // Decoración: va en el pasto (sin calle) y sube el cobro de los negocios de las 8 casillas de alrededor.
 // upkeep: gasto diario en días de 75 s, como KINDS. Emojis que existen desde Android 7.
 export const DECOS = {

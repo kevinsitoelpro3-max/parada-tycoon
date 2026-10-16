@@ -114,8 +114,8 @@ export function save() {
     const data = {
       v: 3, mode: S.mode, money: S.money, served: S.served, lost: S.lost, goal: S.goal,
       day: S.day, dayT: S.dayT, rep: S.rep, red: S.red, perfectDays: S.perfectDays, bestDay: S.bestDay,
-      dayEarn: S.dayEarn, dayServed: S.dayServed, dayLost: S.dayLost, w: game.W, h: game.H, land: S.land || 0, over: S.over, ct: S.contract || null, h2: !!S.hwy2,
-      tiles: S.tiles.map(t => t.t === 'bld' ? { t: 'bld', k: t.k, l: t.lvl, e: t.earned || 0, ...(t.price !== undefined && t.price !== 1 ? { p: t.price } : {}) } : t.t === 'deco' ? { t: 'deco', d: t.d } : { t: t.t })
+      dayEarn: S.dayEarn, dayServed: S.dayServed, dayLost: S.dayLost, w: game.W, h: game.H, land: S.land || 0, over: S.over, ct: S.contract || null, h2: !!S.hwy2, ...(S.river !== undefined ? { rv: S.river } : {}),
+      tiles: S.tiles.map(t => t.t === 'bld' ? { t: 'bld', k: t.k, l: t.lvl, e: t.earned || 0, ...(t.price !== undefined && t.price !== 1 ? { p: t.price } : {}) } : t.t === 'deco' ? { t: 'deco', d: t.d } : t.br ? { t: 'road', b: 1 } : t.sand ? { t: t.t, s: 1 } : { t: t.t })
     };
     localStorage.setItem(KEY, JSON.stringify(data));
   } catch (e) { /* sin almacenamiento: el juego sigue */ }
@@ -131,10 +131,12 @@ export function load() {
     const h = (d.h | 0) || 10;
     if (w < 2 || w > WMAX || h < 2 || h > HMAX || d.tiles.length !== w * h) return false;
     const land = d.v === 3 ? Math.max(0, d.land | 0) : Math.max(0, (h - 10) / 2 | 0);
-    const valid = ['grass', 'road', 'tree', 'water', 'hwy', 'hwy2'];
+    const valid = ['grass', 'road', 'tree', 'water', 'hwy', 'hwy2', 'rock'];
     const old = d.tiles.map(o => (o && o.t === 'bld' && KINDS[o.k])
       ? { t: 'bld', k: o.k, lvl: clamp(o.l | 0, 1, 3), earned: o.e | 0, ...(o.p === 0 || o.p === 2 ? { price: o.p } : {}) }
       : (o && o.t === 'deco' && DECOS[o.d]) ? { t: 'deco', d: o.d }
+      : (o && o.t === 'road' && o.b) ? { t: 'road', br: true }
+      : (o && o.s && (o.t === 'grass' || o.t === 'tree' || o.t === 'rock')) ? { t: o.t, sand: true }
       : { t: (o && valid.includes(o.t)) ? o.t : 'grass' });
     // Las partidas de antes crecen gratis al tamaño inicial nuevo (columnas a la derecha y filas
     // abajo, con pasto). Lo construido queda en las mismas casillas.
@@ -152,7 +154,7 @@ export function load() {
       rep: clamp(Number.isFinite(+d.rep) && d.rep !== undefined ? +d.rep : 3, 1, 5),
       red: +d.red || 0, perfectDays: +d.perfectDays || 0, bestDay: +d.bestDay || 0,
       dayEarn: +d.dayEarn || 0, dayServed: +d.dayServed || 0, dayLost: +d.dayLost || 0,
-      w: game.W, h: game.H, land, over: !!d.over, tiles, hwy2: !!d.h2,
+      w: game.W, h: game.H, land, over: !!d.over, tiles, hwy2: !!d.h2, ...(Number.isInteger(d.rv) && d.rv > 0 && d.rv < game.H ? { river: d.rv } : {}),
       // contrato de flotilla del día (si el guardado trae uno válido)
       contract: (d.ct && KINDS[d.ct.k] && d.ct.n > 0) ? { co: String(d.ct.co || ''), k: d.ct.k, n: d.ct.n | 0, got: d.ct.got | 0, prize: d.ct.prize | 0, done: !!d.ct.done, failed: !!d.ct.failed } : null
     };

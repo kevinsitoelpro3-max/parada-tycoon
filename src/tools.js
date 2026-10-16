@@ -22,25 +22,28 @@ export function check(k, x, y) {
   const roadNear = DIRS.some(([dx, dy]) => isRoad(x + dx, y + dy));
   if (k === 'road') {
     if (t.t === 'tree') return { ok: false, msg: 'Quita el árbol con 🔨 Demoler primero' };
-    if (t.t !== 'grass') return { ok: false, msg: 'Ahí no se puede hacer calle' };
+    if (t.t === 'rock') return { ok: false, msg: `Quita las rocas con 🔨 Demoler primero ($${COST.rock})` };
+    if (t.t !== 'grass' && t.t !== 'water') return { ok: false, msg: 'Ahí no se puede hacer calle' };
     if (!(x === 1 || roadNear || (game.S.hwy2 && y === 1))) return { ok: false, msg: 'La calle tiene que salir de la carretera o de otra calle' };
-    return { ok: true, cost: COST.road };
+    return { ok: true, cost: t.t === 'water' ? COST.bridge : COST.road };
   }
   if (KINDS[k]) {
     if (t.t === 'tree') return { ok: false, msg: 'Quita el árbol con 🔨 Demoler primero' };
+    if (t.t === 'rock') return { ok: false, msg: `Quita las rocas con 🔨 Demoler primero ($${COST.rock})` };
     if (t.t !== 'grass') return { ok: false, msg: 'Ese lugar ya está ocupado' };
     if (!roadNear) return { ok: false, msg: 'Ponlo pegado a una calle para que lleguen los tráileres' };
     return { ok: true, cost: KINDS[k].cost };
   }
   if (DECOS[k]) {
-    if (t.t === 'tree') return { ok: false, msg: 'Quita el árbol con 🔨 Demoler primero' };
+    if (t.t === 'tree' || t.t === 'rock') return { ok: false, msg: 'Despeja la casilla con 🔨 Demoler primero' };
     if (t.t !== 'grass') return { ok: false, msg: 'La decoración va en el pasto' };
     return { ok: true, cost: DECOS[k].cost };
   }
   if (k === 'demo') {
     if (t.t === 'deco') return { ok: true, cost: COST.demo, refund: Math.round(DECOS[t.d].cost * 0.5) };
     if (t.t === 'tree') return { ok: true, cost: COST.tree };
-    if (t.t === 'water') return { ok: false, msg: 'El estanque no se puede quitar' };
+    if (t.t === 'rock') return { ok: true, cost: COST.rock };
+    if (t.t === 'water') return { ok: false, msg: 'El agua no se quita; con 🛣️ Calle puedes ponerle un puente' };
     if (t.t === 'road') {
       if (inUse(x, y)) return { ok: false, msg: 'Hay tráileres usando esa calle, espera a que pasen' };
       return { ok: true, cost: COST.demo };
@@ -66,6 +69,7 @@ export function applyTool(x, y, drag) {
   const t = T(x, y);
   S.money -= r.cost;
   if (tool === 'road') {
+    if (t.t === 'water') t.br = true;   // puente
     t.t = 'road';
     sfx.road();
   } else if (KINDS[tool]) {
@@ -77,8 +81,10 @@ export function applyTool(x, y, drag) {
     sfx.build();
     toast(`${DECOS[tool].emoji} ${DECOS[tool].name}: +${Math.round(DECOS[tool].bonus * 100)} % de cobro a los negocios de alrededor`);
   } else if (tool === 'demo') {
+    const wasBridge = !!t.br, sand = !!t.sand;
     for (const k of Object.keys(t)) delete t[k];
-    t.t = 'grass';
+    t.t = wasBridge ? 'water' : 'grass';
+    if (sand && !wasBridge) t.sand = true;
     sfx.demolish();
     if (r.refund) {
       S.money += r.refund;

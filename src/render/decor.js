@@ -49,3 +49,12 @@ const neon = (x, y) => {
 
 const DRAW = { bench, garden, neon };
 export function drawDeco(x, y, t) { const f = DRAW[t.d]; if (f) f(x, y); }
+
+// Rocas del cerro: tres peñascos grises de tamaño fijo según la casilla
+export function drawRock(x, y) {
+  const h = ((x * 374761393 + y * 668265263) >>> 0) % 1000 / 1000;
+  poly([P(x + 0.15, y + 0.2), P(x + 0.85, y + 0.2), P(x + 0.85, y + 0.85), P(x + 0.15, y + 0.85)], 'rgba(0,0,0,.08)');
+  cbox(x + 0.2, y + 0.3, x + 0.62, y + 0.7, 0, 0.42 + h * 0.12, '#8D8A82');
+  cbox(x + 0.5, y + 0.45, x + 0.82, y + 0.8, 0, 0.3, '#A19D93');
+  cbox(x + 0.26, y + 0.62, x + 0.48, y + 0.84, 0, 0.18, '#7B776F');
+}

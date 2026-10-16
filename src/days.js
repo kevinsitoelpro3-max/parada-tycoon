@@ -1,4 +1,4 @@
-import { WMAX, HMAX, LAND_STEP, DAY_SCALE, PERFECT_DAY_MIN, CLOSE_HOUR, HWY2_W, HWY2_COST } from './config.js';
+import { WMAX, HMAX, LAND_STEP, DAY_SCALE, PERFECT_DAY_MIN, CLOSE_HOUR, HWY2_W, HWY2_COST, DESERT_X, DESERT_Y, RIVER_FROM } from './config.js';
 import { $, pick, fmt, money } from './utils.js';
 import { game, mode, totalUpkeep, landCost, emptyEvent, save } from './state.js';
 import { fit, clampCam } from './camera.js';
@@ -73,10 +73,20 @@ export function expandLand(dir) {
   S.money -= c;
   S.land = (S.land || 0) + 1;
   sfx.build();
-  const newTile = x => ({ t: x === 0 ? 'hwy' : (x >= 2 && Math.random() < 0.2 ? 'tree' : 'grass') });
+  // Casilla nueva: árboles y rocas del cerro; en la zona de desierto, arena y más rocas que árboles
+  const newTile = (x, y) => {
+    if (x === 0) return { t: 'hwy' };
+    const r = Math.random(), desert = y >= DESERT_Y || x >= DESERT_X;
+    if (x >= 2 && r < (desert ? 0.06 : 0.16)) return desert ? { t: 'tree', sand: true } : { t: 'tree' };
+    if (x >= 2 && r < (desert ? 0.16 : 0.22)) return desert ? { t: 'rock', sand: true } : { t: 'rock' };
+    return desert && r < 0.85 ? { t: 'grass', sand: true } : { t: 'grass' };
+  };
+  // El río cruza la primera fila nueva la primera vez que amplías hacia abajo desde RIVER_FROM filas
+  const river = dir === 'down' && S.river === undefined && game.H >= RIVER_FROM;
+  if (river) S.river = game.H;      // fila del río (para seguirlo al ampliar a la derecha)
   if (dir === 'down') {
     const oldEnd = game.H + 2.6;
-    for (let y = game.H; y < game.H + LAND_STEP; y++) for (let x = 0; x < game.W; x++) S.tiles.push(newTile(x));
+    for (let y = game.H; y < game.H + LAND_STEP; y++) for (let x = 0; x < game.W; x++) S.tiles.push(river && y === game.H && x > 0 ? { t: 'water' } : newTile(x, y));
     game.H += LAND_STEP; S.h = game.H;
     // los tráileres que iban a salir por el borde de abajo ahora salen por el nuevo borde
     for (const tr of game.trucks) for (const p of tr.path) if (Math.abs(p[1] - oldEnd) < 1e-6) p[1] = game.H + 2.6;
@@ -86,7 +96,7 @@ export function expandLand(dir) {
     const W = game.W, tiles = [];
     for (let y = 0; y < game.H; y++) {
       for (let x = 0; x < W; x++) tiles.push(S.tiles[y * W + x]);
-      for (let x = W; x < W + LAND_STEP; x++) tiles.push(S.hwy2 && y === 0 ? { t: 'hwy2' } : newTile(x));
+      for (let x = W; x < W + LAND_STEP; x++) tiles.push(S.hwy2 && y === 0 ? { t: 'hwy2' } : y === S.river ? { t: 'water' } : newTile(x, y));
     }
     S.tiles = tiles;
     game.W += LAND_STEP; S.w = game.W;
