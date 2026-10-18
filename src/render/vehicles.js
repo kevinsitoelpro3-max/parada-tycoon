@@ -169,12 +169,24 @@ export function drawCar(c) {
   };
   const HB = 0.075;
   poly([W(-0.17, -0.09, 0), W(0.17, -0.09, 0), W(0.17, 0.09, 0), W(-0.17, 0.09, 0)].map(([x, y]) => [x + 2, y + 1.8]), 'rgba(0,0,0,.2)');
-  lbox(-0.16, 0.16, -HB, HB, 0.03, 0.11, c.col);                       // carrocería
-  lbox(-0.09, 0.07, -HB + 0.01, HB - 0.01, 0.11, 0.19, shade(c.col, 0.08)); // cabina
   const e = HB - 0.006;
-  poly([W(-0.075, e, 0.12), W(0.055, e, 0.12), W(0.055, e, 0.18), W(-0.075, e, 0.18)], GLASS_SIDE);
-  const fa = front ? 0.072 : -0.092;
-  poly([W(fa, -0.055, 0.12), W(fa, 0.055, 0.12), W(fa, 0.055, 0.18), W(fa, -0.055, 0.18)], GLASS);
+  if (c.van) {
+    // Camioneta de reparto: cabina azul al frente y caja de carga del color de lo que lleva
+    const near = front ? [box, cab] : [cab, box];
+    function box() { lbox(-0.17, 0.05, -HB - 0.005, HB + 0.005, 0.03, 0.27, c.col); }
+    function cab() {
+      lbox(0.05, 0.17, -HB, HB, 0.03, 0.2, '#2E6DB4');
+      poly([W(0.08, e, 0.12), W(0.15, e, 0.12), W(0.15, e, 0.18), W(0.08, e, 0.18)], GLASS_SIDE);
+      if (front) poly([W(0.172, -0.055, 0.12), W(0.172, 0.055, 0.12), W(0.172, 0.055, 0.18), W(0.172, -0.055, 0.18)], GLASS);
+    }
+    for (const f of near) f();
+  } else {
+    lbox(-0.16, 0.16, -HB, HB, 0.03, 0.11, c.col);                       // carrocería
+    lbox(-0.09, 0.07, -HB + 0.01, HB - 0.01, 0.11, 0.19, shade(c.col, 0.08)); // cabina
+    poly([W(-0.075, e, 0.12), W(0.055, e, 0.12), W(0.055, e, 0.18), W(-0.075, e, 0.18)], GLASS_SIDE);
+    const fa = front ? 0.072 : -0.092;
+    poly([W(fa, -0.055, 0.12), W(fa, 0.055, 0.12), W(fa, 0.055, 0.18), W(fa, -0.055, 0.18)], GLASS);
+  }
   for (const a of [-0.1, 0.1]) {
     const p = W(a, HB + 0.004, 0.035);
     circle(p[0], p[1], 2.1 * K, TIRE);

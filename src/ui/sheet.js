@@ -1,4 +1,4 @@
-import { KINDS, PRICES, STOCK_BONUS, STOCK_REACH, HOME, HAP_GROW, HAP_LEAVE } from '../config.js';
+import { KINDS, PRICES, STOCK_BONUS, STOCK_REACH, HOME, HAP_GROW, HAP_LEAVE, INDUSTRY, WHOLESALE } from '../config.js';
 import { $, fmt, money } from '../utils.js';
 import { game, T, payOf, payNow, repMult, upkeepOf, upCost, bonusAt, priceOf, perkVal, homeUpkeepOf } from '../state.js';
 import { toast } from './toast.js';
@@ -8,6 +8,7 @@ import { sfx } from '../audio/sfx.js';
 import { track } from '../daily.js';
 import { pop, dust } from '../fx.js';
 import { capOfHome, hap, hapFace } from '../city.js';
+import { every, capOut, capIn, vansOf } from '../industry.js';
 
 /* ---------- Ficha del negocio (ver y mejorar) ---------- */
 export const sheetEl = $('#sheet');
@@ -20,6 +21,7 @@ export function renderSheet() {
   const t = T(sel.x, sel.y);
   if (t && t.t === 'home') return renderHome(t);
   if (!t || t.t !== 'bld') { closeSheet(); return; }
+  if (KINDS[t.k].prod) return renderProd(t, sel.x, sel.y);
   setLabels('tráileres a la vez', 'por cliente hoy', 'de gasto al día', 'ganado aquí');
   $('#shPrice').hidden = false;
   const k = KINDS[t.k];
@@ -83,6 +85,28 @@ function renderHome(t) {
     txt += ` Al mejorarla caben ${HOME.cap[t.lvl]} vecinos.`;
     up.textContent = 'Mejorar por $' + fmt(homeUp(t));
     up.disabled = game.S.money < homeUp(t) || game.S.over;
+  } else { up.textContent = 'Nivel máximo'; up.disabled = true; }
+  $('#shNext').textContent = txt;
+}
+// Granja y fábrica: qué producen, qué tienen guardado y sus camionetas
+function renderProd(t, x, y) {
+  const k = KINDS[t.k], farm = t.k === 'farm', per = Math.round(60 / every(t) * 10) / 10;
+  $('#shTitle').textContent = k.emoji + ' ' + k.name;
+  $('#shLvl').textContent = 'Nivel ' + t.lvl + ' de 3' + (t.off > 0 ? '. Sin luz por ahora.' : '');
+  setLabels(farm ? 'maíz guardado' : 'guardado en la fábrica', farm ? '🌽 por minuto' : '📦 por minuto (si hay 🌽)', 'de gasto al día', 'camionetas en camino');
+  $('#shPrice').hidden = true;
+  $('#shCap').textContent = farm ? `🌽 ${t.raw | 0} / ${capOut(t)}` : `🌽 ${t.raw | 0}  📦 ${t.goods | 0}`;
+  $('#shPay').textContent = String(per);
+  $('#shUpk').textContent = '$' + fmt(upkeepOf(t));
+  $('#shEarn').textContent = `🚚 ${vansOf(x, y)} / ${t.lvl}`;
+  let txt = farm
+    ? `Produce 🌽 maíz. Su camioneta lo lleva a la 🏭 fábrica más cercana por tus calles (hasta 6 por viaje). Si no hay fábrica conectada o está llena, el maíz se queda aquí hasta ${capOut(t)}.`
+    : `Convierte ${INDUSTRY.factory.need} 🌽 en 1 📦 caja (le caben ${capIn(t)} 🌽). Su camioneta lleva las cajas a la 📦 zona de descarga más cercana: cada caja surte a los comercios de alrededor y te paga $${WHOLESALE}.`;
+  const up = $('#shUp');
+  if (t.lvl < 3) {
+    txt += ' Al mejorarla produce 50 % más rápido, guarda más y tiene otra camioneta.';
+    up.textContent = 'Mejorar por $' + fmt(upCost(t));
+    up.disabled = game.S.money < upCost(t) || game.S.over;
   } else { up.textContent = 'Nivel máximo'; up.disabled = true; }
   $('#shNext').textContent = txt;
 }

@@ -35,7 +35,7 @@ export function check(k, x, y) {
     if (t.t === 'tree') return { ok: false, msg: 'Quita el árbol con 🔨 Demoler primero' };
     if (t.t === 'rock') return { ok: false, msg: `Quita las rocas con 🔨 Demoler primero ($${COST.rock})` };
     if (t.t !== 'grass') return { ok: false, msg: 'Ese lugar ya está ocupado' };
-    if (!roadNear) return { ok: false, msg: k === 'home' ? 'Ponla pegada a una calle para que salgan los coches' : 'Ponlo pegado a una calle para que lleguen los tráileres' };
+    if (!roadNear) return { ok: false, msg: k === 'home' ? 'Ponla pegada a una calle para que salgan los coches' : KINDS[k].prod ? 'Ponla pegada a una calle para que salgan sus camionetas' : 'Ponlo pegado a una calle para que lleguen los tráileres' };
     return { ok: true, cost: k === 'home' ? HOME.cost : KINDS[k].cost };
   }
   if (DECOS[k]) {
@@ -80,9 +80,12 @@ export function applyTool(x, y, drag) {
     t.t = 'road';
     sfx.road();
   } else if (KINDS[tool]) {
+    const first = KINDS[tool].prod && !S.tiles.some(b => b.t === 'bld' && b.k === tool);
     Object.assign(t, { t: 'bld', k: tool, lvl: 1, earned: 0, slots: [null, null] });
     sfx.build(); pop(t); dust(x, y, 14);
     toast(`Nuevo negocio: ${KINDS[tool].name}. Gasto diario $${fmt(upkeepOf(t))}`);
+    if (first && tool === 'farm') toast('👷 Lupe: ¡Tu primera granja! Produce 🌽 maíz. Pon una 🏭 fábrica conectada por calle: su camioneta le llevará el maíz.', 4600, true);
+    if (first && tool === 'factory') toast('👷 Lupe: La fábrica convierte 2 🌽 en 1 📦 caja. Su camioneta las lleva a tu 📦 zona de descarga: surten a los comercios y te pagan $30 cada una.', 4800, true);
   } else if (tool === 'home') {
     const first = !S.tiles.some(h => h.t === 'home');
     Object.assign(t, { t: 'home', k: 'home', lvl: 1, res: HOME.start });

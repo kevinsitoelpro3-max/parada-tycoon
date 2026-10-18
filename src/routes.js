@@ -78,7 +78,7 @@ export function findQueue(need) {
 }
 export function inUse(x, y) {
   const k = x + ',' + y;
-  return game.trucks.some(tr => tr.tiles && tr.tiles.has(k)) || (game.cars || []).some(c => c.tiles.has(k));
+  return game.trucks.some(tr => tr.tiles && tr.tiles.has(k)) || game.cars.some(c => c.tiles.has(k)) || game.vans.some(v => v.tiles.has(k));
 }
 export function parkSpot(tr, b) {
   const [sx, sy] = tr.route[0];

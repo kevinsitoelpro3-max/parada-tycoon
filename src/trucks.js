@@ -185,7 +185,7 @@ export function waitInLine(tr, dt) {
 }
 
 // Descarga: surte a los negocios de alrededor de la zona (x, y)
-function supply(x, y) {
+export function supply(x, y) {
   for (let dy = -STOCK_REACH; dy <= STOCK_REACH; dy++) for (let dx = -STOCK_REACH; dx <= STOCK_REACH; dx++) {
     const t = T(x + dx, y + dy);
     if (t && t.t === 'bld' && !KINDS[t.k].side) t.stock = Math.min(STOCK_MAX, (t.stock || 0) + STOCK_GIVE);

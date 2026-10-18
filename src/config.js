@@ -28,8 +28,20 @@ export const KINDS = {
   // Pensión: solo de noche (desde NIGHT_FROM); los tráileres se quedan y pagan al cierre del día
   park:  { name: 'Pensión',       emoji: '🅿️', cost: 500, pay: 120, time: Infinity, upkeep: 40, color: '#3B5BA5', night: true, side: true },
   // Zona de descarga: llegan tráileres de carga, pagan la cuota y surten a los negocios de alrededor
-  dock:  { name: 'Zona de descarga', short: 'Descarga', emoji: '📦', cost: 300, pay: 40, time: 4, upkeep: 15, color: '#B07A3B', side: true }
+  dock:  { name: 'Zona de descarga', short: 'Descarga', emoji: '📦', cost: 300, pay: 40, time: 4, upkeep: 15, color: '#B07A3B', side: true },
+  // Industria (1.4): no atienden tráileres; producen y sus camionetas reparten (ver INDUSTRY e industry.js)
+  farm:  { name: 'Granja', emoji: '🌾', cost: 500, pay: 0, time: 1, upkeep: 20, color: '#C9A227', side: true, prod: true },
+  factory: { name: 'Fábrica', emoji: '🏭', cost: 900, pay: 0, time: 1, upkeep: 45, color: '#7A6F9B', side: true, prod: true }
 };
+// Cadena de la industria: la granja produce 🌽 cada `every` s de juego (más rápido con nivel) hasta `cap`;
+// la fábrica convierte `need` 🌽 en 1 📦; las camionetas (una por nivel) llevan 🌽 de la granja a la
+// fábrica y 📦 de la fábrica a la zona de descarga, donde cada caja surte a los comercios cercanos
+// (como un tráiler de carga) y paga WHOLESALE de venta a mayoreo. Cargan VAN_LOAD como máximo.
+export const INDUSTRY = {
+  farm:    { every: 8, cap: 12 },
+  factory: { every: 5, cap: 12, need: 2, rawCap: 24 },
+};
+export const VAN_LOAD = 6, WHOLESALE = 30, VAN_SPEED = 1.7, VAN_UNLOAD = 1.5;
 // side: true = no cuenta para la meta de los 6 tipos, los contratos ni los retos de un tipo de negocio.
 // Carga: de los tráileres que se iban sin pedir nada, CARGO_SHARE trae mercancía si tienes zona de
 // descarga (con su propio sorteo: sin zona el azar es idéntico). Al descargar, cada negocio a

@@ -46,6 +46,7 @@ export function draw() {
     const a = truckAlpha(tr);
     if (a > 0) objs.push({ d: tr.x + tr.ox + tr.y + tr.oy, a, f: () => drawTruck(tr) });
   }
+  for (const v of game.vans) objs.push({ d: v.x + v.ox + v.y + v.oy, a: 1, f: () => drawCar(v) });
   for (const c of game.cars) objs.push({ d: c.x + c.ox + c.y + c.oy, a: 1, f: () => drawCar(c) });
   objs.sort((p, q) => p.d - q.d);
   for (const o of objs) { ctx.globalAlpha = o.a; o.f(); }
