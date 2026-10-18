@@ -25,20 +25,20 @@ export function homes() {
 export const population = () => game.S.tiles.reduce((a, t) => a + (t.t === 'home' ? t.res | 0 : 0), 0);
 export const hapFace = (h = hap()) => h >= HAP_GROW ? '😊' : h >= HAP_LEAVE ? '😐' : '😟';
 
-const roadNextTo = (x, y) => { for (const [dx, dy] of DIRS) if (isRoad(x + dx, y + dy)) return [x + dx, y + dy]; return null; };
 const decoNear = (x, y) => {
   for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const t = T(x + dx, y + dy); if (t && t.t === 'deco') return true; }
   return false;
 };
-// El comercio surtido más cercano por las calles: BFS desde la calle de la casa
-function findShop(sx, sy) {
+// El edificio más cercano por las calles que cumpla ok(t): BFS desde la calle (sx, sy).
+// Devuelve la ruta de calles hasta la que queda junto al edificio y dónde está el edificio.
+export function findNear(sx, sy, ok) {
   const key = (x, y) => y * game.W + x;
   const prev = new Map([[key(sx, sy), null]]), q = [[sx, sy]];
   for (let i = 0; i < q.length; i++) {
     const [x, y] = q[i];
     for (const [dx, dy] of DIRS) {
       const t = T(x + dx, y + dy);
-      if (t && t.t === 'bld' && CITY_KINDS.includes(t.k) && t.stock > 0 && !(t.off > 0)) {
+      if (t && ok(t)) {
         const path = [];
         for (let c = [x, y]; c; c = prev.get(key(c[0], c[1]))) path.push(c);
         return { path: path.reverse(), bx: x + dx, by: y + dy };
@@ -51,6 +51,9 @@ function findShop(sx, sy) {
   }
   return null;
 }
+// El comercio surtido más cercano
+const findShop = (sx, sy) => findNear(sx, sy, t => t.t === 'bld' && CITY_KINDS.includes(t.k) && t.stock > 0 && !(t.off > 0));
+export const roadNextTo = (x, y) => { for (const [dx, dy] of DIRS) if (isRoad(x + dx, y + dy)) return [x + dx, y + dy]; return null; };
 const setHap = v => { game.S.hap = clamp(v, 0, 100); };
 
 // Un ciudadano de la casa h sale a comprar

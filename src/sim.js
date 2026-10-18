@@ -10,6 +10,7 @@ import { sfx } from './audio/sfx.js';
 import { contractTick } from './contracts.js';
 import { ensureToday } from './daily.js';
 import { tickCity } from './city.js';
+import { tickIndustry } from './industry.js';
 import { tickFx, confetti, coinsFrom } from './fx.js';
 
 /* ---------- Simulación ---------- */
@@ -66,6 +67,7 @@ export function update(dt, rdt) {
   }
 
   tickCity(dt);
+  tickIndustry(dt);
   const slow = game.ev.rain ? 0.7 : 1;
   for (const tr of game.trucks) {
     tr.speed = (tr.x < 1 || (S.hwy2 && tr.y < 1) ? 2.6 : 1.5) * slow;

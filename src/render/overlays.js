@@ -102,6 +102,17 @@ export function cashAt(px, py) {
   return best;
 }
 
+// Granja y fábrica: pastilla con lo que tienen guardado (🌽 maíz, 📦 cajas), abajo del edificio
+function drawStore(x, y, t, kb) {
+  if (cam.z < 0.5) return;
+  const [sx, sy] = scr(x + 0.5, y + 0.92, 0);
+  const txt = t.k === 'farm' ? `🌽 ${t.raw | 0}` : `🌽 ${t.raw | 0}  📦 ${t.goods | 0}`;
+  ctx.font = `800 ${10.5 * kb}px ${UI_FONT}`;
+  const w = ctx.measureText(txt).width + 14 * kb, h = 16 * kb;
+  rrect(sx - w / 2, sy - h / 2, w, h, h / 2); ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fill();
+  ctx.lineWidth = 1.2 * kb; ctx.strokeStyle = 'rgba(0,0,0,.22)'; ctx.stroke();
+  ctx.fillStyle = '#13261C'; ctx.fillText(txt, sx, sy + 1);
+}
 // Casa: pastilla con la carita del barrio y cuántos viven ahí (solo de cerca)
 function drawHomeBadge(x, y, t, kb) {
   if (cam.z < 0.5) return;
@@ -127,7 +138,7 @@ export function drawOverlays() {
   for (let d = 1; d < game.W + game.H - 1; d++) {
     for (let x = Math.max(1, d - game.H + 1); x <= Math.min(game.W - 1, d); x++) {
       const t = T(x, d - x);
-      if (t.t === 'bld') drawBadge(x, d - x, t, kb, nb, vw, vh);
+      if (t.t === 'bld') { drawBadge(x, d - x, t, kb, nb, vw, vh); if (KINDS[t.k].prod) drawStore(x, d - x, t, kb); }
       else if (t.t === 'home') drawHomeBadge(x, d - x, t, kb);
     }
   }
@@ -164,8 +175,8 @@ export function drawOverlays() {
   }
   ctx.globalAlpha = 1;
   // Coches de ciudadanos: burbuja chica con lo que van a comprar, o la carita al volver
-  for (const c of cam.z < 0.5 ? [] : game.cars) {
-    const em = c.happy > 0 ? '😊' : c.sad ? '😟' : c.state === 'go' ? NEED_EMOJI[c.need] : null;
+  for (const c of cam.z < 0.5 ? [] : [...game.cars, ...game.vans]) {
+    const em = c.van ? (c.state === 'go' ? (c.kind === 'raw' ? '🌽' : '📦') : null) : c.happy > 0 ? '😊' : c.sad ? '😟' : c.state === 'go' ? NEED_EMOJI[c.need] : null;
     if (!em) continue;
     const [sx, sy] = scr(c.x + c.ox, c.y + c.oy, 0.75), r = 8.5 * kt;
     circle(sx, sy, r, '#FFFFFF');

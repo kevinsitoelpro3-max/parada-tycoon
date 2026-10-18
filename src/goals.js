@@ -43,5 +43,11 @@ export const GOALS = [
   { text: 'Llega a 20 habitantes',                     prize: 1500, ok: () => population() >= 20 },
   { text: 'Atiende a 100 ciudadanos',                  prize: 3000, ok: () => (game.S.cit || 0) >= 100 },
   { text: 'Ten el barrio al 80 % de felicidad',        prize: 4000, ok: () => homes().length > 0 && hap() >= 80 },
-  { text: 'Llega a 100 habitantes',                    prize: 10000, ok: () => population() >= 100 }
+  { text: 'Llega a 100 habitantes',                    prize: 10000, ok: () => population() >= 100 },
+  // Temporada 6: industria y cadenas
+  { text: 'Abre una 🌾 granja',                         prize: 400,  ok: () => countK('farm') >= 1 },
+  { text: 'Abre una 🏭 fábrica',                        prize: 800,  ok: () => countK('factory') >= 1 },
+  { text: 'Entrega 20 📦 cajas en la zona de descarga', prize: 1500, ok: () => (game.S.boxes || 0) >= 20 },
+  { text: 'Ten 3 granjas y 2 fábricas',                prize: 3000, ok: () => countK('farm') >= 3 && countK('factory') >= 2 },
+  { text: 'Entrega 300 📦 cajas',                       prize: 8000, ok: () => (game.S.boxes || 0) >= 300 }
 ];

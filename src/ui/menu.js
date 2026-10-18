@@ -145,7 +145,7 @@ function renderLand() {
 export function startNew(modeKey) {
   try { localStorage.removeItem(KEY); } catch (_) {}
   newGame(modeKey);
-  game.trucks = []; game.cars = []; game.floats = []; game.puffs = []; game.ev = emptyEvent(); game.spawnT = 1.2;
+  game.trucks = []; game.cars = []; game.vans = []; game.floats = []; game.puffs = []; game.ev = emptyEvent(); game.spawnT = 1.2;
   toastQueue.length = 0;
   for (const k in hudCache) delete hudCache[k];
   game.billCache = totalUpkeep();
