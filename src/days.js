@@ -123,7 +123,9 @@ export function openTopRoad() {
     const t = S.tiles[x];
     if (t.t === 'bld' || t.t === 'home' || t.t === 'water') { sfx.nope(); toast('Primero quita lo que hay en la fila de hasta arriba (negocios, casas o agua)'); return; }
   }
-  if (game.trucks.some(tr => tr.tiles && [...tr.tiles].some(k => k.endsWith(',0')))) { sfx.nope(); toast('Hay tráileres usando calles de la fila de arriba, espera tantito'); return; }
+  // Los tráileres y coches que ya iban por calles de la fila de arriba siguen su camino (van por
+  // coordenadas, no por el tipo de casilla); antes se pedía esperar a que no hubiera nadie y con mucho
+  // tráfico nunca pasaba.
   S.money -= HWY2_COST;
   for (let x = 1; x < game.W; x++) { const t = S.tiles[x]; for (const k of Object.keys(t)) delete t[k]; t.t = 'hwy2'; }
   S.hwy2 = true;
