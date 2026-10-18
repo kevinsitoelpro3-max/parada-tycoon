@@ -6,7 +6,6 @@ import { game } from './state.js';
 // Todo usa su propio azar (fxRng) y el reloj de la pantalla: nunca toca Math.random ni game.S.
 const fxRng = mulberry32(4242);
 const R = (a, b) => a + fxRng() * (b - a);
-game.fx = [];
 
 // Rebote del edificio: al construir crece desde 0 (from = 0); al mejorar, desde un poco más chico
 export function pop(t, from = 0) { t.pop = { t0: performance.now(), from }; }

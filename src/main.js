@@ -67,10 +67,24 @@ function tickSound() {
   setRain(!over && !game.paused && game.ev.rain);
 }
 
-let last = performance.now();
+// Resolución que se adapta: si durante 3 s el juego va a menos de ~40 cuadros por segundo, baja un
+// poco la densidad de píxeles (hasta 1.25); si luego va sobrado (más de ~55) durante 8 s, la sube.
+// Así un celular modesto se mantiene fluido y uno rápido se ve nítido.
+let last = performance.now(), ema = 1 / 60, slowT = 0, fastT = 0;
+function adapt(rdt) {
+  if (document.hidden || rdt <= 0) return;
+  ema += (rdt - ema) * 0.05;
+  const cap = game.dprCap || 2, max = Math.min(2, window.devicePixelRatio || 1);
+  slowT = ema > 1 / 40 ? slowT + rdt : 0;
+  fastT = ema < 1 / 55 ? fastT + rdt : 0;
+  const set = c => { game.dprCap = c; if (Math.min(window.devicePixelRatio || 1, c) !== game.dpr) resize(); };
+  if (slowT > 3 && cap > 1.25) { set(Math.max(1.25, cap - 0.25)); slowT = 0; }
+  else if (fastT > 8 && cap < max) { set(Math.min(max, cap + 0.25)); fastT = 0; }
+}
 function frame(now) {
   const rdt = Math.min(0.1, Math.max(0, (now - last) / 1000));
   last = now;
+  adapt(rdt);
   if (!game.paused) update(rdt * game.speed, rdt);
   updateLight();
   draw();

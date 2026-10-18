@@ -139,9 +139,9 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   .dock::-webkit-scrollbar{display:block;height:6px}
 }
 @media (min-width:600px){
-  .dock{grid-auto-flow:row;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-columns:auto;overflow-x:visible}
+  .dock{grid-auto-flow:row;grid-template-columns:repeat(8,minmax(0,1fr));grid-auto-columns:auto;overflow-x:visible}
 }
-@media (min-width:1000px){.dock{grid-template-columns:repeat(14,minmax(0,1fr))}}
+@media (min-width:1000px){.dock{grid-template-columns:repeat(15,minmax(0,1fr))}}
 .tool{display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 2px 7px;min-height:62px}
 .tool .ic{font-size:21px;line-height:1.1;transition:opacity .2s}
 .tool .nm{font-size:11.5px;font-weight:600;line-height:1.2;margin-top:2px;white-space:nowrap}
@@ -195,6 +195,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .contract.ok{color:var(--muted)}
 .contract[hidden]{display:none}
 .modes.price{margin:-4px 0 10px}
+.modes.price[hidden]{display:none}
 .modes.price .btn{padding:8px 4px;font-size:14px}
 .facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:12px}
 .fact{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:8px 10px 6px}

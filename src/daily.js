@@ -26,6 +26,8 @@ const RETOS = {
   deco:  { n: () => 3, txt: m => `Pon ${m.n} decoraciones (banca, jardín o letrero)` },
   cash:  { n: d => d > 10 ? 8 : 5, txt: m => `Cobra ${m.n} propinas 💰 tocando tus negocios` },
   night: { n: d => r5(12 + 2 * d), txt: m => `Atiende ${fmt(m.n)} tráileres de noche (desde las 20:00)` },
+  cit:   { n: d => r5(10 + 2 * d), txt: m => `Atiende a ${fmt(m.n)} ciudadanos 🚗`, can: () => game.S.tiles.some(t => t.t === 'home') },
+  unload:{ n: d => r5(8 + d), txt: m => `Descarga ${fmt(m.n)} tráileres en tu 📦 zona de descarga`, can: () => countK('dock') > 0 },
   combo: { n: d => d > 10 ? 10 : 6, txt: m => `Cobra ${m.n} propinas de tráileres con dos pedidos`, can: () => BASIC.filter(k => countK(k) > 0).length >= 2 },
 };
 const r5 = v => Math.round(v / 5) * 5, r100 = v => Math.round(v / 100) * 100;

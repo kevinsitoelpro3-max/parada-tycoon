@@ -1,4 +1,4 @@
-import { KINDS, COST, DIRS, DECOS } from './config.js';
+import { KINDS, COST, DIRS, DECOS, HOME } from './config.js';
 import { fmt, money } from './utils.js';
 import { game, T, isRoad, upkeepOf } from './state.js';
 import { inUse } from './routes.js';
@@ -15,6 +15,7 @@ export function toolCost(k) {
   if (k === 'demo') return COST.demo;
   if (KINDS[k]) return KINDS[k].cost;
   if (DECOS[k]) return DECOS[k].cost;
+  if (k === 'home') return HOME.cost;
   return 0;
 }
 export function check(k, x, y) {
@@ -30,12 +31,12 @@ export function check(k, x, y) {
     if (!(x === 1 || roadNear || (game.S.hwy2 && y === 1))) return { ok: false, msg: 'La calle tiene que salir de la carretera o de otra calle' };
     return { ok: true, cost: t.t === 'water' ? COST.bridge : COST.road };
   }
-  if (KINDS[k]) {
+  if (KINDS[k] || k === 'home') {
     if (t.t === 'tree') return { ok: false, msg: 'Quita el árbol con 🔨 Demoler primero' };
     if (t.t === 'rock') return { ok: false, msg: `Quita las rocas con 🔨 Demoler primero ($${COST.rock})` };
     if (t.t !== 'grass') return { ok: false, msg: 'Ese lugar ya está ocupado' };
-    if (!roadNear) return { ok: false, msg: 'Ponlo pegado a una calle para que lleguen los tráileres' };
-    return { ok: true, cost: KINDS[k].cost };
+    if (!roadNear) return { ok: false, msg: k === 'home' ? 'Ponla pegada a una calle para que salgan los coches' : 'Ponlo pegado a una calle para que lleguen los tráileres' };
+    return { ok: true, cost: k === 'home' ? HOME.cost : KINDS[k].cost };
   }
   if (DECOS[k]) {
     if (t.t === 'tree' || t.t === 'rock') return { ok: false, msg: 'Despeja la casilla con 🔨 Demoler primero' };
@@ -51,6 +52,7 @@ export function check(k, x, y) {
       if (inUse(x, y)) return { ok: false, msg: 'Hay tráileres usando esa calle, espera a que pasen' };
       return { ok: true, cost: COST.demo };
     }
+    if (t.t === 'home') return { ok: true, cost: COST.demo, refund: Math.round(HOME.cost * 0.5) };
     if (t.t === 'bld') {
       if (t.slots.some(Boolean) || (t.queue && t.queue.length)) return { ok: false, msg: 'Espera a que salgan los clientes' };
       return { ok: true, cost: COST.demo, refund: Math.round(KINDS[t.k].cost * 0.5) };
@@ -65,7 +67,7 @@ export function applyTool(x, y, drag) {
   if (!drag && collectCash(x, y)) return;
   if (tool === 'none') {
     const t = T(x, y);
-    if (t && t.t === 'bld') openSheet(x, y); else closeSheet();
+    if (t && (t.t === 'bld' || t.t === 'home')) openSheet(x, y); else closeSheet();
     return;
   }
   const r = check(tool, x, y);
@@ -81,6 +83,15 @@ export function applyTool(x, y, drag) {
     Object.assign(t, { t: 'bld', k: tool, lvl: 1, earned: 0, slots: [null, null] });
     sfx.build(); pop(t); dust(x, y, 14);
     toast(`Nuevo negocio: ${KINDS[tool].name}. Gasto diario $${fmt(upkeepOf(t))}`);
+  } else if (tool === 'home') {
+    const first = !S.tiles.some(h => h.t === 'home');
+    Object.assign(t, { t: 'home', k: 'home', lvl: 1, res: HOME.start });
+    sfx.build(); pop(t); dust(x, y, 14);
+    track('home');
+    if (first) {
+      toast(`👷 Lupe: ¡Tu primera casa! Aquí viven ${HOME.start} vecinos y cada uno sale una vez al día en coche a comprar.`, 4200, true);
+      toast('👷 Lupe: solo compran en 🛒 tiendita, 🍗 comedor o ⛽ gasolinera con surtido 📦. Pon una zona de descarga cerca de ellos.', 4600, true);
+    } else toast(`🏠 Casa nueva: llegan ${HOME.start} vecinos. Renta $${HOME.rent} por habitante al día`);
   } else if (DECOS[tool]) {
     Object.assign(t, { t: 'deco', d: tool });
     sfx.build(); pop(t); dust(x, y, 8);
